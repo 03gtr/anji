@@ -9,6 +9,8 @@
  *  - Sultan: the sanctuary's vain peacock.
  *  - The Gate, the phone and the narrator only have voices / icons.
  */
+import { lightingDefs, lit } from './lighting.js';
+
 let uid = 0;
 
 export function ryanSprite({ pose = 'idle', t = 0, shadow = false, size } = {}) {
@@ -19,8 +21,8 @@ export function ryanSprite({ pose = 'idle', t = 0, shadow = false, size } = {}) 
   const fill = (c) => (shadow ? `url(#sh${id})` : c);
   const dims = size ? `width="${size / 2}" height="${size}"` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" ${dims}>
-    <defs><linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0d22"/><stop offset=".85" stop-color="#151a3a"/><stop offset="1" stop-color="#6fd3ff"/></linearGradient></defs>
-    <g opacity="${shadow ? 0.92 : 1}">
+    <defs><linearGradient id="sh${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0d22"/><stop offset=".85" stop-color="#151a3a"/><stop offset="1" stop-color="#6fd3ff"/></linearGradient>${shadow ? '' : lightingDefs(id)}</defs>
+    <g opacity="${shadow ? 0.92 : 1}" ${shadow ? '' : `filter="url(#v3d-${id})"`}>
       <path d="M36 138 L34 ${186 - lf} L48 ${186 - lf} L49 140Z" fill="${fill('#3d5a85')}"/>
       <path d="M51 140 L52 ${186 + lf} L66 ${186 + lf} L64 138Z" fill="${fill('#35507a')}"/>
       <path d="M31 ${184 - lf} H49 V${193 - lf} H29Z" fill="${fill('#24252c')}"/><path d="M29 ${191 - lf} H49 V${195 - lf} H29Z" fill="${fill('#e9e9ef')}"/>
@@ -44,9 +46,11 @@ export function ryanSprite({ pose = 'idle', t = 0, shadow = false, size } = {}) 
 
 export function ryanPortrait({ expr = 'back' } = {}) {
   const turn = expr === 'turn';
+  const id = `rp${++uid}`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-    <defs><radialGradient id="moonlit" cx=".7" cy=".2" r=".9"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient></defs>
+    <defs><radialGradient id="moonlit" cx=".7" cy=".2" r=".9"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient>${lightingDefs(id)}</defs>
     <circle cx="140" cy="40" r="90" fill="url(#moonlit)"/>
+    <g filter="url(#v3d-${id})">
     <path d="M20 200 C24 160 50 140 100 138 C150 140 176 160 180 200Z" fill="#2c2f38"/>
     <path d="M62 146 C70 160 130 160 138 146 C130 134 70 134 62 146Z" fill="#23252d"/>
     <path d="M58 156 L52 200 M142 156 L148 200" stroke="#15161b" stroke-width="12"/>
@@ -55,6 +59,7 @@ export function ryanPortrait({ expr = 'back' } = {}) {
     <ellipse cx="62" cy="88" rx="7" ry="12" fill="#e0b89e"/><ellipse cx="138" cy="88" rx="7" ry="12" fill="${turn ? '#e6c0a6' : '#e0b89e'}"/>
     <path d="M60 80 C56 40 80 28 100 28 C122 28 144 40 140 80 C140 104 126 118 100 118 C76 118 60 104 60 80Z" fill="#2a1d16"/>
     <path d="M72 50 C84 38 116 38 128 50" stroke="#3e2b20" stroke-width="3" fill="none"/>
+    </g>
     <path d="M136 52 C142 62 142 74 138 82" stroke="#9fd7ff" stroke-width="2.4" fill="none" opacity=".6"/>
   </svg>`;
 }
@@ -93,8 +98,28 @@ export function needleSvg({ expr = 'cheerful', pose = 'idle', t = 0 } = {}) {
   </svg>`;
 }
 
-function muntherPortrait() {
+/** Uncle Munther's expressions: neutral, proud, confused, sleepy, delighted. */
+export const MUNTHER_EXPRESSIONS = ['neutral', 'proud', 'confused', 'sleepy', 'delighted'];
+
+function muntherPortrait(expr = 'neutral') {
+  const id = `m${++uid}`;
+  const e = MUNTHER_EXPRESSIONS.includes(expr) ? expr : 'neutral';
+  const lids =
+    e === 'sleepy'
+      ? '<path d="M54 92 Q76 84 100 96 M100 96 Q124 84 146 92" fill="#6b5a86"/><path d="M52 98 H100 M100 98 H148" stroke="#6b5a86" stroke-width="14"/>'
+      : e === 'proud'
+        ? '<path d="M54 86 Q76 80 98 88 L98 92 L54 92Z M102 88 Q124 80 146 86 L146 92 L102 92Z" fill="#6b5a86"/>'
+        : '';
+  const brows =
+    e === 'confused'
+      ? '<path d="M56 70 L92 78 M108 74 L144 66" stroke="#4a3d60" stroke-width="5" stroke-linecap="round"/><text x="150" y="62" font-size="30" font-weight="700" fill="#ffd977" font-family="sans-serif">?</text>'
+      : e === 'delighted'
+        ? '<path d="M56 74 Q74 64 92 74 M108 74 Q126 64 144 74" stroke="#4a3d60" stroke-width="4" fill="none" stroke-linecap="round"/>'
+        : '';
+  const tilt = e === 'confused' ? -8 : e === 'proud' ? -3 : 0;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <defs>${lightingDefs(id)}</defs>
+    <g transform="rotate(${tilt} 100 120)" filter="url(#v3d-${id})">
     <ellipse cx="100" cy="126" rx="66" ry="70" fill="#6b5a86"/>
     <ellipse cx="100" cy="146" rx="42" ry="44" fill="#c9b8de"/>
     <path d="M70 150 q10 6 20 0 M90 166 q10 6 20 0 M110 150 q10 6 20 0" stroke="#9c88b8" stroke-width="3" fill="none"/>
@@ -106,6 +131,8 @@ function muntherPortrait() {
     <path d="M44 182 Q100 196 156 182 L150 168 Q100 180 50 168Z" fill="#2b3a8c"/>
     <path d="M150 40 L168 92" stroke="#f2c14e" stroke-width="7" stroke-linecap="round"/><path d="M150 40 l-3 -9 l7 3Z" fill="#3a2a48"/><path d="M166 86 l4 10" stroke="#ff9ec4" stroke-width="7" stroke-linecap="round"/>
     <circle cx="70" cy="178" r="2.4" fill="#ffe28a"/><circle cx="100" cy="184" r="2.4" fill="#ffe28a"/><circle cx="130" cy="178" r="2.4" fill="#ffe28a"/>
+    </g>
+    <g transform="rotate(${tilt} 100 120)">${lids}${brows}${e === 'delighted' ? '<path d="M94 132 Q100 140 106 132" stroke="#a46a1a" stroke-width="3" fill="none"/>' : ''}</g>
   </svg>`;
 }
 
@@ -150,16 +177,75 @@ function phonePortrait() {
   </svg>`;
 }
 
+/** Ryan's "playing version" on the laptop: a backlit silhouette on a screen. */
+function ryanScreenPortrait() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <rect x="18" y="26" width="164" height="118" rx="12" fill="#16161c"/>
+    <rect x="26" y="34" width="148" height="100" rx="6" fill="#0c1640"/>
+    <radialGradient id="rsg" cx=".5" cy=".35" r=".6"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient>
+    <rect x="26" y="34" width="148" height="100" rx="6" fill="url(#rsg)"/>
+    <path d="M62 134 C66 112 82 104 100 104 C118 104 134 112 138 134Z" fill="#1b1d24"/>
+    <path d="M80 76 C78 58 90 50 100 50 C112 50 122 58 120 76 C120 88 112 96 100 96 C88 96 80 88 80 76Z" fill="#17120f"/>
+    <path d="M80 76 C78 58 90 50 100 50 C112 50 122 58 120 76" stroke="#9fd7ff" stroke-width="2" fill="none" opacity=".8"/>
+    <path d="M34 42 h28" stroke="#7fd38a" stroke-width="3"/><text x="166" y="48" text-anchor="end" font-size="10" font-family="monospace" fill="#9fd7ff">ryan.play</text>
+    <path d="M6 150 H194 L182 168 H18Z" fill="#9aa3b8"/><rect x="84" y="152" width="32" height="5" rx="2" fill="#6d7488"/>
+  </svg>`;
+}
+
 const glyph = (char, bg) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="76" fill="${bg}"/><text x="100" y="126" text-anchor="middle" font-size="80" font-family="sans-serif">${char}</text></svg>`;
 
 /** speaker id → display name + portrait renderer */
 export const CAST = {
   ryan: { name: 'ريان', portrait: ({ expr }) => ryanPortrait({ expr }) },
   needle: { name: 'الممرضة إبرة', portrait: ({ expr }) => needleSvg({ expr }) },
-  munther: { name: 'العم منذر', portrait: () => muntherPortrait() },
+  munther: { name: 'العم منذر', portrait: ({ expr } = {}) => muntherPortrait(expr) },
   sultan: { name: 'السلطان', portrait: () => sultanPortrait() },
   gate: { name: 'البوابة', portrait: () => gatePortrait() },
   phone: { name: 'الموبايل', portrait: () => phonePortrait() },
+  ryanpc: { name: 'ريان (نسخة اللعب)', portrait: () => ryanScreenPortrait() },
   sign: { name: 'لافتة', portrait: () => glyph('🪧', '#3b3d7e') },
   note: { name: 'ورقة', portrait: () => glyph('📜', '#3b3d7e') },
 };
+
+/**
+ * Ryan's character-sheet views. The story keeps his face hidden: the side
+ * view is a silhouette against moonlight, the "front" is backlit (face in
+ * shadow). Hair, hoodie, backpack and proportions match ryanSprite.
+ */
+export const RYAN_VIEWS = ['back', 'turn', 'side', 'front-backlit'];
+
+export function ryanView(view = 'back') {
+  if (view === 'back') return ryanSprite({});
+  if (view === 'turn') return ryanPortrait({ expr: 'turn' });
+  const id = `rv${++uid}`;
+  const rim = '#9fd7ff';
+  if (view === 'side') {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+      <defs>${lightingDefs(id)}</defs>
+      <g filter="url(#v3d-${id})">
+        <path d="M42 138 L40 188 L54 188 L55 140Z" fill="#2c3e5c"/><path d="M38 186 H58 L60 195 H36Z" fill="#1c1d24"/>
+        <path d="M34 72 C34 62 44 58 54 58 C62 58 68 64 68 74 L70 142 L34 142Z" fill="#23252d"/>
+        <path d="M22 76 C14 80 14 118 22 128 L34 126 L34 76Z" fill="#111216"/>
+        <path d="M60 78 L66 126 L60 128 L54 82Z" fill="#1d1f26"/>
+        <rect x="48" y="48" width="10" height="12" fill="#3a3038"/>
+        <path d="M40 34 C40 16 52 10 60 12 C70 14 74 24 72 36 C72 46 66 52 56 52 C46 52 40 46 40 34Z" fill="#1d1612"/>
+        <path d="M70 30 C74 34 75 40 72 44" stroke="${rim}" stroke-width="1.6" fill="none"/>
+      </g>
+      <path d="M68 74 L70 142 M72 36 C72 46 66 52 60 52" stroke="${rim}" stroke-width="1.2" fill="none" opacity=".7"/>
+    </svg>`;
+  }
+  // front-backlit
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+    <defs>${lightingDefs(id)}<radialGradient id="halo${id}" cx=".5" cy=".3" r=".6"><stop offset="0" stop-color="${rim}" stop-opacity=".55"/><stop offset="1" stop-color="${rim}" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="50" cy="70" rx="48" ry="70" fill="url(#halo${id})"/>
+    <g filter="url(#v3d-${id})">
+      <path d="M36 138 L34 188 L48 188 L49 140Z M51 140 L52 188 L66 188 L64 138Z" fill="#1f2a40"/>
+      <path d="M24 70 C26 62 36 58 50 58 C64 58 74 62 76 70 L78 142 L22 142Z" fill="#1b1d24"/>
+      <path d="M22 72 L14 126 L22 128 L28 84Z M78 72 L86 126 L78 128 L72 84Z" fill="#16171d"/>
+      <path d="M32 72 L36 64 M68 72 L64 64" stroke="#0c0d12" stroke-width="5"/>
+      <rect x="44" y="48" width="12" height="12" fill="#2a2228"/>
+      <path d="M32 36 C30 18 42 12 50 12 C60 12 70 18 68 36 C68 46 62 52 50 52 C38 52 32 46 32 36Z" fill="#17120f"/>
+    </g>
+    <path d="M32 36 C30 18 42 12 50 12 C60 12 70 18 68 36 M24 70 C26 62 36 58 50 58 C64 58 74 62 76 70" stroke="${rim}" stroke-width="1.4" fill="none" opacity=".8"/>
+  </svg>`;
+}

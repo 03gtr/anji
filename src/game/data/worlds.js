@@ -21,6 +21,7 @@ export const WORLDS = [
   { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, scene: 'workshop', spawn: 140, unlock: 'flag:act6-done', ready: true },
   // V2 side locations
   { id: 'study', name: 'مكتب ريان', icon: 'note', x: 70, y: 42, act: 2, scene: 'study', spawn: 140, unlock: 'flag:house-entered', ready: true },
+  { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 50, y: 62, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 6, y: 38, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
   { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, scene: 'final', spawn: 140, unlock: 'flag:act7-done', ready: true },
 ];
@@ -30,7 +31,7 @@ export const ROUTES = [
   ['garden', 'maze'], ['maze', 'conservatory'], ['conservatory', 'house'], ['house', 'wardrobe'], ['house', 'kitchen'],
   ['house', 'garage'], ['kitchen', 'academy'], ['academy', 'sanctuary'], ['house', 'observatory'], ['observatory', 'library'],
   ['observatory', 'lake'], ['lake', 'corridor'], ['library', 'workshop'], ['observatory', 'final'], ['workshop', 'final'],
-  ['house', 'study'], ['sanctuary', 'meadow'],
+  ['house', 'study'], ['sanctuary', 'meadow'], ['house', 'gameroom'],
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === id);

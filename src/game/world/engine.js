@@ -26,6 +26,16 @@ const KIND = {
 
 const REACH = 34; // how close (beyond an object's half width) counts as "next to it"
 
+/** Snooki's reactions when she taps him (rotating, see game.nextLine). */
+export const SNOOKI_TAPS = [
+  { pose: 'bark', text: 'هاو! …يعني «شكراً». بلغة الكلاب الراقية.', sfx: 'bark' },
+  { pose: 'wag', text: 'ذيلي يتحرك وحده. ما إلي علاقة.' },
+  { pose: 'innocent', text: 'آني؟ ما سوّيت شي. ولا مرة. بحياتي.' },
+  { pose: 'sniff', text: 'أشم… بسكويت؟ لا. خيبة كبيرة.' },
+  { pose: 'celebrate', text: 'نطّة احتفال! بدون سبب. الأسباب مبالغ بيها.' },
+  { pose: 'stubborn', text: 'لا. مو هسه. آني مشغول… بالتفكير.' },
+];
+
 export async function createWorld(host, scene, app, { spawnX, onProgress } = {}) {
   const { game, audio, input, scope } = app;
   const canvas = document.createElement('canvas');
@@ -329,10 +339,26 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     game.setLocation(scene.id, player.x);
   }
 
+  /** Tap on Snooki: a short pose + line (never blocks play). */
+  let snookiBusyUntil = 0;
+  function snookiReact() {
+    if (t < snookiBusyUntil || !snooki.visible) return false;
+    const r = SNOOKI_TAPS[game.nextLine('snooki-tap', SNOOKI_TAPS.length)];
+    snookiBusyUntil = t + 1.6;
+    snooki.pose = r.pose;
+    snooki.bubble = { text: r.text, until: t + 2.6 };
+    if (r.sfx) audio.play(r.sfx);
+    scope.timeout(() => {
+      if (snooki.pose === r.pose) snooki.pose = null;
+    }, 1500);
+    return true;
+  }
+
   // ── input: tap a thing to walk to it and use it; tap ground to walk there ──
   scope.on(canvas, 'pointerup', (e) => {
     if (mode !== 'play' || paused) return;
     const p = screenToWorld(e.clientX, e.clientY);
+    if (Math.abs(p.x - snooki.x) < 30 && p.y > snooki.y - snooki.h && p.y < snooki.y + 8 && snookiReact()) return;
     const hit = interactables()
       .filter((it) => Math.abs(p.x - it.x) <= Math.max(26, (it.w || 40) / 2 + 10) && p.y >= (it.y ?? GROUND) - (it.h || 140) - 20 && p.y <= GROUND + 40)
       .sort((a, b) => Math.abs(p.x - a.x) - Math.abs(p.x - b.x))[0];
@@ -412,7 +438,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       if (!anim) {
         if (a === player && !player.onGround) anim = player.vy < 0 ? 'jump' : 'fall';
         else if (moving) anim = Math.abs(a.vx) > 175 && frames[a.kind].run ? 'run' : 'walk';
-        else if (a === snooki && idleTime > 5) anim = 'sit';
+        else if (a === snooki && idleTime > 16 && frames.snooki.sleep) anim = 'sleep';
+        else if (a === snooki && idleTime > 5) anim = Math.floor(idleTime / 4) % 3 === 2 && frames.snooki.wag ? 'wag' : 'sit';
         else anim = 'idle';
       }
       if (anim !== a.anim) {
@@ -647,6 +674,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     get reduced() {
       return app.reduced();
     },
+    /** The app (scene content can open panels: games table, boards…). */
+    get app() {
+      return app;
+    },
     get interactTarget() {
       return interactTarget;
     },
@@ -668,6 +699,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     },
     run,
     interact: () => interact(interactTarget),
+    snookiReact: () => snookiReact(),
     on(type, fn) {
       listeners[type].push(fn);
     },

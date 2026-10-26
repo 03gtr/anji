@@ -8,6 +8,7 @@ import { CORRIDOR, LAKE } from './act6.js';
 import { WORKSHOP, FINAL } from './act78.js';
 import { STUDY, PASSAGE } from './side-house.js';
 import { MEADOW } from './side-meadow.js';
+import { GAMEROOM } from './side-gameroom.js';
 
 export const SCENES = {
   [GARDEN.id]: GARDEN,
@@ -25,4 +26,5 @@ export const SCENES = {
   [STUDY.id]: STUDY,
   [PASSAGE.id]: PASSAGE,
   [MEADOW.id]: MEADOW,
+  [GAMEROOM.id]: GAMEROOM,
 };

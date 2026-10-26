@@ -9,7 +9,7 @@
  * except through an export the player starts herself.
  */
 export const GAME_ID = 'snooki-missing-creator';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const SAVE_KEY = 'snooki-game:save';
 
 /**
@@ -21,6 +21,12 @@ export const MIGRATIONS = {
   // V2: the observatory owl became «العم منذر» (journal id 'hoot' → 'munther').
   1: (save) => {
     if (Array.isArray(save.journal)) save.journal = save.journal.map((id) => (id === 'hoot' ? 'munther' : id));
+    return save;
+  },
+  // V3: the games room (card backs, gifts, dialogue rotation)
+  2: (save) => {
+    save.cosmetics = { cardBack: 'classic', ...(save.cosmetics || {}) };
+    save.hub = save.hub || { lines: {}, gifts: [], daily: null };
     return save;
   },
 };
@@ -51,11 +57,30 @@ export function defaultState(now = Date.now()) {
       snookiHat: 'none',
       snookiCollar: 'navy',
       carColor: 'cobalt',
+      cardBack: 'classic',
     },
     location: { scene: null, x: null },
     garden: [],
     memories: {},
+    hub: { lines: {}, gifts: [], daily: null },
   };
+}
+
+export const GIFT_PARTS = ['wrap', 'ribbon', 'flower', 'note'];
+export const MAX_GIFTS = 24;
+
+function normalizeHub(raw) {
+  const hub = { lines: {}, gifts: [], daily: null };
+  if (!isObj(raw)) return hub;
+  for (const [k, v] of Object.entries(isObj(raw.lines) ? raw.lines : {})) if (Number.isInteger(v) && v >= 0) hub.lines[k] = v;
+  if (Array.isArray(raw.gifts)) {
+    hub.gifts = raw.gifts
+      .filter((g) => isObj(g) && GIFT_PARTS.every((k) => typeof g[k] === 'string' && g[k].length <= 40))
+      .slice(0, MAX_GIFTS)
+      .map((g) => Object.fromEntries(GIFT_PARTS.map((k) => [k, g[k]])));
+  }
+  if (typeof raw.daily === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(raw.daily)) hub.daily = raw.daily;
+  return hub;
 }
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -116,6 +141,7 @@ export function normalize(raw, now = Date.now()) {
     },
     garden,
     memories,
+    hub: normalizeHub(raw.hub),
   };
 }
 

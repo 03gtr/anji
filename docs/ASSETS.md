@@ -19,10 +19,18 @@
 
 Character sheet for checking consistency: `npm run dev` → `/dev/art.html?zoom=2`.
 
+**V3:** characters now share one 2.5D lighting model, Anji has front/back views
+and 3 new expressions, Snooki 5 new poses and 2 expressions, Ryan four views
+(never his face), العم منذر five expressions; games-room props live in
+`world/props-v3.js`. Every character image is listed in `src/game/art/manifest.js`
+and exported for review with `npm run art:export` → `docs/art/`. Details,
+lighting guide, palette, naming and licensing: **`docs/ART_PIPELINE.md`**.
+
 ## Owner artwork (local only, git-ignored)
 
-`private-art/*.webp` — cropped from the owner's concept collage. Used when
-present; replaced by the built-in illustrations otherwise.
+`private-art/*.webp` — cropped from the owner's concept collage. Used by the
+dev server and by `npm run build:private`; the normal `npm run build` never
+includes them (V3) and uses the built-in illustrations.
 
 | File | Used for |
 | --- | --- |

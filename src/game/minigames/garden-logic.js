@@ -22,6 +22,15 @@ export const PIECES = {
   'cat-house': { name: 'بيت فيروز', icon: 'cat', unlock: 'flag:mission:lost-kitten', special: true },
   telescope: { name: 'تلسكوب صغير', icon: 'star', unlock: 'flag:mission:second-sky', special: true },
   robo: { name: 'روبو-سنوكي', icon: 'robot', unlock: 'flag:mission:robo-snooki', special: true },
+  // V3: from the games room's activities and pranks
+  'rose-vase': { name: 'مزهرية الوردة', icon: 'rose', unlock: 'flag:deliver-done' },
+  chocolates: { name: 'علبة شوكولاتة', icon: 'candy', unlock: 'flag:chocolates-done' },
+  picnic: { name: 'بطانية نزهة', icon: 'apple', unlock: 'flag:picnic-done' },
+  'gift-box': { name: 'صندوق هدية', icon: 'heart', unlock: 'flag:gift-made' },
+  'lantern-path': { name: 'ممر فوانيس', icon: 'sun', unlock: 'flag:duet-done' },
+  'promise-arch': { name: 'قوس الوعد', icon: 'rose', unlock: 'flag:promise-done' },
+  'snooki-stash': { name: 'مخبأ سنوكي', icon: 'paw', unlock: 'flag:prank-paws' },
+  'game-table': { name: 'طاولة أوراق', icon: 'star', unlock: 'flag:gameroom-entered' },
 };
 
 export const roseBudget = (seedPouches) => seedPouches * ROSES_PER_POUCH;

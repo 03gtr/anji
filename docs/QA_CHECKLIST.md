@@ -3,7 +3,7 @@
 Legend: ✅ verified automatically · 👀 verified by playing in a browser
 (mobile viewport 375×812 / 390×844) · ☐ to check by hand on a real phone.
 
-## Automated (`npm test`, 483 tests, 15 files)
+## Automated (`npm test`, 559 tests, 18 files — all passing at the V3 commit)
 
 - ✅ Saves: save/load, backup recovery, corrupted save quarantine, migrations,
   future-version refusal, quota error, export/import round trip, wrong file.
@@ -48,6 +48,29 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
   lamp → symbols → drawer → mission reward → passage); hint → solution →
   skip; missions journal; help screen; drawing unfold + journal; race host
   (ready card, countdown, pause freezes, finish records the result).
+- ✅ V3 tabletop engines (24): seeded reproducible deck; High Card ties carry
+  the pot; trick game follow-suit, trumps, trick winner leads, 3–3 draw, AI
+  never plays an illegal card and never sees Anji's hand, deterministic per
+  seed, hard > normal > easy over 400 hands; checkers opening, forced capture,
+  multi-jump, crowning, king moves, no-move loss, 40-move draw, illegal moves
+  rejected (undo-safe), AI legal at every level, AI-vs-AI ends; card-trick
+  rounds solvable and distinct.
+- ✅ V3 content: save v2 → v3 migration (nothing lost), games-room data
+  validation, export/import; dialogue rotation; every game × every moment;
+  Ryan never claims to be live/watching and never pressures; ≥ 7 activities and
+  10 pranks, all runnable and rewarded; rewards valid; card backs unlockable;
+  decorations unlockable; comedy never targets Anji; duet has no game over;
+  waiting clock accepts ±15 min; arrange puzzles; no personal memories in the
+  repo; drafts never shown; picnic labels only from owner memories; asset
+  manifest complete, lit and exported; private assets marked private;
+  `@private-sources` is empty in tests.
+- ✅ V3 app flows (DOM, 9): first visit (Ryan's playing version invites her);
+  High Card to a recorded result; a full rose-trick hand by tapping legal cards;
+  checkers move → Ryan answers → undo; card trick three rounds; memory match to
+  a result; garden duet + gift workshop; an activity from the board through the
+  world (chocolate box); tapping Snooki reacts without blocking play.
+- ✅ Public build: 36 files precached; `audit:private` clean (37 files in
+  `dist/` checked against 22 private images, private file names and memory text).
 
 ## Played in the browser 👀
 
@@ -70,7 +93,26 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
   network off → title, new game, garden; maze, racing, kitchen, dress-up and
   quiz chunks load; zero errors.
 
+- 👀 V3 (headless Microsoft Edge screenshots against the dev server; the
+  in-app browser pane was too small to use): 390×844 portrait — games room,
+  games table, rose trick, checkers, High Card, card trick, memory (ready
+  panel), prank board, chocolate box, waiting clock, gift workshop; 844×390
+  landscape — games room, checkers; 320×640 — rose trick, memory ready panel.
+  No horizontal scroll and no console errors in any of them. Found and fixed:
+  in low landscape the world canvas filled only a ~200 px strip (a grid
+  auto-placement bug that predates V3), checkers was clipped at the top, and
+  the six-card hand wrapped at 320 px.
+- 👀 **Offline (V3)**: public build, headless Edge, 36 files precached, network
+  off → title, new game, garden; maze, racing, kitchen, dress-up, quiz, memory,
+  high-card, rose-trick, checkers, card-trick, duet, gift, pipes and garden
+  chunks load; zero errors.
+
 ## By hand on a real phone ☐
+
+- ☐ V3: play one full game of each table game on a phone, including a rematch
+  and leaving mid-game; checkers undo; the daily table on two different days.
+- ☐ V3: tap Snooki in the games room repeatedly (reactions, no spam); stand still
+  ~20 s to see him fall asleep.
 
 - ☐ Install/offline: open once online, wait for «جاهزة للعب بدون إنترنت ✓»,
   enable airplane mode, reopen.
@@ -101,6 +143,9 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
 - The in-app browser pane used during development cannot register service
   workers; offline was verified with headless Edge instead.
 - Characters are original vector art based on the reference, not the painted
-  style (see docs/ASSETS.md for the missing painted sprite sheets).
+  style (see docs/ASSETS.md for the missing painted sprite sheets). V3 adds
+  2.5D lighting; they are not 3D models.
+- V3: the full campaign was again not replayed end to end; the games room was
+  verified by tests, scene jumps and screenshots, not on a physical phone.
 - Music is a simple synthesised ambience; no composed soundtrack yet.
 - English localisation: text fields accept `{ ar, en }` but only Arabic is written.

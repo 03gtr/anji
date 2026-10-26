@@ -18,7 +18,11 @@
  *   dialogue:    [{ s: 'anji', e: 'soft', t: '…' }]   optional lines after solving
  *   reward:      'unlock:bow-gold'                     optional effect(s)
  *   art:         'private-art name'                   optional painted picture
+ *   location:    'بالحديقة'                           optional place label (V3)
+ *   object:      'picnic:sweet'                        optional game object it dresses (V3)
+ *   status:      'fictional' | 'draft' | 'confirmed'   optional (V3); drafts are NEVER shown
  * }
+ * Memory text lives only in private/ or on her device — never in this repo.
  */
 export const MEMORY_CATEGORIES = {
   clinic: 'المستوصف',
@@ -35,6 +39,7 @@ export const MEMORY_CATEGORIES = {
 };
 
 const ID = /^[a-z0-9][a-z0-9-]{1,40}$/;
+export const MEMORY_STATUS = ['fictional', 'draft', 'confirmed'];
 
 /** @returns {{ ok: boolean, errors: string[] }} */
 export function validateMemory(m) {
@@ -59,6 +64,9 @@ export function validateMemory(m) {
   if (m.hints !== undefined) need(Array.isArray(m.hints) && m.hints.every((h) => typeof h === 'string'), 'hints must be a list of text');
   if (m.dialogue !== undefined) need(Array.isArray(m.dialogue) && m.dialogue.every((l) => l && typeof l.t === 'string'), 'dialogue must be a list of { s, e, t } lines');
   if (m.reward !== undefined) need([].concat(m.reward).every((r) => typeof r === 'string'), 'reward must be effect text');
+  if (m.location !== undefined) need(typeof m.location === 'string' && m.location.length <= 60, 'location must be short text');
+  if (m.object !== undefined) need(typeof m.object === 'string' && /^[a-z]+:[a-z0-9-]+$/.test(m.object), "object looks like 'picnic:sweet'");
+  if (m.status !== undefined) need(MEMORY_STATUS.includes(m.status), `status must be one of: ${MEMORY_STATUS.join(', ')}`);
   return { ok: errors.length === 0, errors };
 }
 

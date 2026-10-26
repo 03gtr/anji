@@ -6,10 +6,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/verify-offline.mjs",
+    "build": "vite build && node scripts/verify-offline.mjs && node scripts/audit-private.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "verify:offline": "node scripts/verify-offline.mjs"
+    "verify:offline": "node scripts/verify-offline.mjs",
+    "art:export": "node scripts/export-art.mjs",
+    "build:private": "vite build --mode private && node scripts/verify-offline.mjs && node scripts/audit-private.mjs --report",
+    "audit:private": "node scripts/audit-private.mjs"
   },
   "devDependencies": {
     "happy-dom": "^21.0.4",

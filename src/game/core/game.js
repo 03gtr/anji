@@ -7,7 +7,7 @@
  * Collectible ids are dotted, the first segment is their group:
  *   'star.garden.1', 'note.ryan.3', 'seed.blue.2' …
  */
-import { defaultState } from './save.js';
+import { defaultState, MAX_GIFTS } from './save.js';
 
 const MEDAL_RANK = { bronze: 1, silver: 2, gold: 3 };
 
@@ -136,6 +136,26 @@ export function createGame({ saveManager, bus, initial, now = () => Date.now() }
     setGarden(placed) {
       state.garden = placed.map(({ id, cell }) => ({ id, cell }));
       commit('garden', {});
+    },
+
+    /** Index of the next line of a dialogue pool; rotates so lines rarely repeat. */
+    nextLine(key, size) {
+      if (!size) return 0;
+      const i = (state.hub.lines[key] ?? 0) % size;
+      state.hub.lines[key] = (i + 1) % size;
+      commit('hub', { key });
+      return i;
+    },
+    /** Save a gift made in the gift workshop (bounded list). */
+    addGift(gift) {
+      if (state.hub.gifts.length >= MAX_GIFTS) return false;
+      state.hub.gifts.push({ ...gift });
+      commit('gift', {});
+      return true;
+    },
+    setDaily(day) {
+      state.hub.daily = day;
+      commit('hub', { daily: day });
     },
 
     setLocation(scene, x = null) {

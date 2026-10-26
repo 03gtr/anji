@@ -27,7 +27,7 @@ import { createExplore } from './scenes/explore.js';
 import { SCENES } from './data/scenes/index.js';
 import { DIALOGUE } from './data/dialogue/index.js';
 import { PUZZLES } from './data/puzzles.js';
-import { corridorMemories, allMemories } from './memories/registry.js';
+import { corridorMemories, allMemories, withMemoryLabels } from './memories/registry.js';
 import { memoryPuzzle } from './memories/schema.js';
 import { applyEffects } from './core/effects.js';
 import { syncAchievements } from './progression/achievements.js';
@@ -112,7 +112,9 @@ export function createGameApp(root, opts = {}) {
           console.error('[puzzle] missing', id);
           return Promise.resolve({ solved: false });
         }
-        return openPuzzle(app, { id, ...def });
+        // activities like the picnic can be dressed with the owner's local memories
+        const dressed = def.memoryObjects ? withMemoryLabels(def, id) : def;
+        return openPuzzle(app, { id, ...dressed });
       },
       minigame: (id, options) => openMinigame(app, id, options),
       /**

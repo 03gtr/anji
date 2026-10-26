@@ -580,11 +580,15 @@ svg {
   .play {
     grid-template-rows: auto 1fr;
   }
+  /* both pinned to column 1: otherwise auto-placement pushes the stage into
+     an implicit second column (a ~200px strip) because the HUD holds row 1 */
   .stage {
     grid-row: 1 / -1;
+    grid-column: 1;
   }
   .hud {
     grid-row: 1;
+    grid-column: 1;
   }
   .controls {
     position: absolute;

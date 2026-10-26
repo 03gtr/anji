@@ -305,6 +305,84 @@ export const VIEWS = {
     },
   },
 
+  arrange: {
+    solution: true,
+    render(body, api) {
+      const { config } = api.def;
+      const st = api.state;
+      const pieceOf = (id) => config.pieces.find((p) => p.id === id);
+      const sol = api.showSolution ? Object.fromEntries((solve('arrange', config, st) || []).reduce((acc, m, i, all) => (m[0] === 'place' ? [...acc, [m[1], all[i - 1][1]]] : acc), [])) : {};
+      const placedIds = new Set(Object.values(st.placed));
+      rerender(
+        body,
+        `<div class="ar-slots ${config.grid ? 'is-grid' : ''}" style="--n:${config.grid || 1}">
+          ${config.slots
+            .map((sl) => {
+              const p = pieceOf(st.placed[sl.id]);
+              const hint = sol[sl.id] ? pieceOf(sol[sl.id]) : null;
+              return `<button type="button" class="ar-slot ${p ? 'is-full' : ''} ${hint ? 'is-solution' : ''}" data-k="s${sl.id}" data-slot="${sl.id}" aria-label="${esc(tx(sl.label || ''))}${p ? `: ${esc(tx(p.label))}` : ': فارغ'}">
+                ${p ? `${p.icon ? symbol(p.icon) : ''}<span>${esc(tx(p.label))}</span>` : `<small>${esc(tx(sl.label || ''))}</small>`}
+                ${hint && !p ? `<em class="ar-hint">${esc(tx(hint.label))}</em>` : ''}</button>`;
+            })
+            .join('')}
+         </div>
+         <p class="ar-help">${st.sel ? `اختاري مكان لـ «${esc(tx(pieceOf(st.sel).label))}»` : 'المسي قطعة، بعدين المسي مكانها.'}</p>
+         <div class="ar-pieces">${config.pieces
+           .map((p) => `<button type="button" class="ar-piece ${st.sel === p.id ? 'is-sel' : ''} ${placedIds.has(p.id) ? 'is-used' : ''}" data-k="p${p.id}" data-piece="${p.id}" aria-pressed="${st.sel === p.id}">${p.icon ? symbol(p.icon) : ''}<span>${esc(tx(p.label))}</span></button>`)
+           .join('')}</div>
+         <button type="button" class="btn btn-primary" data-k="check" data-check>${esc(tx(config.checkLabel || 'خلصت ✓'))}</button>`,
+        () => {
+          body.querySelectorAll('[data-piece]').forEach((b) => b.addEventListener('click', () => api.act('pick', b.dataset.piece)));
+          body.querySelectorAll('[data-slot]').forEach((b) =>
+            b.addEventListener('click', () => {
+              if (api.state.sel) api.act('place', b.dataset.slot);
+              else if (api.state.placed[b.dataset.slot]) api.act('clear', b.dataset.slot);
+            }),
+          );
+          body.querySelector('[data-check]').addEventListener('click', () => {
+            if (api.act('check') === 'noop') api.say('بعد أكو أماكن فارغة.', 'bad');
+          });
+        },
+      );
+    },
+  },
+
+  clock: {
+    solution: true,
+    render(body, api) {
+      const { config } = api.def;
+      const st = api.state;
+      const hAng = (((st.h % 12) + st.m / 60) / 12) * 360;
+      const mAng = (st.m / 60) * 360;
+      const ticks = Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * Math.PI * 2;
+        return `<line x1="${50 + Math.sin(a) * 40}" y1="${50 - Math.cos(a) * 40}" x2="${50 + Math.sin(a) * 45}" y2="${50 - Math.cos(a) * 45}" stroke="#3b2630" stroke-width="${i % 3 ? 1 : 2.4}"/>`;
+      }).join('');
+      const digits = (n) => String(n).padStart(2, '0').replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+      rerender(
+        body,
+        `<div class="clk">
+          <svg class="clk-face" viewBox="0 0 100 100" role="img" aria-label="الساعة ${digits(st.h)}:${digits(st.m)}">
+            <circle cx="50" cy="50" r="48" fill="#f3e3c3" stroke="#3b2630" stroke-width="3"/>${ticks}
+            <line x1="50" y1="50" x2="${50 + Math.sin((hAng * Math.PI) / 180) * 24}" y2="${50 - Math.cos((hAng * Math.PI) / 180) * 24}" stroke="#3b2630" stroke-width="4" stroke-linecap="round"/>
+            <line x1="50" y1="50" x2="${50 + Math.sin((mAng * Math.PI) / 180) * 36}" y2="${50 - Math.cos((mAng * Math.PI) / 180) * 36}" stroke="#2b3a8c" stroke-width="2.4" stroke-linecap="round"/>
+            <circle cx="50" cy="50" r="3" fill="#e2b544"/>
+          </svg>
+          <p class="clk-read" aria-live="polite">${digits(st.h)}:${digits(st.m)}${api.showSolution ? ` — الجواب: حوالي ${digits(config.target[0])}:${digits(config.target[1])}` : ''}</p>
+          <div class="clk-ctl">
+            <div><span>الساعات</span><button type="button" class="dial-btn" data-k="h-" data-hand="h" data-d="-1" aria-label="الساعة: قبل">−</button><button type="button" class="dial-btn" data-k="h+" data-hand="h" data-d="1" aria-label="الساعة: بعد">+</button></div>
+            <div><span>الدقايق</span><button type="button" class="dial-btn" data-k="m-" data-hand="m" data-d="-1" aria-label="الدقايق: قبل">−</button><button type="button" class="dial-btn" data-k="m+" data-hand="m" data-d="1" aria-label="الدقايق: بعد">+</button></div>
+          </div>
+          <button type="button" class="btn btn-primary" data-k="ok" data-submit>هذا الوقت ✓</button>
+        </div>`,
+        () => {
+          body.querySelectorAll('[data-hand]').forEach((b) => b.addEventListener('click', () => api.act('turn', b.dataset.hand, Number(b.dataset.d))));
+          body.querySelector('[data-submit]').addEventListener('click', () => api.act('submit'));
+        },
+      );
+    },
+  },
+
   rings: {
     render(body, api) {
       const { config } = api.def;

@@ -55,6 +55,8 @@ export function frameTable(kind, cos = {}) {
         think: [anjiSprite({ ...o, pose: 'think' })],
         crouch: [anjiSprite({ ...o, pose: 'crouch', expr: 'thinking' })],
         sleep: [anjiSprite({ ...o, pose: 'idle', blink: true, expr: 'soft' })],
+        pout: [anjiSprite({ ...o, pose: 'idle', expr: 'pout' })],
+        shy: [anjiSprite({ ...o, pose: 'idle', expr: 'shy' })],
       };
     }
     case 'snooki': {
@@ -71,6 +73,11 @@ export function frameTable(kind, cos = {}) {
         sleep: [snookiSprite({ ...o, pose: 'sleep' })],
         jump: [snookiSprite({ ...o, pose: 'jump' })],
         growl: [snookiSprite({ ...o, pose: 'idle', mouth: 'closed' })],
+        bark: [snookiSprite({ ...o, pose: 'bark', t: 0 }), snookiSprite({ ...o, pose: 'bark', t: 0.25 })],
+        wag: [0, 0.25, 0.5, 0.75].map((t) => snookiSprite({ ...o, pose: 'wag', t })),
+        innocent: [snookiSprite({ ...o, pose: 'innocent', t: 0 }), snookiSprite({ ...o, pose: 'innocent', t: 0.5 })],
+        stubborn: [snookiSprite({ ...o, pose: 'stubborn' })],
+        celebrate: [snookiSprite({ ...o, pose: 'celebrate', t: 0 }), snookiSprite({ ...o, pose: 'celebrate', t: 0.25 })],
       };
     }
     case 'ryan':
@@ -94,6 +101,25 @@ export function frameTable(kind, cos = {}) {
   }
 }
 
+/**
+ * Draw a decoded SVG image into a bitmap canvas once, so the lighting filters
+ * (characters/lighting.js) are evaluated a single time, never per frame.
+ */
+export function bake(img) {
+  const w = img.width || img.naturalWidth;
+  const h = img.height || img.naturalHeight;
+  if (!w || !h || typeof document === 'undefined') return img;
+  try {
+    const c = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h });
+    const ctx = c.getContext('2d');
+    if (!ctx?.drawImage) return img;
+    ctx.drawImage(img, 0, 0, w, h);
+    return c;
+  } catch {
+    return img;
+  }
+}
+
 /** Decode every frame of a table. onProgress(done, total) reports real progress. */
 export async function rasterize(table, { onProgress, height = 256 } = {}) {
   const entries = Object.entries(table);
@@ -107,7 +133,7 @@ export async function rasterize(table, { onProgress, height = 256 } = {}) {
           const img = await loadImage(svgUrl(withSize(svg, height)));
           done += 1;
           onProgress?.(done, total);
-          return img;
+          return bake(img);
         }),
       );
     }),

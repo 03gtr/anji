@@ -21,12 +21,12 @@ character-driven, the romance is quiet and earned, and the mystery pays off.
 
 | | Role | Design notes |
 | --- | --- | --- |
-| **Anji** | Playable hero | Long wavy auburn hair with golden highlights, burgundy bow, green eyes, red lips; black jacket over red-black-white plaid (default). 10 expressions, 6 outfits, 5 bows. Smart, sarcastic, kind. Loves blue roses, cars, animals, the gym and healthy food. |
-| **Snooki** | Companion & comic engine | Fluffy white Siberian husky, amber eyes with dark rims, pink inner ears, navy collar with a blue paw tag. 9 portrait expressions, 10 poses, 6 hats, 4 collars. "Security consultant with fur." Terrible at keeping secrets; secretly following Ryan's instructions. |
+| **Anji** | Playable hero | Long wavy auburn hair with golden highlights, burgundy bow, green eyes, red lips; black jacket over red-black-white plaid (default). 13 expressions, 8 outfits, 6 bows; front and back views (V3). Smart, sarcastic, kind. Loves blue roses, cars, animals, the gym and healthy food. |
+| **Snooki** | Companion & comic engine | Fluffy white Siberian husky, amber eyes with dark rims, pink inner ears, navy collar with a blue paw tag. 11 portrait expressions, 14 poses, 7 hats, 5 collars. "Security consultant with fur." Terrible at keeping secrets; secretly following Ryan's instructions. |
 | **Ryan** | The missing creator | Seen from behind or as a shadow: dark hair, charcoal hoodie, black backpack, jeans. Present through notes, recordings, warm tea and the Creator's Mark. Fully revealed only in Act VIII. |
 | Nurse Needle | Running gag | A cheerful cartoon syringe with a rubber safety ball, determined to give Snooki his overdue vaccine. Harmless. |
 | The Gate | Guardian | Speaks in formal Arabic, very dramatic. |
-| العم منذر (Uncle Munther) | Astronomer owl | Warm, clever, slightly eccentric, often more confident than correct (calls Snooki «ذيب», reads a dumbbell as a bone). |
+| العم منذر (Uncle Munther) | Astronomer owl | 5 expressions (V3). Warm, clever, slightly eccentric, often more confident than correct (calls Snooki «ذيب», reads a dumbbell as a bone). |
 | Sultan | Sanctuary peacock | Vain, alibi-ready. |
 
 ## The mystery (spoilers)
@@ -94,6 +94,70 @@ Missions are data (`src/game/data/missions.js`); their progress is derived from
 story flags like the act objectives, and completion is recorded once
 (`flag:mission:<id>`). A test proves every flag a mission waits for is set
 somewhere.
+
+## V3 — «صالة ألعاب ريان وأنجي» (the games room)
+
+A room off the house hall (door in Act II, and a node on the world map). It
+holds a card table, a checkers table (Snooki asleep on the board), a games
+shelf, a blue-rose lamp, a cork board of pranks, a trophy shelf and Ryan's
+laptop. Everything here is optional; nothing in the story waits for it.
+
+**Ryan's invitations are recorded, never live.** The laptop shows «ريان (نسخة
+اللعب)» — a game version of him that he left behind, with pre-written lines.
+The game never implies he is watching, online or answering in real time, and
+leaving a game is always one tap with a friendly line, never a guilt trip.
+
+### Games (all fair, all seeded)
+
+| Game | Rules in one line | Opponent |
+| --- | --- | --- |
+| لعبة الذاكرة (memory) | flip pairs; 6 / 8 / 12 pairs; garden / kitchen / friends themes; optional timer | none; Snooki comments on streaks |
+| الورقة الأعلى (High Card) | 10 rounds, higher card takes the middle; a tie («حرب صغيرة») leaves the cards for the next round | pure luck, explained as such |
+| سباق الورد (Rose Race, an original trick game) | 6 cards each from 4 suits × 1–8; follow suit if you can; blue rose is trump; 6 tricks, 3–3 is a draw | AI easy / normal / hard |
+| الداما (checkers) | English draughts: forced and multi-jumps, kings, a draw after 40 quiet moves, undo | AI easy / normal / hard |
+| خدعة سنوكي (card trick) | three short logic rounds: follow the swaps, fix the labels, find the pattern | none |
+
+Fairness: the trick-game AI only receives what a player could see (its own
+hand, the table, played cards, its legal moves); checkers AI searches legal
+moves only (alpha-beta, depth 0 / 2 / 4). Shuffles and tie-breaks come from a
+seed. The game never alters a draw or a legal move to steer the story — tests
+check that the trick AI never sees Anji's hand, that both AIs only play legal
+moves, and that the harder trick AI really wins more (400 seeded hands).
+Medals: easy → bronze, normal → silver, hard → gold.
+
+**Dialogue for every moment**: before, win, lose, draw, rematch, leave and new
+record, per game, stored as data (`data/hub-lines.js`) and rotated so lines do
+not repeat back to back. Tests check every game has every moment.
+
+**Daily table (optional)**: the laptop suggests one game + difficulty per
+calendar day (deterministic from the date). No streaks, no expiry, no penalty —
+yesterday's suggestion simply changes.
+
+### Activities (cork board → «أشياء حلوة»)
+
+توصيل الوردة (Blue Rose Delivery: a clue then a route) · علبة الشوكولاتة
+(arrange by a card) · سلّة النزهة (arrange a basket; owner memories can label
+the slots) · ساعة الانتظار (set the clock near 2:30, generous tolerance) ·
+دويتو الحديقة (Garden Duet: repeat a growing pattern, no timer) · ورشة الهدايا
+(Gift Workshop: wrap a gift for the trophy shelf and garden) · وعد الوردة
+الزرقاء (Blue-Rose Promise: a path repaired from both ends).
+
+### Snooki's prank board (10)
+
+صندوق الكنز · اللوحات المگلوبة · علب سنوكي · خطأ ٤٠٤ · الحارس النايم · الكنز
+اللي ما يبين · لغز آثار الكفوف · جولة ثأر ريان (checkers with a twist) · الطرد
+المفاجئ · وضع الخبراء. Pranks are puzzles about Snooki's stubbornness; none
+targets Anji, none is loud or flashing, none is irreversible, and every one
+can be skipped.
+
+### Rewards
+
+Card backs (classic, stars, paws, gold, moon, roses), the garden outfit,
+Snooki's jester hat, garden-designer decorations
+(rose vase, chocolates, picnic, gift box, lantern path, promise arch, Snooki's
+stash, game table), journal entries and the trophy shelf / replay gallery
+(private art is labelled as such). Rewards come from playing — never from a
+romantic answer, a promise, or anything outside the game.
 
 ## Progression
 

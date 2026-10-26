@@ -234,6 +234,56 @@ export const program = {
   },
 };
 
+/* ── arrange: put pieces into slots; each slot accepts certain pieces ──
+ * config: { slots: [{ id, label, accepts: [pieceId…] }], pieces: [{ id, label, icon }] }
+ * Tap a piece, then a slot. Several pieces may fit a slot (identical sweets). */
+export const arrange = {
+  init: () => ({ placed: {}, sel: null, mistakes: 0 }),
+  pick(config, state, pieceId) {
+    if (!config.pieces.some((p) => p.id === pieceId)) return { state, outcome: 'noop' };
+    return { state: { ...state, sel: state.sel === pieceId ? null : pieceId }, outcome: 'progress' };
+  },
+  place(config, state, slotId) {
+    if (!state.sel || !config.slots.some((s) => s.id === slotId)) return { state, outcome: 'noop' };
+    const placed = { ...state.placed };
+    for (const [k, v] of Object.entries(placed)) if (v === state.sel) delete placed[k];
+    placed[slotId] = state.sel;
+    return { state: { ...state, placed, sel: null }, outcome: 'progress' };
+  },
+  clear(config, state, slotId) {
+    const placed = { ...state.placed };
+    delete placed[slotId];
+    return { state: { ...state, placed }, outcome: 'progress' };
+  },
+  check(config, state) {
+    if (config.slots.some((s) => !state.placed[s.id])) return { state, outcome: 'noop', message: 'بعد أكو أماكن فارغة.' };
+    const right = config.slots.filter((s) => s.accepts.includes(state.placed[s.id])).length;
+    if (right === config.slots.length) return { state, outcome: 'solved' };
+    return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong', message: `${right} من ${config.slots.length} بمكانها الصح.` };
+  },
+};
+
+/* ── clock: set the hands; any time within the tolerance is accepted ──
+ * config: { target: [h, m], tolerance (minutes), step (minutes), start: [h, m] } */
+const minutesOf = (h, m) => ((h % 12) * 60 + m) % 720;
+export const clock = {
+  init: (config) => ({ h: config.start?.[0] ?? 12, m: config.start?.[1] ?? 0, mistakes: 0 }),
+  turn(config, state, hand, dir = 1) {
+    if (hand === 'h') return { state: { ...state, h: ((((state.h - 1 + dir) % 12) + 12) % 12) + 1 }, outcome: 'progress' };
+    if (hand === 'm') {
+      const step = config.step || 5;
+      return { state: { ...state, m: (((state.m + dir * step) % 60) + 60) % 60 }, outcome: 'progress' };
+    }
+    return { state, outcome: 'noop' };
+  },
+  submit(config, state) {
+    const diff = Math.abs(minutesOf(state.h, state.m) - minutesOf(...config.target));
+    const off = Math.min(diff, 720 - diff);
+    if (off <= (config.tolerance ?? 0)) return { state, outcome: 'solved' };
+    return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong' };
+  },
+};
+
 /* ── rings: concentric rings; turning one ring may drag a linked one ── */
 export const rings = {
   /** config: { count, steps, start: [..], links: { ringIndex: [otherRing, ...] } } solved when all are 0 */
@@ -264,7 +314,7 @@ export const deduction = {
   },
 };
 
-export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, rings, deduction };
+export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction };
 
 /** Next hint to show (hints are revealed one by one, never skipped). */
 export function nextHint(hints, used) {
@@ -387,6 +437,30 @@ const SOLVE = {
       }
     }
     return null;
+  },
+  arrange: (c) => {
+    const used = new Set();
+    const moves = [];
+    for (const slot of c.slots) {
+      const piece = slot.accepts.find((p) => !used.has(p));
+      used.add(piece);
+      moves.push(['pick', piece], ['place', slot.id]);
+    }
+    return [...moves, ['check']];
+  },
+  clock: (c, s) => {
+    const moves = [];
+    let h = s.h;
+    while (h !== (((c.target[0] - 1) % 12) + 12) % 12 + 1) {
+      moves.push(['turn', 'h', 1]);
+      h = (h % 12) + 1;
+    }
+    let m = s.m;
+    while (m !== c.target[1]) {
+      moves.push(['turn', 'm', 1]);
+      m = (m + (c.step || 5)) % 60;
+    }
+    return [...moves, ['submit']];
   },
   deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.slice(0, c.need || 2).map((e) => ['toggleEvidence', e]), ['submit']],
 };

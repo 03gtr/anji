@@ -48,6 +48,33 @@ gift.html ─► src/main.js (the original 24-hour gift, unchanged)
 | `world/props-v2.js` | study, passage, meadow, cat, robot, archive props |
 | `data/scenes/side-house.js`, `side-meadow.js` | Ryan's study, the hidden passage, the meadow |
 
+## V3 additions
+
+```
+data/scenes/side-gameroom.js ──► ui/hub.js (games table, cork board, trophies, laptop/daily)
+        │                              │
+        │                              ├─► minigames/{memory,highcard,rosetrick,checkers,cardtrick,duet,gift}.js  (lazy chunks)
+        │                              │          └─► tabletop/*.js  pure, seeded rules + AI (no DOM)
+        │                              └─► data/activities.js (ACTIVITIES, PRANKS) ─► puzzles / minigames
+        └─► data/hub-lines.js  dialogue pools per game × moment ─► game.nextLine() rotation (saved)
+```
+
+| Module | Responsibility |
+| --- | --- |
+| `tabletop/deck.js` | 4 suits × 12 ranks, seeded `shuffle(list, seed)` |
+| `tabletop/highcard.js`, `rosetrick.js`, `checkers.js`, `cardtrick.js`, `duet.js` | pure game rules; every function returns new state (undo = keep the old one). AIs receive only a player-visible view (`viewFor`) or the legal move list |
+| `tabletop/ui.js` | shared card rendering, card backs, the speaker bar, ready panel (rules + difficulty), moment lines |
+| `ui/hub.js` | games-room panels; `dailyChallenge(date)` is deterministic from the calendar date |
+| `data/hub-lines.js` | `HUB_LINES` pools, `MOMENTS` (before/win/lose/draw/rematch/leave/record), `linesFor`, `pickLines` |
+| `data/activities.js` | 7 activities and 10 pranks as runnable data (`intro` lines → puzzle / minigame → reward flag) |
+| `data/puzzles-v3.js` | the activities' and pranks' puzzles (spread into `PUZZLES`) |
+| `puzzles/rules.js` | new types `arrange` and `clock` (with solvers) |
+| `world/props-v3.js` | games-room props; `world/engine.js` adds Snooki tap reactions and an idle sleep/wag/sit cycle |
+| `characters/lighting.js` | shared 2.5D light rig (see `docs/ART_PIPELINE.md`) |
+| `art/manifest.js` | character asset manifest; `scripts/export-art.mjs` exports it |
+| `@private-sources` alias | `art/private-sources.js` in dev / `--mode private`, `art/private-none.js` in the public build and tests |
+| `scripts/audit-private.mjs` | fails `npm run build` if any private image byte, private file name or personal-memory text is in `dist/` |
+
 ## Content flow
 
 ```
@@ -87,6 +114,10 @@ overlay and when the tab is hidden.
 `snooki-game:settings`, `snooki-game:memories` (imported personal memories).
 Schema version: `SAVE_VERSION` in `core/save.js` (V2 = 2; migration 1 → 2
 renames the owl's journal entry). Tips seen / race difficulty live in settings.
+V3 = 3: migration 2 → 3 adds `cosmetics.cardBack` and a `hub` section
+(`lines` rotation counters, `gifts` — at most 24, validated against
+`GIFT_PARTS` — and `daily`). Nothing existing is changed or dropped; export →
+import keeps the games-room progress (tested).
 
 ## Offline
 
@@ -98,6 +129,11 @@ caches of this game, and waits for the player to accept updates.
 Verified (V2): production build, headless Edge, network disabled after
 install — 48 files precached; title, new game, garden and the maze, racing,
 kitchen, dress-up and quiz chunks all load with zero errors (see QA checklist).
+Verified (V3): public build, 36 files precached (private art is no longer in
+the default build, hence fewer files than V2); network off → title, new game,
+garden, and the maze, racing, kitchen, dress-up, quiz, memory, high-card,
+rose-trick, checkers, card-trick, duet, gift, pipes and garden chunks all load
+with zero errors. The games room itself is in the main bundle.
 
 ## Security & privacy
 
@@ -105,11 +141,13 @@ kitchen, dress-up and quiz chunks all load with zero errors (see QA checklist).
   send anything anywhere), no inline scripts.
 - No analytics, accounts, cookies, third-party requests or CDNs.
 - Private art and memories live in git-ignored folders or on the device.
+- V3: the default `npm run build` cannot include them (alias → `private-none.js`)
+  and is audited; only `npm run build:private` includes them, for local use.
 
 ## Publishing (not done)
 
 This branch is not deployed. To publish the game, a separate, explicit decision
 is needed: merge to `main` (the current workflow deploys `main`), or deploy a
 preview elsewhere. Note that the current live site on `main` is the 24-hour
-gift, and that a build containing `private-art/` or `private/memories.json`
-publishes those files.
+gift, and that a `build:private` build contains `private-art/` and
+`private/memories.json` — publishing it publishes those files.

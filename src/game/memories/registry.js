@@ -13,11 +13,12 @@
  */
 import { validateMemory } from './schema.js';
 import { STORY_MEMORIES } from './templates.js';
+import { PRIVATE_MEMORIES } from '@private-sources';
 
 export const CORRIDOR_SLOTS = 6;
 export const LOCAL_KEY = 'snooki-game:memories';
 
-const built = import.meta.glob('/private/memories.json', { eager: true, import: 'default' });
+const built = PRIVATE_MEMORIES; // empty in public builds (art/private-sources.js)
 const BUILD_MEMORIES = Object.values(built)[0];
 
 function readLocal(storage) {
@@ -48,11 +49,33 @@ export function loadPersonal({ storage, sources } = {}) {
       skipped.push({ id: m?.id ?? '?', errors: v.errors });
       continue;
     }
-    if (m.enabled !== true || seen.has(m.id)) continue;
+    // drafts stay in the owner's file and never appear in normal play
+    if (m.enabled !== true || m.status === 'draft' || seen.has(m.id)) continue;
     seen.add(m.id);
     memories.push({ kind: 'personal', ...m });
   }
   return { memories, skipped };
+}
+
+/**
+ * Owner memories that dress a game object (e.g. the picnic basket's slots):
+ * `object: 'picnic:sweet'`. Only enabled, non-draft personal memories; when
+ * there are none, the object keeps its fictional placeholder.
+ */
+export function objectMemories(prefix, opts = {}) {
+  return loadPersonal(opts).memories.filter((m) => typeof m.object === 'string' && m.object.startsWith(`${prefix}:`));
+}
+
+/** A puzzle definition with its slot labels taken from owner memories (if any). */
+export function withMemoryLabels(def, prefix, opts = {}) {
+  const mems = objectMemories(prefix, opts);
+  if (!mems.length) return def;
+  const bySlot = Object.fromEntries(mems.map((m) => [m.object.split(':')[1], m.title]));
+  const pieces = def.config.pieces.map((p) => {
+    const slot = def.config.slots.find((sl) => sl.accepts.includes(p.id));
+    return slot && bySlot[slot.id] ? { ...p, label: bySlot[slot.id] } : p;
+  });
+  return { ...def, config: { ...def.config, pieces } };
 }
 
 /** The memories shown in the corridor frames, in order. */

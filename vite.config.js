@@ -30,10 +30,17 @@ const cspPlugin = {
   ],
 };
 
-export default defineConfig({
+// Private owner content (private-art/, private/memories.json) is bundled only
+// by the dev server and `npm run build:private` (--mode private). Tests and the
+// normal build get an empty module, so a public build cannot leak it.
+const privateSources = (command, mode) =>
+  resolve(ROOT, 'src/game/art', (command === 'serve' && mode !== 'test') || mode === 'private' ? 'private-sources.js' : 'private-none.js');
+
+export default defineConfig(({ command, mode }) => ({
   // Relative base: the built site works from any sub-path, e.g.
   // https://<user>.github.io/anji/ or a renamed repository, without rebuilding.
   base: './',
+  resolve: { alias: { '@private-sources': privateSources(command, mode) } },
   plugins: [cspPlugin, offlinePlugin()],
   build: {
     outDir: 'dist',
@@ -50,5 +57,8 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     include: ['tests/**/*.test.js'],
+    // the multi-step DOM flow tests pass in ~2–4 s alone but can exceed the
+    // 5 s default when every file runs in parallel on a slow machine
+    testTimeout: 20000,
   },
-});
+}));

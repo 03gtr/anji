@@ -1,13 +1,14 @@
 /**
  * Owner-supplied painted artwork (optional, never committed).
  *
- * Files placed in /private-art/*.webp (git-ignored) are bundled into a local
- * build and used for the title screen, cinematics and chapter cards. Without
- * them the game uses its own SVG illustrations, so a public build never needs
- * private images. NOTE: a build made WITH private art contains those images;
- * only deploy such a build if the owner explicitly agrees.
+ * Files placed in /private-art/*.webp (git-ignored) are used by the dev
+ * server and by `npm run build:private` (title screen, cinematics, chapter
+ * cards, the finale drawing). A normal `npm run build` contains none of them
+ * (see art/private-sources.js) and the game falls back to its own art.
+ * NOTE: a build:private output contains those images — never deploy it
+ * unless the owner explicitly agrees.
  */
-const files = import.meta.glob('/private-art/*.webp', { eager: true, query: '?url', import: 'default' });
+import { PRIVATE_ART as files } from '@private-sources';
 
 export const PAINTED = Object.fromEntries(
   Object.entries(files).map(([path, url]) => [path.split('/').pop().replace(/\.webp$/, ''), url]),

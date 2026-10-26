@@ -5,6 +5,8 @@
  * solve (also when she skips: the story never stalls on a puzzle).
  * `goal` is the one-sentence objective shown above every puzzle.
  */
+import { PUZZLES_V3 } from './puzzles-v3.js';
+
 export const PUZZLES = {
   // Clue: the fountain engraving "from darkness to full light".
   'moon-bloom': {
@@ -399,4 +401,7 @@ export const PUZZLES = {
     success: 'روبو-سنوكي وصل! «بيب بيب… هاو؟»',
     reward: ['flag:robo-coded'],
   },
+
+  // V3: games-room activities and pranks
+  ...PUZZLES_V3,
 };

@@ -519,6 +519,30 @@ export const THEMES = {
     ],
   },
 
+  // V3: the games room — warm burgundy walls, gold trim, lamp light
+  gameroom: interior({
+    wall: '#3a1e2c',
+    pattern: '#45243a',
+    trim: '#c9a24a',
+    wainscot: '#2a1520',
+    floorColors: { wood: '#5a3a2c', light: '#6b463c' },
+    rug: '#2b3a8c',
+    extra(ctx, u0, u1) {
+      // warm pools of light from wall lamps
+      for (let x = Math.floor(u0 / 260) * 260 + 130; x < u1 + 260; x += 260) {
+        const g = ctx.createRadialGradient(x, 40, 4, x, 40, 120);
+        g.addColorStop(0, 'rgba(255,214,140,.22)');
+        g.addColorStop(1, 'rgba(255,214,140,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(x - 120, 0, 240, 170);
+        ctx.fillStyle = '#ffd98a';
+        ctx.beginPath();
+        ctx.arc(x, 40, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  }),
+
   // V2: Ryan's study — warm wood, dark walls, faint circuit traces
   study: interior({
     wall: '#1c2046',

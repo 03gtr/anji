@@ -65,6 +65,7 @@ export const HOUSE = {
     { x: 990, reach: 40, draw: (ctx, { P, game }) => P.recipeBoard(ctx, 990, 96, { torn: !game.flag('mission:missing-recipe') }) },
     doorDyn(420, 'الملابس', 'closed'),
     doorDyn(900, 'المطبخ', 'closed'),
+    doorDyn(700, 'الألعاب', 'closed'),
     doorDyn(1380, 'المكتب', 'closed'),
     doorDyn(1880, 'المكتبة', (g) => (g.flag('library-open') ? 'open' : 'locked')),
     doorDyn(2480, 'الكراج', (g) => (g.flag('garage-open') ? 'open' : 'locked')),
@@ -100,6 +101,15 @@ export const HOUSE = {
         { if: 'flag:kitchen-done', run: [{ game: 'kitchen' }] },
         { run: [{ say: 'a2.kitchen-first' }, { game: 'kitchen', then: [{ say: 'a2.kitchen-done' }] }] },
       ],
+    },
+    {
+      id: 'gameroom',
+      x: 700,
+      w: 60,
+      h: 110,
+      label: 'صالة الألعاب',
+      icon: '🃏',
+      run: [{ fade: 'out' }, { goto: 'gameroom', x: 140 }],
     },
     {
       id: 'clock',

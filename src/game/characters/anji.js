@@ -6,6 +6,8 @@
  * (facing right, viewBox 100×200, feet on y≈196) and the dialogue portrait,
  * so every pose and expression stays the same character.
  */
+import { lightingDefs, lit, aoDefs, ao } from './lighting.js';
+
 let uid = 0;
 
 export const ANJI_PALETTE = {
@@ -37,16 +39,27 @@ export const OUTFITS = {
   racer: { jacket: '#1f4fd1', jacketShade: '#163a9c', shirt: 'white', pants: '#16161c', boots: '#16161c', label: 'جاكيت السباق', stripes: true },
   evening: { jacket: '#1b2a6b', jacketShade: '#121d4d', shirt: 'dress', pants: '#1b2a6b', boots: '#c9a24a', label: 'فستان السهرة', dress: true },
   cozy: { jacket: '#efe2cf', jacketShade: '#d8c6ad', shirt: 'knit', pants: '#3a4f78', boots: '#7b4a35', label: 'البلوزة الدافية' },
+  garden: { jacket: '#4f8a5a', jacketShade: '#3a6a44', shirt: 'white', pants: '#3a4f78', boots: '#7b4a35', label: 'لبس الحديقة' },
   sport: { jacket: '#3f9ad8', jacketShade: '#2c7ab4', shirt: 'white', pants: '#1d1f28', boots: '#f3f1ff', label: 'بدلة الجيم', stripes: true },
   detective: { jacket: '#8a6a45', jacketShade: '#6c5134', shirt: 'plaid', pants: '#2e2a33', boots: '#3c2a22', label: 'معطف المحققة', coat: true },
 };
 
 function defs(id, outfit) {
   return `<defs>
+    ${lightingDefs(id)}${aoDefs(id)}
     <linearGradient id="hair${id}" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="${ANJI_PALETTE.hair}"/>
-      <stop offset=".55" stop-color="#b45a2c"/>
-      <stop offset="1" stop-color="${ANJI_PALETTE.hairLight}"/>
+      <stop offset="0" stop-color="#7e351b"/>
+      <stop offset=".5" stop-color="${ANJI_PALETTE.hair}"/>
+      <stop offset="1" stop-color="#b9632f"/>
+    </linearGradient>
+    <radialGradient id="skin${id}" cx=".4" cy=".35" r=".75">
+      <stop offset="0" stop-color="#fbdccb"/>
+      <stop offset=".65" stop-color="#f2c8b2"/>
+      <stop offset="1" stop-color="#dfa58c"/>
+    </radialGradient>
+    <linearGradient id="fringeShadow${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a3a20" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#7a3a20" stop-opacity="0"/>
     </linearGradient>
     <pattern id="plaid${id}" width="7" height="7" patternUnits="userSpaceOnUse">
       <rect width="7" height="7" fill="#1d1a22"/>
@@ -104,6 +117,10 @@ const EXPRESSIONS = {
   worried: { eyes: 'open', brows: [-3, -3], mouth: 'worried', blush: 0.3, worried: true },
   determined: { eyes: 'open', brows: [2, 2], mouth: 'firm', blush: 0.35, angry: true },
   smirk: { eyes: 'open', brows: [0, -2], mouth: 'smirk', blush: 0.5 },
+  // V3
+  pout: { eyes: 'half', brows: [3, 3], mouth: 'pout', blush: 0.75, angry: true, puff: true },
+  shy: { eyes: 'soft', brows: [-1, -1], mouth: 'small', blush: 1, look: -1.4 },
+  curious: { eyes: 'wide', brows: [-3, 1], mouth: 'o-small', blush: 0.45, look: 1 },
 };
 export const ANJI_EXPRESSIONS = Object.keys(EXPRESSIONS);
 
@@ -123,6 +140,12 @@ function mouth(kind, P) {
       return `<path d="M55.5 75 Q58 72.6 60.5 74.6 Q63 76.4 65.6 73.8" stroke="${P.lips}" stroke-width="2.3" fill="none" stroke-linecap="round"/>`;
     case 'firm':
       return `<path d="M56 74 H65" stroke="${P.lips}" stroke-width="2.6" stroke-linecap="round"/>`;
+    case 'pout':
+      return `<path d="M57 75.5 Q60.5 72.6 64.5 75.2 Q60.5 77.4 57 75.5Z" fill="${P.lips}"/><path d="M58.5 74.6 Q60.5 74 62.6 74.6" stroke="#fff" stroke-width=".8" opacity=".6" fill="none"/>`;
+    case 'small':
+      return `<path d="M57.5 73.4 Q60.5 75.6 63.8 73.2" stroke="${P.lips}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    case 'o-small':
+      return `<ellipse cx="60.6" cy="74.6" rx="2.1" ry="2.6" fill="#7a1622" stroke="${P.lips}" stroke-width="1.3"/>`;
     default:
       return `<path d="M55 72.4 Q60.5 77.5 66 72.4 Q60.5 75 55 72.4Z" fill="${P.lips}"/>`;
   }
@@ -145,24 +168,30 @@ export function anjiHead({ id, expr = 'neutral', bow = 'burgundy', sway = 0, bli
     <path d="M64.8 ${48.8 + bn - browTilt} Q68.8 ${46.6 + bn} 72.6 ${49 + bn + browTilt}" stroke="${P.brow}" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
 
   const back = `<g transform="rotate(${sway * 0.45} 48 40)">
-      <path d="M54 22 C30 16 16 38 20 60 C22 74 14 84 18 98 C21 110 12 118 18 130 C22 140 30 138 34 146 C40 138 36 128 42 122 C44 114 40 104 46 98 C50 92 48 88 52 84 Z" fill="url(#hair${id})"/>
-      <path d="M22 66 C20 80 26 90 21 104 C18 116 24 124 22 132 M30 84 C28 98 34 108 30 122" stroke="${P.hairDark}" stroke-width="1.3" fill="none" opacity=".45"/>
-      <path d="M26 56 C22 70 28 82 24 96 C22 106 26 114 25 122" stroke="${P.hairLight}" stroke-width="1.7" fill="none" opacity=".7"/>
+      ${lit(id, `<path d="M54 22 C30 16 16 38 20 60 C22 74 14 84 18 98 C21 110 12 118 18 130 C22 140 30 138 34 146 C40 138 36 128 42 122 C44 114 40 104 46 98 C50 92 48 88 52 84 Z" fill="url(#hair${id})"/>`)}
+      <path d="M22 66 C20 80 26 90 21 104 C18 116 24 124 22 132 M30 84 C28 98 34 108 30 122 M36 70 C34 84 40 96 36 110" stroke="${P.hairDark}" stroke-width="1.3" fill="none" opacity=".45"/>
+      <path d="M26 56 C22 70 28 82 24 96 C22 106 26 114 25 122 M33 62 C30 74 34 86 31 98" stroke="${P.hairLight}" stroke-width="1.7" fill="none" opacity=".7"/>
+      <path d="M28 128 C26 134 28 140 33 144 M20 116 C17 122 18 128 21 132" stroke="#f0a868" stroke-width="1.1" fill="none" opacity=".55"/>
     </g>`;
-  const crown = `<path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hair${id})"/>`;
-  const face = `<path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="${P.skin}"/>
-    <path d="M38 62 C40 74 48 83 60.5 84 C52 81 44 74 40 62Z" fill="${P.skinShade}" opacity=".55"/>
+  const crown = lit(id, `<path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hair${id})"/>`);
+  const face = `${lit(id, `<path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skin${id})"/>`)}
+    <path d="M38 62 C40 74 48 83 60.5 84 C52 81 44 74 40 62Z" fill="${P.skinShade}" opacity=".45"/>
+    <path d="M37.5 50 C46 44 66 42 78 50 L78 58 C66 52 48 52 37.5 58Z" fill="url(#fringeShadow${id})"/>
+    ${E.puff ? `<ellipse cx="46" cy="70" rx="5.6" ry="4" fill="${P.skin}"/><ellipse cx="73" cy="70" rx="4.4" ry="3.4" fill="${P.skin}"/>` : ''}
     <ellipse cx="48" cy="68.5" rx="4.6" ry="2.6" fill="#f19aa0" opacity="${E.blush}"/>
     <ellipse cx="72" cy="68.5" rx="3.6" ry="2.3" fill="#f19aa0" opacity="${E.blush}"/>
     ${eyePair}${brows}
     <path d="M63.5 63.5 Q65.6 66.6 63.2 67.6" stroke="#d49a86" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-    ${mouth(E.mouth, P)}`;
-  const fringe = `<path d="M33 52 C34 30 58 20 76 28 C83 32 86 42 84 52 C80 44 74 40 70 42 C68 36 62 33 57 36 C52 41 46 44 40 54 C38 50 35 50 33 52Z" fill="url(#hair${id})"/>
+    <path d="M64.6 57 Q65.4 61 64.2 63" stroke="#fff3ea" stroke-width=".9" fill="none" opacity=".7"/>
+    ${mouth(E.mouth, P)}
+    <path d="M58 73.2 Q60.5 72.7 62.4 73.1" stroke="#fff" stroke-width=".7" fill="none" opacity=".45"/>`;
+  const fringe = `${lit(id, `<path d="M33 52 C34 30 58 20 76 28 C83 32 86 42 84 52 C80 44 74 40 70 42 C68 36 62 33 57 36 C52 41 46 44 40 54 C38 50 35 50 33 52Z" fill="url(#hair${id})"/>`)}
+    <path d="M50 30 C58 26 68 27 75 31" stroke="#ffd2a0" stroke-width="1" fill="none" opacity=".6" stroke-linecap="round"/>
     <path d="M45 33 C55 28 66 28 74 33" stroke="${P.hairLight}" stroke-width="1.8" fill="none" opacity=".75" stroke-linecap="round"/>
     <path d="M40 40 C46 36 52 35 57 36" stroke="${P.hairLight}" stroke-width="1.2" fill="none" opacity=".6" stroke-linecap="round"/>
     <path d="M79 42 C86 56 80 74 86 92 C88 100 84 108 88 116 C80 112 76 102 77 92 C78 80 74 66 76 54Z" fill="url(#hair${id})"/>
     <path d="M81 58 C83 70 80 82 84 94" stroke="${P.hairLight}" stroke-width="1.3" fill="none" opacity=".6"/>`;
-  const bowSvg = `<g transform="translate(29 34) rotate(-14)">
+  const bowSvg = `<g transform="translate(29 34) rotate(-14)" filter="url(#gloss-${id})">
       <path d="M0 0 C-10 -12 -20 -4 -14 5 C-10 10 -4 6 0 2Z" fill="${bowMain}"/>
       <path d="M0 0 C8 -13 19 -6 14 4 C10 10 4 6 0 2Z" fill="${bowMain}"/>
       <path d="M-11 -2 C-8 -4 -5 -2 -2 0 M11 -3 C8 -4 5 -2 2 0" stroke="${bowDark}" stroke-width="1.2" fill="none"/>
@@ -263,13 +292,14 @@ export function anjiSprite({ pose = 'idle', t = 0, expr, outfit = 'classic', bow
     ${defs(id, o)}
     <g transform="translate(0 ${p.bob}) rotate(${p.lean || 0} 50 196)">
       ${anjiHead({ id, expr: face, bow, sway: p.sway, blink, layer: 'back' })}
-      ${leg(o, 45, 140, p.legB, false, p.bendB || 0)}
-      ${arm(id, o, 41, 92, p.armB, false)}
-      ${leg(o, 56, 140, p.legF, true, p.bendF || 0)}
-      ${torso(id, o)}
+      ${lit(id, leg(o, 45, 140, p.legB, false, p.bendB || 0))}
+      ${lit(id, arm(id, o, 41, 92, p.armB, false))}
+      ${lit(id, leg(o, 56, 140, p.legF, true, p.bendF || 0))}
+      ${lit(id, torso(id, o))}
       <rect x="51" y="80" width="10" height="9" fill="${ANJI_PALETTE.skinShade}"/>
+      ${ao(id, 56, 88, 12, 4)}
       ${anjiHead({ id, expr: face, bow, sway: p.sway, blink, layer: 'front' })}
-      ${p.cheek ? arm(id, o, 61, 92, -152, true) : arm(id, o, 61, 92, p.armF, true)}
+      ${lit(id, p.cheek ? arm(id, o, 61, 92, -152, true) : arm(id, o, 61, 92, p.armF, true))}
     </g>
   </svg>`;
 }
@@ -290,12 +320,79 @@ export function anjiPortrait({ expr = 'neutral', outfit = 'classic', bow = 'burg
     ${defs(id, o)}
     <g transform="translate(-14 -20) scale(2.12)">
       ${anjiHead({ id, expr, bow, layer: 'back' })}
-      <path d="M26 104 C30 90 42 86 51 86 L62 86 C72 86 84 92 88 104 L92 120 L22 120Z" fill="${o.jacket}"/>
+      ${lit(id, `<path d="M26 104 C30 90 42 86 51 86 L62 86 C72 86 84 92 88 104 L92 120 L22 120Z" fill="${o.jacket}"/>`)}
       <path d="M45 87 L52.5 104 L60 87Z" fill="${shirtFill(id, o)}"/>
       ${o.stethoscope ? '<path d="M44 90 C40 104 46 112 52 112 C58 112 62 104 58 90" stroke="#4a5368" stroke-width="1.8" fill="none"/>' : ''}
       <rect x="51" y="80" width="10" height="9" fill="${ANJI_PALETTE.skinShade}"/>
       ${anjiHead({ id, expr, bow, layer: 'front' })}
     </g>
     ${hand}
+  </svg>`;
+}
+
+/* ── Other views (character sheet, the games room) ───────────── */
+
+/** Front view, full body (viewBox 100×200). */
+export function anjiFront({ expr = 'smile', outfit = 'classic', bow = 'burgundy', blink = false } = {}) {
+  const id = `af${++uid}`;
+  const P = ANJI_PALETTE;
+  const o = OUTFITS[outfit] || OUTFITS.classic;
+  const E = EXPRESSIONS[expr] || EXPRESSIONS.neutral;
+  const eyes = blink ? 'closed' : E.eyes;
+  const [bowMain, bowDark] = BOWS[bow] || BOWS.burgundy;
+  const legs = o.dress
+    ? `<rect x="39" y="150" width="8" height="38" rx="3.5" fill="#3a2f46"/><rect x="53" y="150" width="8" height="38" rx="3.5" fill="#3a2f46"/>`
+    : `<path d="M38 138 H49 L48 186 H39Z" fill="${o.pants}"/><path d="M51 138 H62 L61 186 H52Z" fill="${shade(o.pants)}"/>`;
+  const boots = `<path d="M37 184 H49 V194 H35Z" fill="${o.boots}"/><path d="M51 184 H63 L65 194 H51Z" fill="${o.boots}"/>`;
+  const body = o.dress
+    ? `<path d="M36 90 C42 86 58 86 64 90 L66 112 C72 128 76 146 78 156 C62 162 38 162 22 156 C26 144 30 128 34 112Z" fill="${o.jacket}"/>`
+    : `<path d="M32 90 C38 85 62 85 68 90 L70 ${o.coat ? 166 : 142} C60 ${o.coat ? 170 : 146} 40 ${o.coat ? 170 : 146} 30 ${o.coat ? 166 : 142}Z" fill="${o.jacket}"/>
+       <path d="M43 88 L50 106 L57 88Z" fill="${shirtFill(id, o)}"/>
+       <path d="M43 88 L50 108 L57 88" stroke="${o.jacketShade}" stroke-width="1.6" fill="none"/>
+       ${o.coat ? '' : `<path d="M31 136 H69 L70 143 C60 147 40 147 30 143Z" fill="${shirtFill(id, o)}"/>`}
+       ${o.stripes ? '<path d="M38 92 L35 140 M62 92 L65 140" stroke="#fff" stroke-width="2.2"/>' : ''}`;
+  const armL = `<path d="M30 92 C24 104 22 118 24 132 L30 132 C30 118 33 106 36 96Z" fill="${o.jacketShade}"/><circle cx="27" cy="136" r="4.6" fill="${P.skin}"/>`;
+  const armR = `<path d="M70 92 C76 104 78 118 76 132 L70 132 C70 118 67 106 64 96Z" fill="${o.jacket}"/><circle cx="73" cy="136" r="4.6" fill="${P.skin}"/>`;
+  const face = `<path d="M33 54 C33 36 67 36 67 54 C67 70 60 82 50 82 C40 82 33 70 33 54Z" fill="url(#skin${id})"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+    ${defs(id, o)}
+    ${ao(id, 50, 195, 26, 4)}
+    ${lit(id, `<path d="M50 16 C24 16 16 38 19 60 C21 74 14 82 17 96 C20 108 13 116 17 128 C21 138 30 138 34 132 L66 132 C70 138 79 138 83 128 C87 116 80 108 83 96 C86 82 79 74 81 60 C84 38 76 16 50 16Z" fill="url(#hair${id})"/>`)}
+    ${lit(id, legs)}${lit(id, boots, 'gloss')}
+    ${lit(id, armL)}${lit(id, body)}${lit(id, armR)}
+    <rect x="46" y="78" width="8" height="10" fill="${P.skinShade}"/>
+    ${lit(id, face)}
+    <ellipse cx="41" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="${E.blush}"/><ellipse cx="59" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="${E.blush}"/>
+    ${eye(42.5, 58, 4.2, eyes, P)}${eye(57.5, 58, 4.2, eyes, P)}
+    <path d="M38.5 ${49.5 + E.brows[0]} Q42.5 ${47.5 + E.brows[0]} 46.5 ${49 + E.brows[0]} M53.5 ${49 + E.brows[1]} Q57.5 ${47.5 + E.brows[1]} 61.5 ${49.5 + E.brows[1]}" stroke="${P.brow}" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M50 61 Q51.6 65 49.6 66" stroke="#d49a86" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <g transform="translate(-10.5 -0.5)">${mouth(E.mouth, P)}</g>
+    ${lit(id, `<path d="M32 52 C30 30 46 20 58 22 C68 24 72 34 68 48 C64 40 56 36 50 38 C44 40 38 44 32 52Z" fill="url(#hair${id})"/>`)}
+    <path d="M38 34 C46 26 58 26 64 32" stroke="#ffd2a0" stroke-width="1" fill="none" opacity=".6"/>
+    ${lit(id, `<path d="M33 46 C27 60 31 78 27 96 C34 92 36 74 36 58Z M67 46 C73 60 69 78 73 96 C66 92 64 74 64 58Z" fill="url(#hair${id})"/>`)}
+    <g transform="translate(27 27) rotate(-28) scale(.8)" filter="url(#gloss-${id})"><path d="M0 0 C-10 -12 -20 -4 -14 5 C-10 10 -4 6 0 2Z M0 0 C8 -13 19 -6 14 4 C10 10 4 6 0 2Z" fill="${bowMain}"/><ellipse cx="0" cy="1.5" rx="3.4" ry="3" fill="${bowDark}"/></g>
+  </svg>`;
+}
+
+/** Back view, full body (viewBox 100×200): the long hair and the bow. */
+export function anjiBack({ outfit = 'classic', bow = 'burgundy' } = {}) {
+  const id = `ab${++uid}`;
+  const o = OUTFITS[outfit] || OUTFITS.classic;
+  const [bowMain, bowDark] = BOWS[bow] || BOWS.burgundy;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+    ${defs(id, o)}
+    ${ao(id, 50, 195, 26, 4)}
+    ${lit(id, `<path d="M38 138 H49 L48 186 H39Z" fill="${shade(o.pants)}"/><path d="M51 138 H62 L61 186 H52Z" fill="${o.pants}"/>`)}
+    ${lit(id, `<path d="M37 184 H49 V194 H35Z M51 184 H63 L65 194 H51Z" fill="${o.boots}"/>`, 'gloss')}
+    ${lit(id, `<path d="M30 92 C24 104 22 118 24 132 L30 132 C30 118 33 106 36 96Z M70 92 C76 104 78 118 76 132 L70 132 C70 118 67 106 64 96Z" fill="${o.jacketShade}"/>`)}
+    ${lit(id, `<path d="M32 90 C38 85 62 85 68 90 L70 ${o.coat ? 166 : 142} C60 ${o.coat ? 170 : 146} 40 ${o.coat ? 170 : 146} 30 ${o.coat ? 166 : 142}Z" fill="${o.jacket}"/>`)}
+    ${lit(id, `<path d="M50 16 C26 16 22 36 24 56 C25 76 20 96 24 118 C26 128 34 132 40 126 C44 132 56 132 60 126 C66 132 74 128 76 118 C80 96 75 76 76 56 C78 36 74 16 50 16Z" fill="url(#hair${id})"/>`)}
+    <path d="M36 50 C34 70 38 90 34 112 M50 46 C48 70 52 92 48 120 M64 50 C66 70 62 90 66 112" stroke="${ANJI_PALETTE.hairDark}" stroke-width="1.3" fill="none" opacity=".45"/>
+    <path d="M42 40 C40 62 44 84 41 104 M58 40 C60 62 56 84 59 104" stroke="${ANJI_PALETTE.hairLight}" stroke-width="1.6" fill="none" opacity=".7"/>
+    <g transform="translate(50 38)" filter="url(#gloss-${id})">
+      <path d="M0 0 C-12 -14 -24 -5 -17 6 C-12 12 -5 7 0 2Z M0 0 C12 -14 24 -5 17 6 C12 12 5 7 0 2Z" fill="${bowMain}"/>
+      <path d="M-1 3 L-7 20 L-3 18 L-1 23 L2 4Z M2 3 L8 19 L4 17.5 L1 21Z" fill="${bowDark}"/>
+      <ellipse cx="0" cy="1.5" rx="4" ry="3.6" fill="${bowDark}"/>
+    </g>
   </svg>`;
 }

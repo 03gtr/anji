@@ -1539,6 +1539,71 @@ export function gardenPiece(ctx, id, x, y, rand, t = 0) {
       ctx.fillRect(12, -3.5, 3, 7);
       ctx.restore();
       break;
+    case 'rose-vase':
+      ctx.fillStyle = '#9fd7ff';
+      ctx.beginPath();
+      ctx.moveTo(x - 8, y);
+      ctx.quadraticCurveTo(x - 12, y - 14, x - 5, y - 22);
+      ctx.lineTo(x + 5, y - 22);
+      ctx.quadraticCurveTo(x + 12, y - 14, x + 8, y);
+      ctx.fill();
+      rose(ctx, x, y - 30, 6, 'blue');
+      break;
+    case 'chocolates':
+      ctx.fillStyle = '#5a3420';
+      ctx.fillRect(x - 14, y - 10, 28, 10);
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = ['#3f6fe0', '#e2b544', '#f3f1ff'][i];
+        ctx.beginPath();
+        ctx.arc(x - 8 + i * 8, y - 12, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    case 'picnic':
+      ctx.fillStyle = '#e85d8c';
+      ctx.beginPath();
+      ctx.ellipse(x, y - 1, 22, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#c9a77a';
+      ctx.fillRect(x - 6, y - 12, 12, 9);
+      break;
+    case 'gift-box':
+      ctx.fillStyle = '#1d2b5c';
+      ctx.fillRect(x - 9, y - 16, 18, 16);
+      ctx.fillStyle = '#3f6fe0';
+      ctx.fillRect(x - 2, y - 16, 4, 16);
+      ctx.fillRect(x - 9, y - 12, 18, 3);
+      break;
+    case 'lantern-path':
+      for (const dx of [-14, 0, 14]) {
+        ctx.fillStyle = '#ffd977';
+        ctx.beginPath();
+        ctx.arc(x + dx, y - 6, 3 + Math.sin(t * 3 + dx) * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      break;
+    case 'promise-arch':
+      ctx.strokeStyle = '#9fd7ff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y - 26, 20, Math.PI, 0);
+      ctx.stroke();
+      rose(ctx, x, y - 46, 4.4, 'blue');
+      break;
+    case 'snooki-stash':
+      ctx.fillStyle = '#8a6a45';
+      ctx.fillRect(x - 12, y - 8, 24, 8);
+      ctx.fillStyle = '#e85d8c';
+      ctx.fillRect(x - 8, y - 12, 6, 4);
+      ctx.fillStyle = '#f3f1ff';
+      ctx.fillRect(x + 2, y - 13, 7, 5);
+      break;
+    case 'game-table':
+      table(ctx, x, y, 30, { cloth: '#2f6a5a' });
+      ctx.fillStyle = '#fff7ec';
+      ctx.fillRect(x - 6, y - 43, 5, 7);
+      ctx.fillRect(x + 1, y - 43, 5, 7);
+      break;
     case 'table':
       table(ctx, x, y, 34, { cloth: '#2b3a8c' });
       ctx.fillStyle = '#f3f1ff';
@@ -1556,3 +1621,4 @@ export function gardenPiece(ctx, id, x, y, rand, t = 0) {
 }
 
 export * from './props-v2.js';
+export * from './props-v3.js';

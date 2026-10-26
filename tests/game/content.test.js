@@ -19,10 +19,11 @@ import { isValidEffect } from '../../src/game/core/effects.js';
 import { KNOWN_SPEAKERS } from '../../src/game/characters/portraits.js';
 import { ANJI_EXPRESSIONS } from '../../src/game/characters/anji.js';
 import { SNOOKI_EXPRESSIONS } from '../../src/game/characters/snooki.js';
+import { MUNTHER_EXPRESSIONS } from '../../src/game/characters/cast.js';
 import { MOVE } from '../../src/game/world/physics.js';
 import { GROUND } from '../../src/game/world/props.js';
 
-const EXPR = { anji: ANJI_EXPRESSIONS, snooki: SNOOKI_EXPRESSIONS, needle: ['cheerful', 'determined', 'sneaky'], ryan: ['back', 'turn'] };
+const EXPR = { anji: ANJI_EXPRESSIONS, snooki: SNOOKI_EXPRESSIONS, needle: ['cheerful', 'determined', 'sneaky'], ryan: ['back', 'turn'], munther: MUNTHER_EXPRESSIONS };
 const COND_KINDS = new Set(['flag', 'item', 'got', 'seen', 'record', 'medal', 'count']);
 
 /** Every action (recursively) in a scene. */

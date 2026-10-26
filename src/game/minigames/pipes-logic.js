@@ -127,6 +127,12 @@ export const PIPE_LEVELS = {
     '.0- .0- I0- .0- .0-',
     'D1T I1- L3- .0- L0-',
   ],
+  // V3 «وعد الوردة الزرقاء»: two sources (two sides of the garden) and three
+  // lamps; every lamp lights only when BOTH halves of the path are restored
+  promise: [
+    'D1S I1- T1- T1- T1- I1- D3S',
+    '.0- .0- D0T D0T D0T .0- .0-',
+  ],
   lights: [
     'D1S I1- T1- I1- D3T',
     'I0- .0- I0- .0- .0-',

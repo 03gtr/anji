@@ -229,10 +229,10 @@ describe('three hopeful endings', () => {
 
 describe('saves, settings and tips (V2)', () => {
   it('a version-1 save migrates: the owl journal entry becomes «munther»', () => {
-    expect(SAVE_VERSION).toBe(2);
+    expect(SAVE_VERSION).toBeGreaterThanOrEqual(2);
     const v1 = { ...defaultState(0), v: 1, journal: ['snooki', 'hoot', 'clock'] };
     const up = normalize(migrate(structuredClone(v1)));
-    expect(up.v).toBe(2);
+    expect(up.v).toBe(SAVE_VERSION);
     expect(up.journal).toEqual(['snooki', 'munther', 'clock']);
   });
 
