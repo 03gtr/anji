@@ -1,14 +1,15 @@
 {
   "name": "anji-secret-garden",
   "private": true,
-  "version": "1.0.0",
-  "description": "حديقة أنجي السرّية — a small 24-hour digital gift. Static site, no backend.",
+  "version": "0.1.0",
+  "description": "Secret Garden: Snooki & the Missing Creator — an offline-first, mobile-first story adventure game (static site, no backend).",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/verify-offline.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify:offline": "node scripts/verify-offline.mjs"
   },
   "devDependencies": {
     "happy-dom": "^21.0.4",

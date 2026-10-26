@@ -2,3 +2,7 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Owner-supplied private content: never committed (the repository is public).
+private-art/
+private/

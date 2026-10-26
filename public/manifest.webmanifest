@@ -1,0 +1,14 @@
+{
+  "name": "الحديقة السرّية: سنوكي والصانع المفقود",
+  "short_name": "الحديقة السرّية",
+  "description": "Secret Garden: Snooki & the Missing Creator — an offline story adventure.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1038",
+  "theme_color": "#0d1038",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
