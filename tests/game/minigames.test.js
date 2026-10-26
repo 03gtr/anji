@@ -9,6 +9,9 @@ import { HIDDEN_SCENES } from '../../src/game/minigames/hidden-scenes.js';
 import { RECIPES, INGREDIENTS, checkRecipe, exampleSolution } from '../../src/game/minigames/kitchen-logic.js';
 import { PIPE_LEVELS, parseLevel, scramble, isSolved, rotateAt, flow } from '../../src/game/minigames/pipes-logic.js';
 import { TRACKS, createRace, stepRace, centerAt, raceMedal } from '../../src/game/minigames/racing-logic.js';
+import { deal, flipCard, hideOpen, cardsMedal } from '../../src/game/minigames/cards-logic.js';
+import { createQuiz, answerQuiz, quizMedal } from '../../src/game/minigames/quiz-logic.js';
+import { QUIZ_SETS } from '../../src/game/minigames/quiz-sets.js';
 
 describe('hedge maze', () => {
   for (const [name, rows] of Object.entries(MAZES)) {
@@ -239,4 +242,54 @@ describe('racing', () => {
       expect(s.done).toBe(true);
     });
   }
+});
+
+describe('memory cards', () => {
+  it('deals each symbol twice, the same way for the same seed', () => {
+    const a = deal(['x', 'y', 'z'], 4);
+    expect(a.deck.map((c) => c.symbol).sort()).toEqual(['x', 'x', 'y', 'y', 'z', 'z']);
+    expect(deal(['x', 'y', 'z'], 4).deck).toEqual(a.deck);
+  });
+  it('matches stay, misses need hiding, near-perfect play is gold', () => {
+    const s = deal(['x', 'y'], 1);
+    const pos = (sym) => s.deck.map((c, i) => (c.symbol === sym ? i : -1)).filter((i) => i >= 0);
+    const [x1, x2] = pos('x');
+    const [y1, y2] = pos('y');
+    expect(flipCard(s, x1)).toBe('open');
+    expect(flipCard(s, y1)).toBe('miss');
+    expect(flipCard(s, y2)).toBe('noop'); // two cards waiting
+    hideOpen(s);
+    expect(flipCard(s, x1)).toBe('open');
+    expect(flipCard(s, x2)).toBe('match');
+    expect(flipCard(s, x1)).toBe('noop');
+    flipCard(s, y1);
+    expect(flipCard(s, y2)).toBe('match');
+    expect(s.done).toBe(true);
+    expect(cardsMedal(s)).toBe('gold'); // 3 moves for 2 pairs is within 1.6 × pairs
+  });
+});
+
+describe('clue quiz', () => {
+  for (const [id, set] of Object.entries(QUIZ_SETS)) {
+    it(`${id}: every round has its answer among the options and an explanation`, () => {
+      for (const r of set.rounds) {
+        expect(r.options.some((o) => o.id === r.answer)).toBe(true);
+        expect(r.explain).toBeTruthy();
+      }
+    });
+    it(`${id}: answering every round correctly finishes with gold`, () => {
+      const s = createQuiz();
+      for (const r of set.rounds) expect(answerQuiz(set.rounds, s, r.answer).correct).toBe(true);
+      expect(s.done).toBe(true);
+      expect(quizMedal(s)).toBe('gold');
+    });
+  }
+  it('wrong answers are counted once each and explain why', () => {
+    const rounds = QUIZ_SETS.tracks.rounds;
+    const s = createQuiz();
+    const wrong = rounds[0].options.find((o) => o.id !== rounds[0].answer);
+    expect(answerQuiz(rounds, s, wrong.id)).toMatchObject({ correct: false });
+    expect(answerQuiz(rounds, s, wrong.id)).toEqual({ correct: false });
+    expect(s.mistakes).toBe(1);
+  });
 });

@@ -814,3 +814,254 @@ export function controlPanel(ctx, x, y, { on = false, t = 0 } = {}) {
     ctx.stroke();
   }
 }
+
+export function chalkboard(ctx, x, y, { lines = [], title = '' } = {}) {
+  ctx.fillStyle = '#6b4a3a';
+  ctx.fillRect(x - 74, y - 190, 148, 96);
+  ctx.fillStyle = '#1d2b2c';
+  ctx.fillRect(x - 68, y - 184, 136, 84);
+  ctx.fillStyle = '#f3f1ff';
+  ctx.font = '700 10px "Baloo Bhaijaan 2", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.direction = 'rtl';
+  if (title) ctx.fillText(title, x, y - 166);
+  ctx.globalAlpha = 0.7;
+  ctx.font = '8px "Baloo Bhaijaan 2", sans-serif';
+  lines.forEach((l, i) => ctx.fillText(l, x, y - 150 + i * 12));
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(243,241,255,.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x + 46, y - 124, 9, 0, Math.PI * 2);
+  ctx.moveTo(x + 52, y - 117);
+  ctx.lineTo(x + 60, y - 109);
+  ctx.stroke();
+  ctx.fillStyle = '#e2b544';
+  ctx.fillRect(x - 60, y - 98, 30, 4);
+}
+
+export function schoolDesk(ctx, x, y) {
+  ctx.fillStyle = '#8a6a45';
+  ctx.fillRect(x - 26, y - 34, 52, 7);
+  ctx.fillStyle = '#5a3d2c';
+  ctx.fillRect(x - 22, y - 27, 4, 27);
+  ctx.fillRect(x + 18, y - 27, 4, 27);
+  ctx.fillStyle = '#f3e3c3';
+  ctx.fillRect(x - 10, y - 38, 16, 4);
+}
+
+export function diploma(ctx, x, y) {
+  ctx.fillStyle = '#c9a24a';
+  ctx.fillRect(x - 15, y - 2, 30, 38);
+  ctx.fillStyle = '#f3e3c3';
+  ctx.fillRect(x - 12, y + 1, 24, 32);
+  ctx.fillStyle = '#3a72d8';
+  ctx.beginPath();
+  ctx.arc(x, y + 14, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  for (const [dx, dy] of [[-3, -3], [0, -4], [3, -3]]) {
+    ctx.beginPath();
+    ctx.arc(x + dx, y + 14 + dy, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Sultan the peacock: side view with an optional open tail fan. */
+export function peacock(ctx, x, y, { fan = 0, t = 0, facing = -1 } = {}) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(facing, 1);
+  if (fan > 0) {
+    const n = 11;
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * (0.62 + (i / (n - 1)) * 0.76) + Math.sin(t * 2 + i) * 0.02;
+      const r = 70 * fan;
+      const ex = Math.cos(a) * r + 18;
+      const ey = Math.sin(a) * r - 36;
+      ctx.strokeStyle = '#2f8f6a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(18, -30);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      ctx.fillStyle = '#1f7a5a';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 8, 10, a, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#e2b544';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, 4.5, 6, a, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1d3fa0';
+      ctx.beginPath();
+      ctx.arc(ex, ey, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else {
+    ctx.fillStyle = '#2f8f6a';
+    ctx.beginPath();
+    ctx.moveTo(14, -26);
+    ctx.quadraticCurveTo(50, -24, 70, -6);
+    ctx.lineTo(60, -2);
+    ctx.quadraticCurveTo(40, -16, 12, -16);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#1d5fd0';
+  ctx.beginPath();
+  ctx.ellipse(6, -26, 16, 12, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(-4, -32);
+  ctx.quadraticCurveTo(-10, -50, -6, -62);
+  ctx.lineTo(2, -60);
+  ctx.quadraticCurveTo(0, -46, 6, -34);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-4, -64, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(-6, -65, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#16161c';
+  ctx.beginPath();
+  ctx.arc(-6.6, -65, 1.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#cfc4a8';
+  ctx.beginPath();
+  ctx.moveTo(-11, -64);
+  ctx.lineTo(-17, -62);
+  ctx.lineTo(-11, -61);
+  ctx.fill();
+  ctx.strokeStyle = '#1d5fd0';
+  ctx.lineWidth = 1.2;
+  for (const dx of [-3, 0, 3]) {
+    ctx.beginPath();
+    ctx.moveTo(-4, -70);
+    ctx.lineTo(-4 + dx, -78);
+    ctx.stroke();
+    ctx.fillStyle = '#2bb5a0';
+    ctx.beginPath();
+    ctx.arc(-4 + dx, -79, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = '#a88b5c';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(2, -16);
+  ctx.lineTo(0, 0);
+  ctx.moveTo(10, -16);
+  ctx.lineTo(12, 0);
+  ctx.stroke();
+  ctx.restore();
+}
+
+export function bunny(ctx, x, y, t = 0) {
+  const hop = Math.max(0, Math.sin(t * 3)) * 4;
+  ctx.save();
+  ctx.translate(x, y - hop);
+  ctx.fillStyle = '#e9e2d4';
+  ctx.beginPath();
+  ctx.ellipse(0, -8, 11, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-9, -14, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-11, -24, 2.4, 7, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(-7, -24, 2.4, 7, 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#16161c';
+  ctx.beginPath();
+  ctx.arc(-11, -15, 1.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(10, -9, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+export function squirrel(ctx, x, y, t = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = '#a66a3a';
+  ctx.beginPath();
+  ctx.ellipse(10, -16, 7, 14, 0.4 + Math.sin(t * 4) * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(0, -9, 6, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-3, -19, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#16161c';
+  ctx.beginPath();
+  ctx.arc(-5, -20, 1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#6b4a2a';
+  ctx.beginPath();
+  ctx.ellipse(-6, -10, 2.4, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+export function deer(ctx, x, y, t = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = '#b07a4a';
+  ctx.beginPath();
+  ctx.ellipse(0, -34, 24, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(-18, -30, 4, 30);
+  ctx.fillRect(-8, -30, 4, 30);
+  ctx.fillRect(8, -30, 4, 30);
+  ctx.fillRect(16, -30, 4, 30);
+  const bob = Math.sin(t * 1.2) * 3;
+  ctx.beginPath();
+  ctx.moveTo(-18, -40);
+  ctx.lineTo(-26, -62 + bob);
+  ctx.lineTo(-18, -64 + bob);
+  ctx.lineTo(-12, -40);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(-26, -66 + bob, 7, 5, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#e9e2d4';
+  for (const [dx, dy] of [[-4, -38], [6, -40], [12, -34]]) {
+    ctx.beginPath();
+    ctx.arc(dx, dy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+export function fence(ctx, x0, x1, y, { thread = false } = {}) {
+  ctx.fillStyle = '#8a6a45';
+  for (let x = x0; x <= x1; x += 26) ctx.fillRect(x - 2, y - 44, 5, 44);
+  ctx.fillRect(x0 - 2, y - 36, x1 - x0 + 4, 4);
+  ctx.fillRect(x0 - 2, y - 18, x1 - x0 + 4, 4);
+  if (thread) {
+    ctx.strokeStyle = '#3a72d8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x0 + 40, y - 34);
+    ctx.quadraticCurveTo(x0 + 46, y - 24, x0 + 52, y - 30);
+    ctx.stroke();
+  }
+}
+
+export function pond(ctx, x, y, w = 160, t = 0) {
+  ctx.fillStyle = '#1d3a5c';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 20, w / 2, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(159,215,255,.4)';
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.ellipse(x + Math.sin(t + i) * 20, y + 20, 20 + i * 14, 4 + i, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}

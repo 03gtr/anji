@@ -64,4 +64,37 @@ export const PUZZLES = {
     success: 'تك! الكراج انفتح.',
     reward: ['flag:garage-lock'],
   },
+
+  // Evidence comes from the evidence table (hidden objects) and the tracks
+  // quiz at the sanctuary. Any two husky-related clues prove it.
+  'map-case': {
+    type: 'deduction',
+    title: 'لوحة التحقيق',
+    intro: 'منو أخذ قطعة الخريطة الثانية؟ اختاري المشتبه به ودليلين يثبتون.',
+    config: {
+      need: 2,
+      suspects: [
+        { id: 'sultan', label: 'السلطان', icon: 'feather', note: 'طاووس مغرور يحب الأشياء اللي تلمع' },
+        { id: 'squirrels', label: 'عصابة السناجب', icon: 'claw', note: 'سرقات جوز سابقة' },
+        { id: 'needle', label: 'الممرضة إبرة', icon: 'stethoscope', note: 'تتجول بالليل بدفتر مواعيد' },
+        { id: 'snooki', label: 'سنوكي', icon: 'paw', note: 'المحقق الرئيسي بالقضية' },
+      ],
+      evidence: [
+        { id: 'feather', label: 'ريشة طاووس', icon: 'feather', note: 'السلطان يخسر ريش كل ما يتحمّس' },
+        { id: 'fur', label: 'فرو أبيض', icon: 'paw', note: 'ناعم، طويل، أبيض' },
+        { id: 'teeth', label: 'آثار أسنان', icon: 'map', note: 'على غطاء الخريطة' },
+        { id: 'acorn', label: 'قشرة جوز', icon: 'claw', note: 'تحت الطاولة' },
+        { id: 'sticker', label: 'ملصق «شجاع»', icon: 'stethoscope', note: 'ملصقات الإبرة بكل مكان' },
+        { id: 'paws', label: 'آثار كف هاسكي', icon: 'paw', note: 'جنب الجنطة بالطين' },
+        { id: 'tape', label: 'تسجيل كلام بالنوم', icon: 'note', note: '«…لا تگولها بعد…»' },
+      ],
+      answer: { suspect: 'snooki', evidence: ['fur', 'teeth', 'paws', 'tape'] },
+    },
+    solution: [['pickSuspect', 'snooki'], ['toggleEvidence', 'fur'], ['toggleEvidence', 'paws'], ['submit']],
+    hints: ['فكّري بالأدلة اللي ما إلها تفسير بريء.', 'منو بالحديقة عنده فرو أبيض وأسنان كبيرة؟', 'المحقق الرئيسي… مو دايماً بريء.'],
+    wrong: ['سنوكي: «لا! الأدلة تگول غير هيچ!» … بعيونه خوف.', 'السلطان عنده حجة: چان يتصوّر ويّا القمر طول الليل.', 'الأدلة ما تركب. جرّبي ترتيب ثاني.'],
+    success: 'سنوكي… نزّل راسه.',
+    reward: ['flag:case-solved'],
+  },
 };
+

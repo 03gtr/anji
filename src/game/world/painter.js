@@ -275,6 +275,87 @@ export const THEMES = {
     },
   }),
 
+  academy: interior({
+    wall: '#4a3324',
+    pattern: '#523928',
+    trim: '#2e2018',
+    wainscot: '#3a2a20',
+    floorColors: { wood: '#3a2a22', light: '#4a3528' },
+    extra(ctx, u0, u1) {
+      ctx.strokeStyle = 'rgba(0,0,0,.18)';
+      for (let x = Math.floor(u0 / 19) * 19; x < u1 + 19; x += 19) {
+        ctx.beginPath();
+        ctx.moveTo(x, 10);
+        ctx.lineTo(x, GROUND - 68);
+        ctx.stroke();
+      }
+    },
+  }),
+
+  sanctuary: {
+    sky: nightSky('#1d2160', '#6a4f98', '#e89a7a'),
+    stars: 30,
+    moon: [0.15, 0.2, 13],
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          ctx.fillStyle = '#3a3a72';
+          ctx.beginPath();
+          ctx.moveTo(u0 - 2, 210);
+          for (let u = u0 - 2; u <= u1 + 2; u += 8) ctx.lineTo(u, 180 + Math.sin(u * 0.01) * 22 + Math.sin(u * 0.027) * 9);
+          ctx.lineTo(u1 + 2, VIEW_H);
+          ctx.lineTo(u0 - 2, VIEW_H);
+          ctx.fill();
+          each(u0, u1, 90, 60, seed, (i, x, r) => P.tree(ctx, x, 205, 70 + r() * 50, r, { color: '#2b3a5c', trunk: '#20243c', round: r() < 0.7 }));
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.6,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 240, 120, seed, (i, x, r) => {
+            P.tree(ctx, x, GROUND - 12, 130 + r() * 50, r, { color: '#2f4f45', trunk: '#2a1f24' });
+            if (r() < 0.5) P.fence(ctx, x + 50, x + 180, GROUND - 12);
+          });
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          grassGround(ctx, u0, u1, seed, { grass: '#3f6a4a', light: '#4f7d58', path: '#c9a77a', pathEdge: '#a88b5c', soil: '#2a2420' });
+          each(u0, u1, 50, 20, seed + 9, (i, x, r) => {
+            if (r() < 0.5) {
+              ctx.fillStyle = r() < 0.5 ? '#ffd977' : '#f7b6cb';
+              ctx.beginPath();
+              ctx.arc(x, GROUND + 4 + r() * 6, 2.2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          });
+        },
+      },
+      {
+        name: 'front',
+        f: 1.2,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 300, 80, seed, (i, x, r) => {
+            if (r() < 0.6) {
+              ctx.fillStyle = '#24402f';
+              for (let k = 0; k < 9; k++) {
+                ctx.beginPath();
+                ctx.moveTo(x + k * 9, VIEW_H + 10);
+                ctx.quadraticCurveTo(x + k * 9 + 6, VIEW_H - 40 - r() * 20, x + k * 9 + 12, VIEW_H + 10);
+                ctx.fill();
+              }
+            }
+          });
+        },
+      },
+    ],
+  },
+
   house: {
     sky: null,
     ceiling: '#25285a',

@@ -101,7 +101,7 @@ export const GARAGE = {
       icon: '🏁',
       cases: [
         { if: '!flag:car-ready', run: [{ say: 'a3.road-locked' }] },
-        { if: '!record:game:race-moon', run: [{ say: 'a3.road-intro' }, { game: 'race-moon', then: [{ say: 'a3.after-moon' }] }] },
+        { if: '!record:game:race-moon', run: [{ say: 'a3.road-intro' }, { game: 'race-moon', then: [{ say: 'a3.after-moon' }, { say: 'glovebox' }] }] },
         { if: '!record:game:race-rose', run: [{ game: 'race-rose', then: [{ say: 'a3.after-rose' }] }] },
         { if: '!record:game:race-bridge', run: [{ game: 'race-bridge', then: [{ say: 'a3.after-bridge' }, { chapter: { act: 3, end: true } }] }] },
         { run: [{ journal: 'challenges' }] },

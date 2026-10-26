@@ -156,4 +156,42 @@ export const HIDDEN_SCENES = {
       },
     ],
   },
+  evidence: {
+    title: 'طاولة الأدلة',
+    intro: 'سنوكي فرش كل «الأدلة» على الطاولة. لگي الثمانية… وفكّري منو جابها.',
+    background: `
+      <rect width="300" height="300" fill="#4a3324"/>
+      ${Array.from({ length: 16 }, (_, i) => `<rect x="${i * 19}" y="0" width="18" height="300" fill="${i % 2 ? '#523928' : '#4a3324'}"/>`).join('')}
+      <rect y="292" width="300" height="128" fill="#3a2a22"/>
+      <rect x="26" y="22" width="150" height="96" fill="#1d2b2c" stroke="#8a6a45" stroke-width="5"/>
+      <text x="101" y="52" text-anchor="middle" font-size="12" fill="#f3f1ff" font-family="sans-serif">قضية الخريطة المختفية</text>
+      <path d="M44 70 H96 M44 84 H120 M44 98 H80" stroke="#f3f1ff" stroke-width="2" opacity=".6"/>
+      <circle cx="150" cy="88" r="12" fill="none" stroke="#f3f1ff" stroke-width="2" opacity=".7"/><path d="M158 96 L168 106" stroke="#f3f1ff" stroke-width="3" opacity=".7"/>
+      <rect x="196" y="24" width="40" height="52" fill="#f3e3c3" stroke="#c9a24a" stroke-width="3"/><circle cx="216" cy="46" r="9" fill="#3a72d8"/><path d="M210 66 H222" stroke="#8a6a45"/>
+      <rect x="246" y="30" width="40" height="52" fill="#f3e3c3" stroke="#c9a24a" stroke-width="3"/><circle cx="266" cy="52" r="9" fill="#3a72d8"/><path d="M260 72 H272" stroke="#8a6a45"/>
+      <rect x="196" y="96" width="94" height="110" fill="#2a1a22"/>
+      ${[0, 1, 2].map((r) => `<rect x="196" y="${132 + r * 36}" width="94" height="4" fill="#1a1016"/>${books(198, 100 + r * 36, 90, 30, PALETTE.slice(r + 1).concat(PALETTE))}`).join('')}
+      <rect x="10" y="230" width="280" height="16" fill="#8a6a45"/>
+      <rect x="10" y="246" width="280" height="54" fill="#6b5134"/>
+      <rect x="20" y="300" width="12" height="70" fill="#4a3324"/><rect x="268" y="300" width="12" height="70" fill="#4a3324"/>
+      <ellipse cx="150" cy="396" rx="110" ry="16" fill="#2b3a8c" opacity=".8"/>
+      <rect x="40" y="252" width="70" height="40" fill="#f3e3c3" transform="rotate(-4 75 272)"/>
+      <rect x="170" y="254" width="80" height="34" fill="#efe2cf" transform="rotate(5 210 271)"/>`,
+    decoys: `
+      <circle cx="132" cy="268" r="9" fill="#9fd7ff" opacity=".7"/>
+      <rect x="84" y="320" width="18" height="12" rx="3" fill="#c9a77a"/>
+      <path d="M236 330 q8 -8 16 0" stroke="#f3f1ff" stroke-width="3" fill="none"/>
+      <rect x="128" y="352" width="22" height="6" rx="3" fill="#e2b544"/>`,
+    objects: [
+      { id: 'feather', label: 'ريشة طاووس', icon: 'feather', line: 'ريشة السلطان. بس السلطان يخسر ريش كل ما يتحمّس.', x: 54, y: 254, w: 22, h: 30, svg: '<path d="M2 28 C2 14 10 4 20 2 C20 14 12 24 2 28Z" fill="#2f8f6a"/><circle cx="15" cy="9" r="4" fill="#e2b544"/><circle cx="15" cy="9" r="2" fill="#1d3fa0"/>' },
+      { id: 'fur', label: 'خصلة فرو أبيض', icon: 'paw', line: 'فرو أبيض… فرو ناعم… فرو مألوف جداً. لا تباوعيني.', x: 186, y: 258, w: 22, h: 16, svg: '<path d="M2 10 Q6 2 11 8 Q15 0 20 8 Q22 14 14 14 Q6 16 2 10Z" fill="#fbfbfd" stroke="#c9c5d8" stroke-width="1"/>' },
+      { id: 'teeth', label: 'غطاء الخريطة معضوض', icon: 'map', line: 'آثار أسنان على الغطاء. أسنان كبيرة. أسنان… محترمة.', x: 220, y: 262, w: 26, h: 18, svg: '<rect x="0" y="2" width="26" height="14" rx="3" fill="#8a6a45"/><path d="M18 2 l2 4 l2 -4 l2 4" stroke="#f3e3c3" stroke-width="1.6" fill="none"/>' },
+      { id: 'thread', label: 'خيط أزرق', icon: 'leaf', line: 'خيط أزرق… من قلادتي؟ لا. من شي ثاني. أكيد.', x: 118, y: 236, w: 26, h: 8, svg: '<path d="M1 4 Q7 0 13 4 T25 4" stroke="#3a72d8" stroke-width="2.4" fill="none"/>' },
+      { id: 'acorn', label: 'قشرة جوز', icon: 'claw', line: 'السناجب! مجرمين معروفين. بس بالجوز، مو بالخرايط.', x: 70, y: 362, w: 14, h: 16, svg: '<path d="M2 6 H12 V10 Q12 16 7 16 Q2 16 2 10Z" fill="#a66a3a"/><path d="M1 6 Q7 0 13 6Z" fill="#6b4a2a"/>' },
+      { id: 'sticker', label: 'ملصق «شجاع»', icon: 'stethoscope', line: 'ملصق الممرضة إبرة. هي تلزگها على كل شي. حتى عليّ. مرة.', x: 250, y: 352, w: 20, h: 20, svg: '<circle cx="10" cy="10" r="9" fill="#ffd977" stroke="#e2405f" stroke-width="2"/><path d="M6 10 l3 3 l5 -6" stroke="#e2405f" stroke-width="2" fill="none"/>' },
+      { id: 'tape', label: 'شريط تسجيل', icon: 'note', line: 'تسجيل… لصوت واحد يحچي وهو نايم. منو يحچي وهو نايم؟ مو آني.', x: 154, y: 374, w: 26, h: 16, svg: '<rect x="0" y="0" width="26" height="16" rx="2" fill="#2a2236"/><circle cx="8" cy="8" r="4" fill="#9aa3b8"/><circle cx="18" cy="8" r="4" fill="#9aa3b8"/>' },
+      { id: 'magnifier', label: 'عدسة المحقق', icon: 'star', line: 'عدستي! هي اللي تخلّيني محقق. والقبعة. والذكاء.', x: 28, y: 300, w: 22, h: 22, svg: '<circle cx="8" cy="8" r="7" fill="#bfe3ff" stroke="#8a6a45" stroke-width="2.4"/><path d="M13 13 L20 20" stroke="#8a6a45" stroke-width="3.4" stroke-linecap="round"/>' },
+    ],
+  },
 };
+

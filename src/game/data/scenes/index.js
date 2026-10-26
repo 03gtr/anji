@@ -2,10 +2,13 @@
 import { GARDEN, CONSERVATORY } from './act1.js';
 import { HOUSE } from './act2.js';
 import { GARAGE } from './act3.js';
+import { ACADEMY, SANCTUARY } from './act4.js';
 
 export const SCENES = {
   [GARDEN.id]: GARDEN,
   [CONSERVATORY.id]: CONSERVATORY,
   [HOUSE.id]: HOUSE,
   [GARAGE.id]: GARAGE,
+  [ACADEMY.id]: ACADEMY,
+  [SANCTUARY.id]: SANCTUARY,
 };

@@ -103,6 +103,33 @@ export const MINIGAMES = {
     options: { track: 'bridge' },
     reward: ['flag:race-bridge', 'unlock:car-pearl'],
   },
+  cards: {
+    title: 'تمرين الذاكرة',
+    goal: 'درس المحقق الأول: اقلبي ورقتين، وطابقي الأزواج بأقل عدد محاولات.',
+    controls: ['المسي ورقة حتى تنقلب', 'إذا ما تطابقت الورقتين، ترجع تنقلب'],
+    icon: 'paw',
+    load: () => import('./cards.js'),
+    options: { pairs: 8 },
+    reward: [],
+  },
+  evidence: {
+    title: 'طاولة الأدلة',
+    goal: 'لگي الأدلة الثمانية على طاولة سنوكي.',
+    controls: ['المسي الشي حتى تلگينه', 'زر التلميح يخلّي سنوكي يشم مكانه'],
+    icon: 'map',
+    load: () => import('./hidden.js'),
+    options: { scene: 'evidence' },
+    reward: [],
+  },
+  tracks: {
+    title: 'قراءة الآثار',
+    goal: 'كل أثر بالطين يحچي قصة. اختاري الحيوان الصح لكل أثر.',
+    controls: ['اقرئي الدليل', 'اختاري الجواب', 'بعد كل جواب صح، سنوكي يشرح ليش'],
+    icon: 'footprint',
+    load: () => import('./quiz.js'),
+    options: { set: 'tracks' },
+    reward: [],
+  },
 };
 
 export const MINIGAME_IDS = Object.keys(MINIGAMES);

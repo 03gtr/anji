@@ -42,6 +42,10 @@ export const COLLECTIBLES = {
   'star.garage.1': { name: 'نجمة فوق الطاولة', world: 'garage' },
   'star.garage.2': { name: 'نجمة قرب السقف', world: 'garage' },
   'note.ryan.4': { name: 'ورقة بدرج السيارة', world: 'garage', text: '«سنوكي، إذا دتقرا هاي: لا. — R»' },
+  'star.academy.1': { name: 'نجمة فوق رف المحقق', world: 'academy' },
+  'seed.academy.1': { name: 'بذور بزاوية الأكاديمية', world: 'academy' },
+  'star.sanctuary.1': { name: 'نجمة فوق الشجرة', world: 'sanctuary' },
+  'star.sanctuary.2': { name: 'نجمة بآخر المحمية', world: 'sanctuary' },
   'petal.hedge.1': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.2': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.3': { name: 'بتلة المتاهة', world: 'maze' },
@@ -63,6 +67,8 @@ export const JOURNAL = {
   'voice-1': { title: 'صوت ريان بالراديو', icon: 'note', text: '«الطريق الأزرق إله ثلاث مراحل… وإذا وصلتي للجسر بالليل، باوعي يمين.»' },
   'map-2': { title: 'قطعة الخريطة الثانية', icon: 'map', text: 'تل، وفوقه برج بقبة: المرصد.' },
   'observatory-light': { title: 'ضوء بالمرصد', icon: 'star', text: 'من فوق الجسر شفت ضوء بالمرصد. أحد هناك… ريان؟' },
+  case: { title: 'قضية الخريطة المختفية', icon: 'map', text: 'قطعة الخريطة الثانية اختفت من جنطتي بالليل. سنوكي فتح «أكاديمية» للتحقيق.' },
+  confession: { title: 'اعتراف سنوكي', icon: 'paw', text: 'سنوكي خبّى الخريطة بتعليمات من ريان: «خلّيها تعرف الحديقة قبل ما تعرف ليش انبنت.» والمرصد يضوي بالليل.' },
   'shadow-1': { title: 'الظل عند البوابة', icon: 'mark', text: 'شخص طويل بجنطة ظهر، اختفى ورا البوابة. سنوكي يگول «غيمة».' },
 };
 

@@ -2395,3 +2395,129 @@ svg {
   background: rgba(13, 16, 56, 0.6);
   pointer-events: auto;
 }
+
+/* memory cards */
+.cards,
+.quiz {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px calc(var(--safe-b) + 14px);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  gap: 8px;
+  width: min(100%, 440px);
+}
+
+.card-tile {
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  border: 0;
+  background: none;
+  perspective: 600px;
+}
+
+.card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.35s ease;
+  transform-style: preserve-3d;
+}
+
+.card-tile.is-up .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-back,
+.card-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  backface-visibility: hidden;
+}
+
+.card-back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 217, 119, 0.25) 0 18%, transparent 19%),
+    repeating-linear-gradient(45deg, #23286a 0 8px, #1b1f4e 8px 16px);
+  box-shadow: inset 0 0 0 2px rgba(255, 217, 119, 0.4);
+}
+
+.card-face {
+  transform: rotateY(180deg);
+  background: var(--cream);
+}
+
+.card-face svg {
+  width: 70%;
+  height: 70%;
+}
+
+.card-tile.is-matched .card-face {
+  box-shadow: 0 0 0 3px var(--gold), 0 0 16px rgba(255, 217, 119, 0.5);
+}
+
+/* clue quiz */
+.quiz-intro {
+  margin: 0;
+  text-align: center;
+  color: var(--cyan);
+}
+
+.quiz-card {
+  width: min(100%, 520px);
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.quiz-step {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gold);
+}
+
+.quiz-clue {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 12px;
+}
+
+.quiz-clue svg {
+  flex: none;
+  width: 64px;
+  height: 64px;
+}
+
+.quiz-clue p {
+  margin: 0;
+  font-size: 17px;
+}
+
+.quiz-say {
+  min-height: 1.6em;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.quiz-say[data-kind='good'] {
+  color: var(--gold);
+}
+
+.quiz-say[data-kind='bad'] {
+  color: var(--rose-soft);
+}
