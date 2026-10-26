@@ -13,6 +13,8 @@ import { MINIGAMES } from '../minigames/registry.js';
 import { check } from '../core/conditions.js';
 import { groupOf } from '../core/game.js';
 import { offlineText } from '../core/sw-client.js';
+import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
+import { ACHIEVEMENTS } from '../progression/achievements.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -89,6 +91,13 @@ export function openSettings(app) {
             <label class="btn btn-ghost file-btn">⬆️ استرجاع من نسخة احتياطية<input type="file" accept="application/json,.json" data-import hidden></label>
             <button type="button" class="btn btn-danger" data-clear>مسح التقدم والبدء من جديد</button>
           </div>
+          <h3>ذكريات خاصة</h3>
+          <p class="muted small">ملف ذكريات (JSON) يبقى على هذا الجهاز فقط وما ينرفع لأي مكان. الإطارات الفاضية تنملي بذكريات من القصة.</p>
+          <p class="memories-line"></p>
+          <div class="stack">
+            <label class="btn btn-ghost file-btn">📸 استيراد ملف ذكريات<input type="file" accept="application/json,.json" data-memories hidden></label>
+            <button type="button" class="btn btn-ghost" data-clear-memories>إزالة الذكريات المستوردة</button>
+          </div>
           <h3>بدون إنترنت</h3>
           <p class="offline-line" aria-live="polite"></p>
           <button type="button" class="btn btn-primary" data-update hidden>تحديث للنسخة الجديدة</button>
@@ -144,6 +153,27 @@ export function openSettings(app) {
         if (!second) return;
         app.newGame({ wipe: true });
         close();
+      });
+      const memLine = el.querySelector('.memories-line');
+      const renderMemories = () => {
+        const n = loadPersonal().memories.length;
+        memLine.textContent = n ? `ذكريات خاصة مفعّلة: ${n}` : 'ماكو ذكريات خاصة مفعّلة.';
+      };
+      renderMemories();
+      scope.on(el.querySelector('[data-memories]'), 'change', async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        const res = importMemoriesText(await file.text());
+        if (!res.ok) app.ui.toast(res.error === 'not-json' ? 'الملف مو JSON صالح.' : res.error === 'empty' ? 'الملف ما بيه ذكريات.' : 'ما گدرنا نحفظ الذكريات على هذا الجهاز.', 'warn');
+        else app.ui.toast(`انضافت ${res.count} ذكريات${res.skipped?.length ? ` (وتجاهلنا ${res.skipped.length} بيها أخطاء)` : ''} ✨`);
+        renderMemories();
+      });
+      scope.on(el.querySelector('[data-clear-memories]'), 'click', async () => {
+        const ok = await confirmBox(app, { title: 'إزالة الذكريات؟', text: 'راح تنشال الذكريات المستوردة من هذا الجهاز. التقدم بالقصة يبقى.', yes: 'إزالة', danger: true });
+        if (!ok) return;
+        clearImportedMemories();
+        renderMemories();
       });
       const line = el.querySelector('.offline-line');
       const upd = el.querySelector('[data-update]');
@@ -207,6 +237,7 @@ export function openJournal(app, tab = 'notes') {
         ['collection', 'المجموعات'],
         ['bag', 'الحقيبة'],
         ['challenges', 'التحديات'],
+        ['achievements', 'الإنجازات'],
       ];
       el.innerHTML = `<section class="panel journal">
         <header class="panel-head"><h2 tabindex="-1">دفتر أنجي</h2>
@@ -245,6 +276,12 @@ export function openJournal(app, tab = 'notes') {
           body.innerHTML = inv.length
             ? inv.map(([id, n]) => `<article class="entry"><span class="entry-icon">${symbol(ITEMS[id]?.icon)}</span><div><h4>${esc(ITEMS[id]?.name || id)} ${n > 1 ? `×${num(n)}` : ''}</h4><p>${esc(ITEMS[id]?.text || '')}</p></div></article>`).join('')
             : '<p class="muted">الحقيبة فارغة.</p>';
+        } else if (which === 'achievements') {
+          const got = ACHIEVEMENTS.filter((a) => game.flag(`ach:${a.id}`)).length;
+          body.innerHTML = `<p class="muted">${num(got)}/${num(ACHIEVEMENTS.length)} إنجاز</p>${ACHIEVEMENTS.map((a) => {
+            const done = game.flag(`ach:${a.id}`);
+            return `<article class="entry ${done ? '' : 'is-locked'}"><span class="entry-icon">${done ? symbol(a.icon) : ICONS.lock}</span><div><h4>${esc(a.name)}</h4><p>${esc(a.text)}</p></div></article>`;
+          }).join('')}`;
         } else {
           const list = Object.entries(MINIGAMES).filter(([id]) => game.record(`game:${id}`)?.completed || (MINIGAMES[id].unlock && check(MINIGAMES[id].unlock, game)));
           body.innerHTML = list.length

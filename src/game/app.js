@@ -27,6 +27,12 @@ import { createExplore } from './scenes/explore.js';
 import { SCENES } from './data/scenes/index.js';
 import { DIALOGUE } from './data/dialogue/index.js';
 import { PUZZLES } from './data/puzzles.js';
+import { corridorMemories, allMemories } from './memories/registry.js';
+import { memoryPuzzle } from './memories/schema.js';
+import { applyEffects } from './core/effects.js';
+import { syncAchievements } from './progression/achievements.js';
+import { COLLECTIBLES } from './data/items.js';
+import { groupOf } from './core/game.js';
 import { h } from './ui/dom.js';
 
 const systemReduced = () => {
@@ -47,6 +53,9 @@ export function createGameApp(root, opts = {}) {
   const saves = createSaveManager({ storage: opts.storage, now: opts.now });
   const loaded = saves.load();
   const game = createGame({ saveManager: saves, bus, initial: loaded.state, now: opts.now });
+  const totals = {};
+  for (const id of Object.keys(COLLECTIBLES)) totals[groupOf(id)] = (totals[groupOf(id)] || 0) + 1;
+  game.totalOf = (group) => totals[group] || 0;
   const audio = createAudio(settings);
   const input = createInput({ target: globalThis.window });
   const offline = createOfflineStatus({ enabled: opts.swEnabled ?? false });
@@ -99,6 +108,26 @@ export function createGameApp(root, opts = {}) {
         return openPuzzle(app, { id, ...def });
       },
       minigame: (id, options) => openMinigame(app, id, options),
+      /**
+       * Play one memory: narration, then its question (unless already
+       * solved), then its dialogue. `ref` is a corridor slot or a memory id.
+       */
+      memory: async (ref) => {
+        const m = typeof ref === 'number' ? corridorMemories()[ref] : allMemories().find((x) => x.id === ref);
+        if (!m) return { solved: false };
+        const head = `«${m.title}»${m.dateLabel ? ` — ${m.dateLabel}` : ''}`;
+        await playDialogue(app, [{ s: 'note', t: head }, { s: 'note', t: m.scene }]);
+        const already = game.memory(m.id).solved;
+        let solved = already || m.puzzle === 'reveal';
+        if (!solved) {
+          const res = await openPuzzle(app, memoryPuzzle(m));
+          solved = Boolean(res?.solved);
+          game.markMemory(m.id, solved);
+          if (solved) toasts.announce(applyEffects(m.reward, game));
+        } else if (!already) game.markMemory(m.id, true);
+        if (solved && m.dialogue?.length) await playDialogue(app, m.dialogue);
+        return { solved, memory: m };
+      },
       cinematic: (id) => playCinematic(app, id),
       chapter: (card) => chapterCard(app, card),
       toast: (text, kind) => toasts.toast(text, kind),
@@ -166,6 +195,17 @@ export function createGameApp(root, opts = {}) {
   const tick = setInterval(() => {
     if (!document.hidden && sceneId && sceneId !== 'title') game.addPlayTime(30000);
   }, 30000);
+  // achievements are checked after any progress change (not on their own flags)
+  let syncing = false;
+  bus.on('change', (c) => {
+    if (syncing || (c.kind === 'flag' && String(c.id).startsWith('ach:'))) return;
+    syncing = true;
+    for (const a of syncAchievements(game)) {
+      toasts.toast(`🏆 إنجاز: ${a.name}`, 'unlock');
+      toasts.announce(a.changes);
+    }
+    syncing = false;
+  });
   bus.on('save-error', (err) =>
     toasts.toast(err === 'quota' ? 'المساحة على الجهاز ممتلئة: التقدم ما انحفظ. حرري شوية مساحة.' : 'ما گدرنا نحفظ التقدم على هذا الجهاز (التصفح الخاص؟).', 'warn'),
   );

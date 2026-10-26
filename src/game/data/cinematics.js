@@ -18,4 +18,11 @@ export const CINEMATICS = {
     },
     { scene: 'roses', caption: 'والورد الأزرق… فتّح عيونه.', sfx: 'sparkle', ms: 3000 },
   ],
+  credits: [
+    { art: 'world-8-ending', scene: 'roses', caption: 'الحديقة السرّية: سنوكي والصانع المفقود', ms: 3600 },
+    { art: 'hero-anji-snooki', scene: 'awaken', caption: 'بطولة: أنجي', ms: 3200 },
+    { art: 'world-4-academy', scene: 'roses', caption: 'المحقق والمساعد الوسيم: سنوكي', ms: 3200 },
+    { art: 'ryan-gate', scene: 'gate', caption: 'الصانع: ريان', ms: 3200 },
+    { art: 'story-5-ending', scene: 'roses', caption: 'شكراً لأنچ مشيتي بكل الحديقة 💙', ms: 4200 },
+  ],
 };

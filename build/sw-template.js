@@ -26,7 +26,7 @@ self.addEventListener('install', (event) => {
       let done = 0;
       for (const path of PRECACHE) {
         const url = new URL(path, BASE).href;
-        if (!(await cache.match(url))) {
+        if (!(await cache.match(url, { ignoreVary: true }))) {
           const response = await fetch(url, { cache: 'reload' });
           if (!response.ok) throw new Error(`precache failed for ${path}: ${response.status}`);
           await cache.put(url, response);
@@ -67,15 +67,17 @@ self.addEventListener('fetch', (event) => {
       if (request.mode === 'navigate') {
         // A directory URL (…/anji/) is the cached index.html; ignore ?query.
         const page = url.pathname.endsWith('/') ? new URL('index.html', url).href : url.origin + url.pathname;
-        const hit = await cache.match(page, { ignoreSearch: true });
+        const hit = await cache.match(page, { ignoreSearch: true, ignoreVary: true });
         if (hit) return hit;
         try {
           return await fetch(request);
         } catch {
-          return (await cache.match(new URL('index.html', BASE).href)) || new Response('Offline', { status: 503 });
+          return (await cache.match(new URL('index.html', BASE).href, { ignoreVary: true })) || new Response('Offline', { status: 503 });
         }
       }
-      const hit = await cache.match(request, { ignoreSearch: true });
+      // ignoreVary: module scripts are requested in CORS mode (with an Origin
+      // header) while the precache fetched them without one
+      const hit = await cache.match(request.url, { ignoreSearch: true, ignoreVary: true });
       if (hit) return hit;
       try {
         return await fetch(request);

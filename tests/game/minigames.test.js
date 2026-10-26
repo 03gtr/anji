@@ -12,6 +12,7 @@ import { TRACKS, createRace, stepRace, centerAt, raceMedal } from '../../src/gam
 import { deal, flipCard, hideOpen, cardsMedal } from '../../src/game/minigames/cards-logic.js';
 import { createQuiz, answerQuiz, quizMedal } from '../../src/game/minigames/quiz-logic.js';
 import { QUIZ_SETS } from '../../src/game/minigames/quiz-sets.js';
+import { place, clearCell, roseBudget, rosesUsed, PIECES, COLS, ROWS } from '../../src/game/minigames/garden-logic.js';
 
 describe('hedge maze', () => {
   for (const [name, rows] of Object.entries(MAZES)) {
@@ -291,5 +292,29 @@ describe('clue quiz', () => {
     expect(answerQuiz(rounds, s, wrong.id)).toMatchObject({ correct: false });
     expect(answerQuiz(rounds, s, wrong.id)).toEqual({ correct: false });
     expect(s.mistakes).toBe(1);
+  });
+});
+
+describe('garden designer', () => {
+  it('roses cost seeds (3 per pouch); decorations are free', () => {
+    let layout = [];
+    for (let cell = 0; cell < 3; cell++) layout = place(layout, cell, 'rose-blue', { seeds: 1 });
+    expect(rosesUsed(layout)).toBe(3);
+    expect(place(layout, 3, 'rose-pink', { seeds: 1 })).toBeNull();
+    expect(place(layout, 3, 'lantern', { seeds: 1 })).toHaveLength(4);
+    expect(roseBudget(2)).toBe(6);
+  });
+  it('replacing a rose with a rose in the same plot is allowed at the limit', () => {
+    expect(place([], 0, 'rose-blue', { seeds: 0 })).toBeNull();
+    const full = [0, 1, 2].reduce((l, c) => place(l, c, 'rose-blue', { seeds: 1 }), []);
+    expect(place(full, 1, 'rose-white', { seeds: 1 })).not.toBeNull();
+  });
+  it('locked pieces need their condition; out-of-range plots are refused', () => {
+    expect(place([], 0, 'fountain', { unlocked: () => false })).toBeNull();
+    expect(place([], 0, 'fountain', { unlocked: () => true })).toHaveLength(1);
+    expect(place([], COLS * ROWS, 'lantern')).toBeNull();
+    expect(place([], 0, 'unicorn')).toBeNull();
+    expect(clearCell([{ id: 'bench', cell: 2 }], 2)).toEqual([]);
+    expect(Object.values(PIECES).every((p) => p.name && p.icon)).toBe(true);
   });
 });

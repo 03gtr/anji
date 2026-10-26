@@ -1,41 +1,27 @@
-# حديقة أنجي السرّية — Anji's Secret Garden 🌹🐇
+# الحديقة السرّية: سنوكي والصانع المفقود
+### Secret Garden: Snooki & the Missing Creator
 
-A small, mobile-first interactive gift: a white rabbit guides Anji through a
-moonlit garden of little memories, a tiny delivery mini-game and a few hidden
-secrets. It is open for one 24-hour window.
+A mysterious, funny, emotional story adventure for the web. Anji wakes up in a
+moonlit garden of blue roses, meets Snooki — a fluffy white husky who calls
+himself "a security consultant with fur" — and slowly uncovers why the garden's
+creator, Ryan, disappeared, and why the garden seems to know her.
 
-- Static site (Vite + plain JavaScript). No backend, database, Firebase, accounts,
-  analytics, external APIs or tracking.
-- Everything (art, font, sounds) is bundled. The published page carries a
-  Content-Security-Policy with `connect-src 'none'`, so it cannot send data anywhere.
-- Her progress is kept only in her own browser (`localStorage`) so a reload doesn't
-  lose it. That is not a backup and is never sent anywhere.
+- **Mobile-first**, Arabic (Iraqi dialect), right-to-left, touch + keyboard.
+- **Offline-first**: after one complete visit it plays with no network (service
+  worker precache, verified in a real browser with the network switched off).
+- **Private by design**: no backend, accounts, analytics, trackers or network
+  calls. Progress lives only in the player's browser; backups are files she
+  exports herself.
+- Vanilla JavaScript modules + Vite. No game engine, no runtime dependencies
+  except a bundled font.
+
+> This branch (`feature/snooki-missing-creator`) contains the game. The original
+> 24-hour gift that is live on GitHub Pages is unchanged on `main`; on this
+> branch it is still available as `gift.html`.
 
 ---
 
-## 1. Set the launch time ⏰ (required)
-
-Open **`src/config.js`** and edit `DEFAULT_LAUNCH_AT`:
-
-```js
-export const DEFAULT_LAUNCH_AT = '2026-10-26T09:00:00+03:00';
-```
-
-- Use ISO format **with a time-zone offset**. Baghdad is `+03:00`.
-  A value without an offset is rejected on purpose, because it would shift with
-  the visitor's own time zone.
-- The garden closes **exactly 24 hours later**. That is `WINDOW_MS` in the same file.
-- Before the launch time she sees a "the garden is still asleep" screen with a countdown.
-  After the window she sees the closed, expired garden.
-- If the value is malformed, the site shows a gentle "not ready yet" screen
-  (and logs the reason to the console) instead of opening.
-
-Optional: you can override the time without editing code. Set a repository variable
-named `LAUNCH_AT` (Settings → Secrets and variables → Actions → Variables) and the
-deploy workflow passes it to the build. Locally the same works with
-`VITE_LAUNCH_AT='…' npm run build`.
-
-## 2. Run locally
+## Play it locally
 
 Requires Node.js 20.19+ or 22.12+.
 
@@ -44,94 +30,79 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173/. To preview another moment during development, add
-`?now=`, for example
-`http://localhost:5173/?now=2026-10-26T12:00:00%2B03:00` (active),
-`…?now=2026-10-27T10:00:00%2B03:00` (expired).
-This override exists **only in the dev server**. It is stripped from production builds.
+Open http://localhost:5173/. Development shortcuts (dev server only, stripped from
+builds):
 
-To start the garden over in your browser, use "نعيدها من البداية" on the ending
-screen, or clear the site data.
+| URL | What it does |
+| --- | --- |
+| `/?scene=house` | jump straight into a location |
+| `/?scene=garage&flags=garage-open,act2-done` | …with story flags set |
+| `/?timer=1` | drive the game loop with timers (for automated testing in hidden tabs) |
+| `/dev/art.html?zoom=2` | character sheet: every pose, outfit and expression |
 
-## 3. Test and build
+## Test and build
 
 ```bash
-npm test          # unit and flow tests (Vitest + happy-dom)
-npm run build     # production site in dist/
-npm run preview   # serve dist/ locally
+npm test                # 334 unit, content-integrity and app-flow tests (Vitest)
+npm run build           # production build in dist/ + offline precache verification
+npm run preview         # serve dist/ (service worker works on localhost)
+npm run verify:offline  # re-check that dist/sw.js precaches exactly the files in dist/
 ```
 
-The build uses a relative base (`./`), so it works at
-`https://<user>.github.io/anji/`, under a renamed repository, or on a custom domain.
+## What is in the game
 
-## 4. Deploy to GitHub Pages
+Eight acts, twelve explorable locations, a world map, and these activities:
 
-The workflow `.github/workflows/deploy.yml` tests, builds and publishes `dist/` on
-every push to `main`.
+| Act | Location | Gameplay |
+| --- | --- | --- |
+| I · الحديقة الضائعة | Lost Garden, Rose Conservatory | exploration & platforming, moon-roses sequence puzzle, hedge maze, Nurse Needle chase, the talking gate |
+| II · البيت اللي يتذكر | The House | wardrobe dress-up, healthy-kitchen logic, Ryan's study (hidden objects), garage combination lock |
+| III · طريق الأضواء الزرقاء | Garage & road | logic machine (3 circuits), paint booth, three races |
+| IV · تحقيق سنوكي الكبير | Detective Academy, Animal Sanctuary | memory cards, evidence search, track-reading quiz, deduction board |
+| V · مرصد النجوم الضائعة | Observatory, Secret Library | candle lights-out, constellation rings, star cipher |
+| VI · ممر الذكريات | Memory Corridor, Moonlit Lake | six memory frames (owner memories or story memories), lantern release |
+| VII · ورشة الأشياء المفقودة | Workshop | three-stage final machine (circuits, lamps, journey lock) |
+| VIII · ما وراء الحديقة | Hidden Garden | the meeting, ending variations, credits, garden designer |
 
-1. Push this project to `main` on GitHub.
-2. In the repository, go to **Settings → Pages → Build and deployment → Source** and
-   choose **GitHub Actions**. This is a one-time setting.
-3. Open the **Actions** tab and wait for "Deploy to GitHub Pages" to finish (green).
-   You can re-run it any time with **Run workflow**.
+Plus: collectible stars, Ryan's letters, seed pouches and maze petals in every
+location; medals and replayable challenges (including two harder versions);
+17 achievements; unlockable outfits, bows, Snooki hats, collars and car colours;
+a journal of story clues.
 
-> Note: on GitHub's free plan, Pages only works for **public** repositories, so the
-> source (including all the text) is readable by anyone who finds the repository.
-> The page itself is not indexed (`noindex`), but it is not private either.
+## Owner-supplied content (kept out of this public repository)
 
-## 5. Verify the published URL
+**Artwork.** Put painted panels in `private-art/*.webp` (git-ignored). A local
+build then uses them for the title screen, cinematics, chapter cards and memory
+frames; without them the game uses its own illustrations. See `docs/ASSETS.md`.
 
-The URL is shown on the workflow run and under Settings → Pages. For this repository it
-is normally **https://03gtr.github.io/anji/**.
+**Personal memories.** Real memories are never stored in the repository. Either
+import a memories file on her device (Settings → «ذكريات خاصة»), or put
+`private/memories.json` (git-ignored) in place before a local build. Until then
+the Memory Corridor uses fictional story memories. See `docs/MEMORIES.md`.
 
-Check, on a phone if possible:
+> ⚠️ A build made *with* private art or `private/memories.json` contains them.
+> Only publish such a build if you explicitly want those files online.
 
-- [ ] Before the launch time: the sleeping-garden screen with a countdown.
-- [ ] During the window: the rabbit, the rose button, and the garden after tapping it.
-- [ ] No broken images or fonts. The browser console shows no errors.
+## Deployment
 
-To check the "open" state before launch day, build locally with a past launch time
-and run `npm run preview`. Don't deploy that build.
+Nothing on this branch deploys anything. The GitHub Pages workflow only runs for
+`main`. Publishing the game is a separate, explicit decision (see
+`docs/ARCHITECTURE.md` → "Publishing").
 
-## 6. After the 24 hours: switching it off
+## Documentation
 
-There are **two different things**:
-
-1. **The expired screen (automatic).** When the window ends, the page shows the closed
-   garden and stops all interaction. This happens in her browser and checks her
-   device's clock on load, on focus, every 15 seconds, and before every tap.
-   **It is a courtesy, not security.** Anyone can change their clock, edit the code,
-   or keep a saved copy. Nothing is deleted.
-2. **Taking the site down (manual, by you).** The URL keeps serving the files until you
-   remove them. Pick one:
-   - **Unpublish Pages:** Settings → Pages → *Unpublish site*. You can also set
-     Source to "None" or disable the workflow.
-   - **Delete the repository:** Settings → General → Danger Zone → *Delete this
-     repository*. This removes the code and the Pages site.
-
-   After unpublishing, the URL usually returns 404 within minutes. Browsers or proxies
-   may keep cached copies for a while, and copies people already saved are out of
-   anyone's control.
-
-Nothing in this project deletes itself or changes GitHub settings automatically.
+- `docs/GAME_DESIGN.md` — story, characters, acts, progression, tone
+- `docs/ARCHITECTURE.md` — code structure, data flow, saves, offline, how to add content
+- `docs/MEMORIES.md` — adding personal memories safely
+- `docs/ASSETS.md` — art pipeline, asset manifest, missing assets
+- `docs/QA_CHECKLIST.md` — what was tested, and how to test by hand
 
 ---
 
-## Project map
+## The original 24-hour gift (`gift.html`)
 
-| Path | What it is |
-| --- | --- |
-| `src/config.js` | **Launch time**, window length, storage key |
-| `src/content.js` | Every visitor-facing line (Iraqi Arabic), easy to edit |
-| `src/expiry.js` | Pure time-window logic (`before` / `active` / `expired`) |
-| `src/app.js` | Scene router, time gate, header and progress |
-| `src/guide.js` | The rabbit guide: speech bubble, paw pointer, minimise/replay |
-| `src/scenes/*` | Welcome, garden, the four memories, mini-game, ending, gate screens |
-| `src/game-logic.js` | Deterministic mini-game rules (no losing, generous catch zone) |
-| `src/art.js` | All illustrations as hand-written inline SVG |
-| `src/sound.js` | Optional soft tones (Web Audio). Off by default, never autoplays |
-| `tests/` | Expiry, storage, game logic and full-flow tests |
-
-Accessibility: RTL Arabic layout, 44px+ touch targets, safe-area insets, keyboard
-support (arrow keys in the game), screen-reader labels, and a `prefers-reduced-motion`
-mode where everything works without drifting animation.
+The first version of this repository is a one-day gift page (Anji's Secret
+Garden with a white rabbit guide). Its source is `src/main.js` + `src/*.js`, its
+launch time is `DEFAULT_LAUNCH_AT` in `src/config.js` (ISO time with offset, e.g.
+`'2026-10-25T14:00:00+03:00'`), and it closes exactly 24 hours later. Its tests
+are `tests/*.test.js`. On `main` it is the live page.

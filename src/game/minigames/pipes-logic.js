@@ -114,6 +114,13 @@ export const PIPE_LEVELS = {
     'L0- I1- T1- L3- .0-',
     '.0- .0- D0T .0- L0-',
   ],
+  workshop: [
+    'D1S I1- T1- I1- L2- L2-',
+    'I0- .0- I0- .0- I0- .0-',
+    '.0- L1- X0- I1- T0- D3T',
+    'L1- L3- I0- L0- I0- .0-',
+    'D0T .0- L0- I1- L3- I1-',
+  ],
   lights: [
     'D1S I1- T1- I1- D3T',
     'I0- .0- I0- .0- .0-',

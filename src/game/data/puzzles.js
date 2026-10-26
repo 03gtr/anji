@@ -96,5 +96,85 @@ export const PUZZLES = {
     success: 'سنوكي… نزّل راسه.',
     reward: ['flag:case-solved'],
   },
+
+  // Pure logic: every candle press flips itself and its neighbours.
+  'library-candles': {
+    type: 'switches',
+    title: 'شموع المكتبة',
+    intro: 'كل شمعة تلمسينها تقلب نفسها والشموع اللي جنبها. شعّلي التسعة كلها.',
+    config: { size: 3, scramble: 3, seed: 7 },
+    hints: ['ابدي بالشموع الطافية اللي جنب بعض.', 'الشمعة بالنص تأثر على خمس شموع.', 'جرّبي تلمسين نفس الشمعة مرتين: ترجع مثل ما چانت.'],
+    wrong: [],
+    success: 'المكتبة ضوت كلها.',
+    reward: ['flag:candles-lit'],
+  },
+
+  // Clue: Doctor Hoot explains the golden arrow; the rings show the symbols
+  // she has met on her way (rose, paw, moon).
+  'star-rings': {
+    type: 'rings',
+    title: 'حلقات الكوكبة',
+    intro: 'لفّي الحلقات الثلاث لحد ما كل رمز يوصل للسهم الذهبي فوق. انتبهي: الحلقة الخارجية تسحب اللي جوّاها.',
+    config: {
+      count: 3,
+      steps: 8,
+      start: [3, 5, 2],
+      links: { 0: [1] },
+      symbols: ['rose', 'paw', 'moon-full'],
+      labels: ['الوردة', 'الكف', 'القمر'],
+    },
+    hints: ['ركّزي على الحلقة الخارجية أول، لأنها تحرّك الوسطى.', 'لمن الوردة تصير فوق، صلّحي الكف والقمر بدون ما تلمسين الخارجية.', 'كل حلقة إلها ثمان مواقع.'],
+    wrong: [],
+    success: 'النجوم ركبت… وطلع شكل.',
+    reward: ['flag:rings-aligned'],
+  },
+
+  // Clue: the glyph key in the library note gives the first and last letter;
+  // the word is the name the garden was made for.
+  'star-cipher': {
+    type: 'cipher',
+    title: 'شفرة النجوم',
+    intro: 'تحت الكوكبة، أربع نجوم بأشكال مختلفة. كل شكل حرف. الكلمة اللي ريان كتبها بالسما…',
+    config: {
+      word: ['أ', 'ن', 'ج', 'ي'],
+      glyphs: ['sym:star', 'sym:moon-crescent', 'sym:rose', 'sym:heart'],
+      given: { 0: 'أ', 3: 'ي' },
+      key: [['sym:star', 'أ'], ['sym:heart', 'ي']],
+      letters: ['ر', 'ن', 'ج', 'س', 'م', 'ل'],
+    },
+    hints: ['الكلمة اسم.', 'اسم يبدي بألف وينتهي بياء… ومن أربع حروف.', 'الاسم اللي الحديقة تعرفه من أول يوم.'],
+    wrong: ['النجوم ما ضوت. مو هاي الكلمة.', 'فكّري: ليش الحديقة تعرفچ؟'],
+    success: '…أنجي.',
+    reward: ['flag:cipher-solved'],
+  },
+
+  'workshop-lights': {
+    type: 'switches',
+    title: 'فوانيس الماكينة',
+    intro: 'ستطعش فانوس بالماكينة. كل لمسة تقلب الفانوس وجيرانه. شعّليهن كلهن.',
+    config: { size: 4, scramble: 4, seed: 13 },
+    hints: ['اشتغلي صف صف من فوق لجوه.', 'لمن الصف الفوقاني كله شاعل، صلّحي اللي تحته باللمس تحت كل فانوس طافي.', 'نفس اللمسة مرتين ترجّع كل شي مثل ما چان.'],
+    wrong: [],
+    success: 'الفوانيس كلها شاعلة!',
+    reward: ['flag:wk-stage2'],
+  },
+
+  // Each dial is one chapter of her journey: the full moon that opened the
+  // maze, the key-coded garage, the blue car, Snooki's paw (the culprit).
+  'workshop-lock': {
+    type: 'lock',
+    title: 'قفل الرحلة',
+    intro: 'أربع خانات: الحديقة، البيت، الطريق، التحقيق. لكل مكان رمز فتح الطريق.',
+    config: {
+      symbols: ['sym:moon-full', 'sym:key', 'sym:car', 'sym:paw', 'sym:star', 'sym:rose', 'sym:heart', 'sym:note'],
+      start: [4, 5, 6, 7],
+      answer: [0, 1, 2, 3],
+      dialLabels: ['الحديقة', 'البيت', 'الطريق', 'التحقيق'],
+    },
+    hints: ['كل خانة: شنو الشي اللي فتح الطريق بهذاك المكان؟', 'الحديقة: آخر وردة بالترتيب. البيت: قفل الكراج. الطريق: زفيرو. التحقيق: المجرم.', 'بدر، مفتاح، سيارة، كف.'],
+    wrong: ['الماكينة تهز… بس ما تفتح.', 'سنوكي: «التحقيق؟ لا تحطين كفّي! …زين، حطيه.»', 'فكّري بكل فصل من الرحلة.'],
+    success: 'الماكينة دارت!',
+    reward: ['flag:wk-stage3'],
+  },
 };
 

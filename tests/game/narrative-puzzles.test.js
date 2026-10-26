@@ -160,7 +160,38 @@ describe('puzzle content', () => {
       return [...moves, ['submit']];
     },
     cipher: (c) => [...c.word.map((l, i) => ['set', i, l]), ['submit']],
-    deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.map((e) => ['toggleEvidence', e]), ['submit']],
+    deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.slice(0, c.need || 2).map((e) => ['toggleEvidence', e]), ['submit']],
+    // small state spaces: search for a sequence of presses / turns
+    switches: (c) => {
+      const n = c.size * c.size;
+      for (let mask = 1; mask < 1 << n; mask++) {
+        const moves = [];
+        for (let i = 0; i < n; i++) if (mask & (1 << i)) moves.push(['press', i]);
+        if (replay('switches', c, moves).outcome === 'solved') return moves;
+      }
+      return null;
+    },
+    rings: (c) => {
+      const start = c.start.join(',');
+      const queue = [[c.start, []]];
+      const seen = new Set([start]);
+      while (queue.length) {
+        const [pos, moves] = queue.shift();
+        for (let i = 0; i < c.start.length; i++) {
+          for (const dir of [1, -1]) {
+            const next = [...pos];
+            for (const r of [i, ...(c.links?.[i] || [])]) next[r] = (((next[r] + dir) % c.steps) + c.steps) % c.steps;
+            const key = next.join(',');
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const m = [...moves, ['turn', i, dir]];
+            if (next.every((p) => p === 0)) return m;
+            queue.push([next, m]);
+          }
+        }
+      }
+      return null;
+    },
   };
   for (const [id, def] of Object.entries(PUZZLES)) {
     it(`${id}: has a title, intro, hints, reward and a valid solution`, () => {

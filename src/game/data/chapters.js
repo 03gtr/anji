@@ -60,10 +60,54 @@ export const ACTS = [
       { done: 'flag:case-solved', text: 'حلّي القضية على لوحة التحقيق.' },
     ],
   },
-  { act: 5, title: 'مرصد النجوم الضائعة', subtitle: 'النجوم ما تكذب. بس ترمّز.', art: null, objectives: [] },
-  { act: 6, title: 'ممر الذكريات', subtitle: 'الأشياء تحفظ القصص.', art: 'world-7-memories', objectives: [] },
-  { act: 7, title: 'ورشة الأشياء المفقودة', subtitle: 'كل أداة لها مكان.', art: null, objectives: [] },
-  { act: 8, title: 'ما وراء الحديقة', subtitle: 'النهاية… أو البداية.', art: 'world-8-ending', objectives: [] },
+  {
+    act: 5,
+    title: 'مرصد النجوم الضائعة',
+    subtitle: 'النجوم ما تكذب. بس ترمّز.',
+    art: null,
+    objectives: [
+      { done: 'flag:observatory-entered', text: 'روحي للمرصد (من الخريطة).' },
+      { done: 'flag:library-open', text: 'احچي ويّا دكتور هوت.' },
+      { done: 'flag:lens-found', text: 'لگي العدسة بالمكتبة السرية (الباب اللي بيه نجمة بالبيت).' },
+      { done: 'flag:rings-done', text: 'رجّعي العدسة للتلسكوب وصفّي الحلقات.' },
+      { done: 'flag:act5-done', text: 'اقرئي رسالة النجوم.' },
+    ],
+  },
+  {
+    act: 6,
+    title: 'ممر الذكريات',
+    subtitle: 'الأشياء تحفظ القصص.',
+    art: 'world-7-memories',
+    objectives: [
+      { done: 'flag:corridor-entered', text: 'روحي لممر الذكريات (من الخريطة).' },
+      { done: 'flag:corridor-done', text: 'ضوّي الإطارات الستة بممر الذكريات.' },
+      { done: 'flag:lake-done', text: 'طيّري الفوانيس بالبحيرة القمرية.' },
+      { done: 'flag:act6-done', text: 'شنو اللي يلمع بالماي؟' },
+    ],
+  },
+  {
+    act: 7,
+    title: 'ورشة الأشياء المفقودة',
+    subtitle: 'كل شي هنا ناقصه قطعة.',
+    art: null,
+    objectives: [
+      { done: 'flag:workshop-entered', text: 'انزلي للورشة من الدرج اللي بالبيت.' },
+      { done: { any: ['item:blue-thread', 'flag:act7-done'] }, text: 'الماكينة تحتاج الخيط الأزرق اللي بسياج المحمية.' },
+      { done: 'flag:wk-stage1', text: 'شغّلي قلب الماكينة.' },
+      { done: 'flag:wk-stage2', text: 'شعّلي فوانيس الماكينة.' },
+      { done: 'flag:act7-done', text: 'افتحي قفل الرحلة.' },
+    ],
+  },
+  {
+    act: 8,
+    title: 'ما وراء الحديقة',
+    subtitle: 'النهاية… أو البداية.',
+    art: 'world-8-ending',
+    objectives: [
+      { done: 'flag:final-entered', text: 'روحي للحديقة المخفية.' },
+      { done: 'flag:game-complete', text: 'تحت شجرة الورد الزرقاء…' },
+    ],
+  },
 ];
 
 /** The act she is currently in: the first one with an unfinished objective. */

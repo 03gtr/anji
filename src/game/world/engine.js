@@ -178,10 +178,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
 
   async function runOne(act) {
     if (typeof act === 'function') return act(api);
-    if (act.if !== undefined && !('then' in act) && !('else' in act) && !act.puzzle && !act.game) {
+    if (act.if !== undefined && !('then' in act) && !('else' in act) && !act.puzzle && !act.game && act.memory === undefined) {
       if (!check(act.if, game)) return;
     }
-    if ('then' in act && !act.puzzle && !act.game) {
+    if ('then' in act && !act.puzzle && !act.game && act.memory === undefined) {
       return runActions(check(act.if, game) ? act.then : act.else || []);
     }
     if (act.say) return app.ui.dialogue(act.say);
@@ -192,6 +192,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     }
     if (act.puzzle) {
       const res = await app.ui.puzzle(act.puzzle);
+      return runActions(res?.solved ? act.then || [] : act.else || []);
+    }
+    if (act.memory !== undefined) {
+      const res = await app.ui.memory(act.memory);
       return runActions(res?.solved ? act.then || [] : act.else || []);
     }
     if (act.game) {

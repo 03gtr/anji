@@ -356,6 +356,169 @@ export const THEMES = {
     ],
   },
 
+  observatory: interior({
+    wall: '#141a48',
+    pattern: '#141a48',
+    trim: '#8a6a20',
+    wainscot: '#10143a',
+    floorColors: { wood: '#3a2a36', light: '#4a3542' },
+    rug: '#2b3a8c',
+    extra(ctx, u0, u1, seed) {
+      // painted star map across the dome wall
+      each(u0, u1, 22, 10, seed + 4, (i, x, r) => {
+        ctx.fillStyle = `rgba(255,246,208,${0.3 + r() * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(x, 14 + r() * (GROUND - 100), r() < 0.2 ? 1.6 : 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.strokeStyle = 'rgba(159,215,255,.15)';
+      ctx.lineWidth = 1;
+      for (let x = Math.floor(u0 / 160) * 160; x < u1 + 160; x += 160) {
+        ctx.beginPath();
+        ctx.arc(x, GROUND - 40, 150, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.stroke();
+      }
+    },
+  }),
+
+  library: interior({
+    wall: '#2a1a22',
+    pattern: '#2a1a22',
+    trim: '#5a3d2c',
+    wainscot: '#22141c',
+    floorColors: { wood: '#4a2f2a', light: '#5a3a32' },
+    rug: '#5b1f34',
+    extra(ctx, u0, u1, seed) {
+      each(u0, u1, 120, 0, seed + 7, (i, x, r) => P.bookshelf(ctx, i * 120 + 6, GROUND - 2, 108, GROUND - 26, r));
+    },
+  }),
+
+  corridor: interior({
+    wall: '#1e2250',
+    pattern: '#232860',
+    trim: '#8a6a20',
+    wainscot: '#181c44',
+    floorColors: { wood: '#3a2a36', light: '#4a3542' },
+    rug: '#2b3a8c',
+  }),
+
+  lake: {
+    sky: nightSky('#070a2a', '#1b2160', '#3b3a7a'),
+    stars: 110,
+    moon: [0.62, 0.16, 18],
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          ctx.fillStyle = '#141a48';
+          ctx.beginPath();
+          ctx.moveTo(u0 - 2, 200);
+          for (let u = u0 - 2; u <= u1 + 2; u += 8) ctx.lineTo(u, 186 + Math.sin(u * 0.008) * 14);
+          ctx.lineTo(u1 + 2, 205);
+          ctx.lineTo(u0 - 2, 205);
+          ctx.fill();
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.5,
+        draw(ctx, u0, u1) {
+          // the lake surface with soft moonlight streaks
+          const g = ctx.createLinearGradient(0, 200, 0, GROUND);
+          g.addColorStop(0, '#1b2160');
+          g.addColorStop(1, '#0f1440');
+          ctx.fillStyle = g;
+          ctx.fillRect(u0 - 2, 200, u1 - u0 + 4, GROUND - 196);
+          ctx.fillStyle = 'rgba(255,244,214,.12)';
+          for (let x = Math.floor(u0 / 60) * 60; x < u1 + 60; x += 60) ctx.fillRect(x + 10, 210 + ((x / 60) % 3) * 10, 26, 2);
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          grassGround(ctx, u0, u1, seed, { grass: '#2a4a40', light: '#345a4c', path: '#a88b5c', pathEdge: '#8a6a45', soil: '#16201f' });
+          each(u0, u1, 170, 60, seed, (i, x, r) => {
+            if (r() < 0.6) P.roseBush(ctx, x, GROUND + 4, 50 + r() * 30, 30, r, { tone: 'blue', roses: 4 });
+          });
+        },
+      },
+    ],
+  },
+
+  workshop: interior({
+    wall: '#2a2236',
+    pattern: '#2e2640',
+    trim: '#b4674a',
+    wainscot: '#221c2e',
+    floor: 'concrete',
+    floorColors: { floor: '#3a3048', line: '#2e2638' },
+    extra(ctx, u0, u1) {
+      ctx.strokeStyle = 'rgba(180,103,74,.5)';
+      ctx.lineWidth = 6;
+      for (let x = Math.floor(u0 / 300) * 300; x < u1 + 300; x += 300) {
+        ctx.beginPath();
+        ctx.moveTo(x, 20);
+        ctx.lineTo(x, 120);
+        ctx.lineTo(x + 140, 120);
+        ctx.stroke();
+      }
+    },
+  }),
+
+  final: {
+    sky: nightSky('#05071f', '#1b2160', '#3b3a7a'),
+    stars: 160,
+    moon: [0.85, 0.12, 16],
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          // soft aurora
+          for (let k = 0; k < 3; k++) {
+            ctx.strokeStyle = `rgba(111,211,255,${0.06 + k * 0.03})`;
+            ctx.lineWidth = 24 - k * 6;
+            ctx.beginPath();
+            for (let u = u0 - 2; u <= u1 + 2; u += 10) ctx.lineTo(u, 60 + k * 18 + Math.sin(u * 0.01 + k) * 14);
+            ctx.stroke();
+          }
+          each(u0, u1, 80, 60, seed, (i, x, r) => P.tree(ctx, x, 210, 60 + r() * 40, r, { color: '#1b2a5c', trunk: '#141a40' }));
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.55,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 150, 80, seed, (i, x, r) => P.hedgeWall(ctx, x - 60, x + 60, GROUND - 120, GROUND - 16, r, { color: '#1f3f40', light: '#284d4b', roses: 0.16 }));
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          grassGround(ctx, u0, u1, seed, { grass: '#2a5a4a', light: '#357060' });
+          each(u0, u1, 40, 20, seed + 3, (i, x, r) => {
+            ctx.fillStyle = `rgba(159,215,255,${0.4 + r() * 0.4})`;
+            ctx.beginPath();
+            ctx.arc(x, GROUND + 6 + r() * 8, 1.6, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        },
+      },
+      {
+        name: 'front',
+        f: 1.2,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 360, 120, seed, (i, x, r) => {
+            if (r() < 0.6) P.roseBush(ctx, x, VIEW_H + 18, 100, 50, r, { tone: 'blue', leaf: '#16302c', leafLight: '#1e3c36', roses: 9 });
+          });
+        },
+      },
+    ],
+  },
+
   house: {
     sky: null,
     ceiling: '#25285a',

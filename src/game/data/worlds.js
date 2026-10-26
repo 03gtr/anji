@@ -14,12 +14,12 @@ export const WORLDS = [
   { id: 'garage', name: 'الكراج وطريق السباق', icon: 'car', x: 84, y: 66, act: 3, scene: 'garage', spawn: 160, unlock: 'flag:garage-open', ready: true },
   { id: 'academy', name: 'أكاديمية سنوكي', icon: 'paw', x: 30, y: 40, act: 4, scene: 'academy', spawn: 140, unlock: 'flag:act3-done', ready: true },
   { id: 'sanctuary', name: 'محمية الحيوانات', icon: 'feather', x: 14, y: 52, act: 4, scene: 'sanctuary', spawn: 140, unlock: 'flag:case-open', ready: true },
-  { id: 'observatory', name: 'المرصد', icon: 'star', x: 62, y: 22, act: 5, unlock: 'flag:act4-done', ready: false },
-  { id: 'library', name: 'المكتبة السرّية', icon: 'note', x: 80, y: 32, act: 5, unlock: 'flag:act4-done', ready: false },
-  { id: 'lake', name: 'البحيرة القمرية', icon: 'moon-full', x: 40, y: 22, act: 6, unlock: 'flag:act5-done', ready: false },
-  { id: 'corridor', name: 'ممر الذكريات', icon: 'heart', x: 22, y: 24, act: 6, unlock: 'flag:act5-done', ready: false },
-  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, unlock: 'flag:act6-done', ready: false },
-  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, unlock: 'flag:act7-done', ready: false },
+  { id: 'observatory', name: 'المرصد', icon: 'star', x: 62, y: 22, act: 5, scene: 'observatory', spawn: 140, unlock: 'flag:act4-done', ready: true },
+  { id: 'library', name: 'المكتبة السرّية', icon: 'note', x: 80, y: 32, act: 5, scene: 'library', spawn: 140, unlock: 'flag:library-open', ready: true },
+  { id: 'lake', name: 'البحيرة القمرية', icon: 'moon-full', x: 40, y: 22, act: 6, scene: 'lake', spawn: 140, unlock: 'flag:act5-done', ready: true },
+  { id: 'corridor', name: 'ممر الذكريات', icon: 'heart', x: 22, y: 24, act: 6, scene: 'corridor', spawn: 140, unlock: 'flag:act5-done', ready: true },
+  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, scene: 'workshop', spawn: 140, unlock: 'flag:act6-done', ready: true },
+  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, scene: 'final', spawn: 140, unlock: 'flag:act7-done', ready: true },
 ];
 
 /** Paths drawn between locations (ids). */

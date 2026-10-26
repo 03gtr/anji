@@ -7,6 +7,8 @@ import { applyEffects, isValidEffect } from '../../src/game/core/effects.js';
 import { createScope } from '../../src/game/core/scope.js';
 import { createSettings, sanitizeSettings } from '../../src/game/core/settings.js';
 import { memoryStorage } from '../helpers.js';
+import { ACHIEVEMENTS, syncAchievements } from '../../src/game/progression/achievements.js';
+import { COSMETICS } from '../../src/game/data/items.js';
 
 const make = () => {
   const storage = memoryStorage();
@@ -164,5 +166,32 @@ describe('settings', () => {
     expect(s.reducedMotion()).toBe(true);
     s.set({ motion: 'full' });
     expect(s.reducedMotion()).toBe(false);
+  });
+});
+
+describe('achievements', () => {
+  it('have unique ids, valid rewards, and nothing is earned on a new game', () => {
+    const ids = ACHIEVEMENTS.map((a) => a.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const a of ACHIEVEMENTS) {
+      if (a.reward) {
+        expect(isValidEffect(a.reward)).toBe(true);
+        expect(COSMETICS[a.reward.split(':')[1]], a.id).toBeTruthy();
+      }
+    }
+    const { game } = make();
+    game.totalOf = () => 99;
+    expect(syncAchievements(game)).toEqual([]);
+  });
+
+  it('are earned once when their condition becomes true, with their reward', () => {
+    const { game } = make();
+    game.totalOf = () => 99;
+    for (let i = 0; i < 10; i++) game.collect(`star.x.${i}`);
+    game.setFlag('met-snooki');
+    const first = syncAchievements(game).map((a) => a.id);
+    expect(first).toEqual(expect.arrayContaining(['first-steps', 'stars-10']));
+    expect(game.isUnlocked('bow-gold')).toBe(true);
+    expect(syncAchievements(game)).toEqual([]);
   });
 });
