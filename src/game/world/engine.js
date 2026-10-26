@@ -646,6 +646,12 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       listeners[type].push(fn);
     },
     /** Advance the simulation manually (tests). */
+    /** Re-dress Anji and Snooki after a wardrobe change. */
+    async refreshCosmetics() {
+      for (const kind of ['anji', 'snooki']) {
+        frames[kind] = await rasterize(frameTable(kind, game.state.cosmetics), { height: RASTER_HEIGHT[kind] });
+      }
+    },
     tick(dt, frames = 1) {
       for (let i = 0; i < frames; i++) update(dt);
     },

@@ -147,18 +147,28 @@ describe('puzzle rules', () => {
 });
 
 describe('puzzle content', () => {
-  const SOLUTIONS = {
-    'moon-bloom': (c) => c.answer.map((id) => ['press', id]),
-    'gate-color': (c) => [['pick', c.answer]],
+  /** Generic solvers derive a winning move list from each puzzle's config. */
+  const SOLVERS = {
+    sequence: (c) => c.answer.map((id) => ['press', id]),
+    choice: (c) => [['pick', c.answer]],
+    lock: (c) => {
+      const start = c.start || c.answer.map(() => 0);
+      const moves = [];
+      c.answer.forEach((target, i) => {
+        for (let k = 0; k < (target - start[i] + c.symbols.length) % c.symbols.length; k++) moves.push(['turn', i, 1]);
+      });
+      return [...moves, ['submit']];
+    },
+    cipher: (c) => [...c.word.map((l, i) => ['set', i, l]), ['submit']],
+    deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.map((e) => ['toggleEvidence', e]), ['submit']],
   };
   for (const [id, def] of Object.entries(PUZZLES)) {
     it(`${id}: has a title, intro, hints, reward and a valid solution`, () => {
       expect(def.title && def.intro).toBeTruthy();
       expect(def.hints?.length).toBeGreaterThanOrEqual(2);
       expect(RULES[def.type]).toBeTruthy();
-      const solve = SOLUTIONS[id] ?? def.solution;
-      expect(solve, `add a solution for ${id} in this test`).toBeTruthy();
-      const moves = typeof solve === 'function' ? solve(def.config) : solve;
+      const moves = def.solution ?? SOLVERS[def.type]?.(def.config);
+      expect(moves, `add a solution for ${id}`).toBeTruthy();
       expect(replay(def.type, def.config, moves).outcome).toBe('solved');
     });
   }

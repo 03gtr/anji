@@ -99,7 +99,8 @@ describe('scenes', () => {
           if (a.puzzle) expect(PUZZLES[a.puzzle], `puzzle ${a.puzzle}`).toBeTruthy();
           if (a.game) expect(MINIGAMES[a.game], `minigame ${a.game}`).toBeTruthy();
           if (a.cine) expect(CINEMATICS[a.cine], `cinematic ${a.cine}`).toBeTruthy();
-          if (a.goto) expect(SCENES[a.goto], `scene ${a.goto}`).toBeTruthy();
+          // a scene may point at a location that is registered on the map but not built yet
+          if (a.goto) expect(SCENES[a.goto] || WORLDS.some((w) => w.id === a.goto && !w.ready), `scene ${a.goto}`).toBeTruthy();
           if (a.fx) checkEffect(a.fx, scene.id);
         }
       });

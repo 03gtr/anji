@@ -593,3 +593,224 @@ export function pot(ctx, x, y, rand, { tone = 'blue' } = {}) {
   ctx.fillRect(x - 14, y - 25, 28, 5);
   roseBush(ctx, x, y - 24, 30, 26, rand, { tone, roses: 3 });
 }
+
+/** Tall clock whose hands show h:m (the house's stopped clock is a clue). */
+export function grandfatherClock(ctx, x, y, { h = 7, m = 14, swing = 0 } = {}) {
+  ctx.fillStyle = '#3b2630';
+  ctx.fillRect(x - 18, y - 150, 36, 150);
+  ctx.fillStyle = '#4a3040';
+  ctx.beginPath();
+  ctx.moveTo(x - 22, y - 150);
+  ctx.quadraticCurveTo(x, y - 176, x + 22, y - 150);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#f3e3c3';
+  ctx.beginPath();
+  ctx.arc(x, y - 128, 13, 0, TAU);
+  ctx.fill();
+  ctx.strokeStyle = '#3b2630';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * TAU;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.sin(a) * 10, y - 128 - Math.cos(a) * 10);
+    ctx.lineTo(x + Math.sin(a) * 12, y - 128 - Math.cos(a) * 12);
+    ctx.stroke();
+  }
+  const hand = (frac, len, w) => {
+    ctx.lineWidth = w;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 128);
+    ctx.lineTo(x + Math.sin(frac * TAU) * len, y - 128 - Math.cos(frac * TAU) * len);
+    ctx.stroke();
+  };
+  hand(((h % 12) + m / 60) / 12, 6.5, 2);
+  hand(m / 60, 9.5, 1.3);
+  ctx.fillStyle = '#2a1a22';
+  ctx.fillRect(x - 10, y - 108, 20, 80);
+  ctx.strokeStyle = '#e2b544';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 106);
+  ctx.lineTo(x + Math.sin(swing) * 6, y - 50);
+  ctx.stroke();
+  ctx.fillStyle = '#e2b544';
+  ctx.beginPath();
+  ctx.arc(x + Math.sin(swing) * 6, y - 46, 5, 0, TAU);
+  ctx.fill();
+}
+
+/** Wall lamp; `lit` 0…1 fades the warm glow. */
+export function sconce(ctx, x, y, lit = 1) {
+  if (lit > 0) {
+    const g = ctx.createRadialGradient(x, y, 2, x, y, 60);
+    g.addColorStop(0, `rgba(255,214,140,${0.5 * lit})`);
+    g.addColorStop(1, 'rgba(255,214,140,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, 60, 0, TAU);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#2a2236';
+  ctx.fillRect(x - 2, y + 4, 4, 14);
+  ctx.fillStyle = lit > 0.3 ? '#ffd98a' : '#5a5470';
+  ctx.beginPath();
+  ctx.moveTo(x - 7, y + 4);
+  ctx.lineTo(x + 7, y + 4);
+  ctx.lineTo(x + 4, y - 8);
+  ctx.lineTo(x - 4, y - 8);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/** Staircase going down (to the workshop). */
+export function stairsDown(ctx, x, y, { open = false } = {}) {
+  ctx.fillStyle = '#1a1424';
+  ctx.fillRect(x - 40, y - 8, 80, 12);
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = i % 2 ? '#3a2a36' : '#45323f';
+    ctx.fillRect(x - 36 + i * 6, y - 4 + i * 2, 72 - i * 12, 3);
+  }
+  ctx.strokeStyle = '#6b4a3a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x - 40, y - 8);
+  ctx.lineTo(x - 40, y - 60);
+  ctx.lineTo(x + 40, y - 60);
+  ctx.lineTo(x + 40, y - 8);
+  ctx.stroke();
+  if (!open) {
+    ctx.strokeStyle = '#e2b544';
+    ctx.lineWidth = 2;
+    for (let i = -30; i <= 30; i += 12) {
+      ctx.beginPath();
+      ctx.moveTo(x + i, y - 58);
+      ctx.lineTo(x + i, y - 8);
+      ctx.stroke();
+    }
+  }
+}
+
+/** A portrait frame that is still empty (the house "forgot" who to show). */
+export function blankFrame(ctx, x, y, w, h, { glow = 0 } = {}) {
+  ctx.fillStyle = '#c9a24a';
+  ctx.fillRect(x - w / 2 - 4, y - 4, w + 8, h + 8);
+  ctx.fillStyle = '#e9e2d4';
+  ctx.fillRect(x - w / 2, y, w, h);
+  if (glow) {
+    ctx.fillStyle = `rgba(159,215,255,${0.35 * glow})`;
+    ctx.fillRect(x - w / 2, y, w, h);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,.12)';
+  ctx.strokeRect(x - w / 2 + 4, y + 4, w - 8, h - 8);
+}
+
+export function toolRack(ctx, x, y) {
+  ctx.fillStyle = '#2a2236';
+  ctx.fillRect(x - 60, y - 150, 120, 80);
+  ctx.strokeStyle = '#9aa3b8';
+  ctx.lineWidth = 3;
+  const tools = [[-45, 'wrench'], [-25, 'hammer'], [-5, 'screw'], [15, 'wrench'], [35, 'saw']];
+  for (const [dx, kind] of tools) {
+    ctx.beginPath();
+    if (kind === 'hammer') {
+      ctx.moveTo(x + dx, y - 140);
+      ctx.lineTo(x + dx, y - 85);
+      ctx.moveTo(x + dx - 7, y - 140);
+      ctx.lineTo(x + dx + 7, y - 140);
+    } else if (kind === 'saw') {
+      ctx.moveTo(x + dx, y - 140);
+      ctx.lineTo(x + dx + 10, y - 90);
+    } else {
+      ctx.moveTo(x + dx, y - 138);
+      ctx.lineTo(x + dx, y - 92);
+      ctx.arc(x + dx, y - 140, 4, 0, Math.PI * 2);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#4a3028';
+  ctx.fillRect(x - 70, y - 40, 140, 8);
+  ctx.fillRect(x - 64, y - 32, 6, 32);
+  ctx.fillRect(x + 58, y - 32, 6, 32);
+  ctx.fillStyle = '#e2b544';
+  ctx.fillRect(x - 40, y - 52, 24, 12);
+  ctx.fillStyle = '#c9304a';
+  ctx.fillRect(x + 10, y - 50, 30, 10);
+}
+
+/** Rolling shutter door to the road; open 0…1. */
+export function shutter(ctx, x, y, { open = 0, glow = 0 } = {}) {
+  const w = 130;
+  const h = 150;
+  if (open > 0) {
+    const g = ctx.createLinearGradient(x, y - h, x, y);
+    g.addColorStop(0, '#141a52');
+    g.addColorStop(1, '#2b3a8c');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - w / 2, y - h, w, h);
+    ctx.fillStyle = 'rgba(111,211,255,.8)';
+    for (let i = 0; i < 6; i++) ctx.fillRect(x - 4, y - 20 - i * 22, 8, 10);
+  }
+  ctx.fillStyle = '#5b6080';
+  const top = y - h;
+  const visible = h * (1 - open);
+  ctx.fillRect(x - w / 2, top, w, visible);
+  ctx.strokeStyle = '#464a68';
+  ctx.lineWidth = 2;
+  for (let yy = top + 8; yy < top + visible; yy += 8) {
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2, yy);
+    ctx.lineTo(x + w / 2, yy);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#2a2236';
+  ctx.fillRect(x - w / 2 - 8, top - 10, w + 16, 10);
+  if (glow) {
+    ctx.strokeStyle = `rgba(255,217,119,${0.7 * glow})`;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x - w / 2 - 4, top - 4, w + 8, h + 4);
+  }
+}
+
+/** Dust sheet covering the car before the reveal. */
+export function carSheet(ctx, x, y) {
+  ctx.fillStyle = '#c9c5e6';
+  ctx.beginPath();
+  ctx.moveTo(x - 86, y);
+  ctx.quadraticCurveTo(x - 80, y - 40, x - 30, y - 52);
+  ctx.quadraticCurveTo(x + 10, y - 62, x + 40, y - 50);
+  ctx.quadraticCurveTo(x + 84, y - 34, x + 88, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.12)';
+  ctx.beginPath();
+  ctx.moveTo(x - 40, y - 46);
+  ctx.quadraticCurveTo(x - 30, y - 20, x - 44, y);
+  ctx.moveTo(x + 20, y - 54);
+  ctx.quadraticCurveTo(x + 30, y - 20, x + 22, y);
+  ctx.stroke();
+}
+
+/** Wall panel with three status lamps (power, cooling, lights). */
+export function controlPanel(ctx, x, y, { on = false, t = 0 } = {}) {
+  ctx.fillStyle = '#2a2236';
+  ctx.fillRect(x - 30, y - 150, 60, 80);
+  ctx.fillStyle = '#121640';
+  ctx.fillRect(x - 24, y - 144, 48, 50);
+  const lamps = ['#ffd977', '#6fd3ff', '#f3f1ff'];
+  lamps.forEach((c, i) => {
+    ctx.fillStyle = on ? c : '#3a3c5c';
+    ctx.beginPath();
+    ctx.arc(x - 14 + i * 14, y - 82, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  if (!on) {
+    ctx.fillStyle = `rgba(232,93,140,${0.5 + 0.5 * Math.sin(t * 4)})`;
+    ctx.fillRect(x - 18, y - 128, 36, 4);
+  } else {
+    ctx.strokeStyle = '#6fd3ff';
+    ctx.beginPath();
+    for (let i = 0; i <= 40; i++) ctx.lineTo(x - 20 + i, y - 120 + Math.sin(i * 0.6 + t * 6) * 6);
+    ctx.stroke();
+  }
+}

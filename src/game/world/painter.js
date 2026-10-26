@@ -108,6 +108,45 @@ function wallpaper(ctx, u0, u1, seed, { wall = '#25285a', pattern = '#2e3270', t
   for (let x = Math.floor(u0 / 70) * 70; x < u1 + 70; x += 70) ctx.strokeRect(x + 8, GROUND - 56, 54, 44);
 }
 
+function concreteFloor(ctx, u0, u1, { floor = '#3a3d52', line = '#2e3044', stripe = null } = {}) {
+  ctx.fillStyle = floor;
+  ctx.fillRect(u0 - 2, GROUND, u1 - u0 + 4, VIEW_H - GROUND);
+  ctx.strokeStyle = line;
+  ctx.lineWidth = 1;
+  for (let x = Math.floor(u0 / 80) * 80; x < u1 + 80; x += 80) {
+    ctx.beginPath();
+    ctx.moveTo(x, GROUND);
+    ctx.lineTo(x - 20, VIEW_H);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(0,0,0,.35)';
+  ctx.fillRect(u0 - 2, GROUND, u1 - u0 + 4, 4);
+  if (stripe) {
+    ctx.fillStyle = stripe;
+    for (let x = Math.floor(u0 / 40) * 40; x < u1 + 40; x += 40) ctx.fillRect(x, GROUND + 22, 22, 4);
+  }
+}
+
+/** Interior rooms share one recipe: wall + optional pattern + floor. */
+function interior({ wall, pattern, trim, wainscot, floor = 'wood', floorColors = {}, rug = null, extra }) {
+  return {
+    sky: null,
+    ceiling: wall,
+    layers: [
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          wallpaper(ctx, u0, u1, seed, { wall, pattern: pattern ?? wall, trim, wainscot });
+          extra?.(ctx, u0, u1, seed);
+          if (floor === 'wood') floorBoards(ctx, u0, u1, seed, { rug, ...floorColors });
+          else concreteFloor(ctx, u0, u1, floorColors);
+        },
+      },
+    ],
+  };
+}
+
 export const THEMES = {
   'garden-night': {
     sky: nightSky('#0d1038', '#262a6e', '#6a4f98'),
@@ -216,8 +255,29 @@ export const THEMES = {
     ],
   },
 
+  garage: interior({
+    wall: '#1d2140',
+    pattern: '#1d2140',
+    trim: '#2a2f5a',
+    wainscot: '#181b36',
+    floor: 'concrete',
+    floorColors: { floor: '#34374c', line: '#2a2c40', stripe: '#d8a73a' },
+    extra(ctx, u0, u1) {
+      // neon strips + brick hints
+      ctx.fillStyle = 'rgba(111,211,255,.85)';
+      for (let x = Math.floor(u0 / 260) * 260 + 40; x < u1; x += 260) ctx.fillRect(x, 26, 150, 4);
+      ctx.fillStyle = 'rgba(111,211,255,.12)';
+      for (let x = Math.floor(u0 / 260) * 260 + 40; x < u1; x += 260) ctx.fillRect(x - 10, 30, 170, 40);
+      ctx.strokeStyle = 'rgba(255,255,255,.05)';
+      for (let y = 90; y < GROUND - 70; y += 18) {
+        for (let x = Math.floor(u0 / 40) * 40 + ((y / 18) % 2) * 20; x < u1 + 40; x += 40) ctx.strokeRect(x, y, 40, 18);
+      }
+    },
+  }),
+
   house: {
     sky: null,
+    ceiling: '#25285a',
     layers: [
       {
         name: 'near',
@@ -274,7 +334,13 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
   function drawSky(ctx, viewW, topY = 0) {
     if (!theme.sky) {
       if (topY < 0) {
+        // tall portrait screens: the room's wall simply continues upward
         ctx.fillStyle = theme.ceiling || '#141432';
+        ctx.fillRect(0, topY, viewW, -topY + 1);
+        const shade = ctx.createLinearGradient(0, topY, 0, 0);
+        shade.addColorStop(0, 'rgba(5,6,26,.75)');
+        shade.addColorStop(1, 'rgba(5,6,26,0)');
+        ctx.fillStyle = shade;
         ctx.fillRect(0, topY, viewW, -topY + 1);
       }
       return;

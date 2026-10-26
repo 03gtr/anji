@@ -62,6 +62,7 @@ export function createExplore(app, scene, { spawnX } = {}) {
   };
   const renderHints = () => el.classList.toggle('no-labels', !settings.get().controlHints);
   scope.sub(bus.on('change', renderObjective));
+  scope.sub(bus.on('cosmetics', () => world?.refreshCosmetics()));
   scope.sub(settings.subscribe(() => {
     renderSound();
     renderHints();

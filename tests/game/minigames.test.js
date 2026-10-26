@@ -4,6 +4,11 @@ import { COURSES, createChase, stepChase, chaseMedal, CHASE } from '../../src/ga
 import { MINIGAMES } from '../../src/game/minigames/registry.js';
 import { stepBody, MOVE, followVelocity } from '../../src/game/world/physics.js';
 import { GROUND } from '../../src/game/world/props.js';
+import { createHunt, tapAt, useHint, huntMedal, hitBox, MIN_HIT } from '../../src/game/minigames/hidden-logic.js';
+import { HIDDEN_SCENES } from '../../src/game/minigames/hidden-scenes.js';
+import { RECIPES, INGREDIENTS, checkRecipe, exampleSolution } from '../../src/game/minigames/kitchen-logic.js';
+import { PIPE_LEVELS, parseLevel, scramble, isSolved, rotateAt, flow } from '../../src/game/minigames/pipes-logic.js';
+import { TRACKS, createRace, stepRace, centerAt, raceMedal } from '../../src/game/minigames/racing-logic.js';
 
 describe('hedge maze', () => {
   for (const [name, rows] of Object.entries(MAZES)) {
@@ -133,4 +138,105 @@ describe('exploration physics', () => {
     expect(followVelocity({ x: 0 }, { x: 300, facing: 1 })).toBeGreaterThan(0);
     expect(followVelocity({ x: 238 }, { x: 300, facing: 1 })).toBe(0);
   });
+});
+
+describe('hidden objects', () => {
+  for (const [id, scene] of Object.entries(HIDDEN_SCENES)) {
+    it(`${id}: every object can be tapped and found exactly once`, () => {
+      const s = createHunt(scene.objects);
+      for (const o of scene.objects) {
+        const res = tapAt(scene.objects, s, o.x + o.w / 2, o.y + o.h / 2);
+        expect(res.hit, o.id).toBe(o.id);
+      }
+      expect(s.done).toBe(true);
+      expect(huntMedal(s)).toBe('gold');
+    });
+    it(`${id}: hit areas are never smaller than ${MIN_HIT} units and stay inside the scene`, () => {
+      for (const o of scene.objects) {
+        const b = hitBox(o);
+        expect(b.w).toBeGreaterThanOrEqual(MIN_HIT);
+        expect(o.x >= 0 && o.y >= 0 && o.x + o.w <= 300 && o.y + o.h <= 420, o.id).toBe(true);
+      }
+    });
+  }
+  it('misses and hints are counted; hints never point at found objects', () => {
+    const scene = HIDDEN_SCENES.study;
+    const s = createHunt(scene.objects);
+    expect(tapAt(scene.objects, s, 2, 2).hit).toBeNull();
+    for (const o of scene.objects.slice(0, -1)) tapAt(scene.objects, s, o.x + o.w / 2, o.y + o.h / 2);
+    expect(useHint(scene.objects, s)).toBe(scene.objects.at(-1).id);
+    expect(s.misses).toBe(1);
+    expect(huntMedal(s)).toBe('silver');
+  });
+});
+
+describe('healthy kitchen', () => {
+  for (const r of RECIPES) {
+    it(`${r.id} has a valid answer`, () => {
+      const sol = exampleSolution(r);
+      expect(sol).toBeTruthy();
+      expect(checkRecipe(r, sol)).toEqual({ ok: true });
+    });
+  }
+  it('chocolate and avocado are rejected for Snooki (unsafe for dogs)', () => {
+    const r = RECIPES.find((x) => x.id === 'snooki-dinner');
+    expect(checkRecipe(r, ['fish', 'carrot', 'chocolate']).reason).toMatch(/شوكولاتة/);
+    expect(checkRecipe(r, ['fish', 'carrot', 'avocado']).reason).toMatch(/الأفوكادو/);
+    expect(checkRecipe(r, ['fish', 'carrot', 'egg']).ok).toBe(true);
+    expect(checkRecipe(r, ['fish', 'carrot']).ok).toBe(false);
+  });
+  it("Ryan's snack must match the recipe card exactly", () => {
+    const r = RECIPES.find((x) => x.id === 'ryan-snack');
+    expect(checkRecipe(r, ['yogurt', 'berries', 'honey']).ok).toBe(true);
+    expect(checkRecipe(r, ['yogurt', 'berries', 'apple']).ok).toBe(false);
+  });
+  it('every ingredient has a name and an icon', () => {
+    for (const it2 of Object.values(INGREDIENTS)) expect(it2.name && it2.icon).toBeTruthy();
+  });
+});
+
+describe('logic machine', () => {
+  for (const [id, rows] of Object.entries(PIPE_LEVELS)) {
+    it(`${id}: solved as authored, starts unsolved, and every target is reachable`, () => {
+      const level = parseLevel(rows);
+      const solved = level.grid.map((r) => r.map((c) => c.solved));
+      expect(isSolved(level, solved)).toBe(true);
+      for (const seed of [1, 5, 11, 99]) expect(isSolved(level, scramble(level, seed))).toBe(false);
+    });
+  }
+  it('sources and fixed tiles cannot be rotated; others turn a quarter', () => {
+    const level = parseLevel(PIPE_LEVELS.power);
+    const rot = level.grid.map((r) => r.map((c) => c.solved));
+    expect(rotateAt(level, rot, 0, 0)).toBe(rot);
+    expect(rotateAt(level, rot, 1, 0)[0][1]).toBe((rot[0][1] + 1) % 4);
+    expect(flow(level, rot).has('4,2')).toBe(true);
+  });
+});
+
+describe('racing', () => {
+  function bot(track, s) {
+    const ahead = track.obstacles
+      .map((o, i) => {
+        const tc = s.traffic.find((c) => c.i === i);
+        return { d: tc ? tc.d : o[0], x: tc ? tc.x : o[1], i };
+      })
+      .filter((o) => !s.hitSet.has(o.i) && o.d - s.d > -30 && o.d - s.d < 320)
+      .sort((a, b) => a.d - b.d)[0];
+    if (!ahead) return { targetX: centerAt(track, s.d + 120) };
+    const c = centerAt(track, ahead.d);
+    return { targetX: ahead.x > c ? c - track.roadHalf * 0.6 : c + track.roadHalf * 0.6 };
+  }
+  for (const [id, track] of Object.entries(TRACKS)) {
+    it(`${id}: a careful driver finishes inside the gold time`, () => {
+      const s = createRace(track);
+      for (let i = 0; i < 60 * 180 && !s.done; i++) stepRace(track, s, 1 / 60, bot(track, s));
+      expect(s.done).toBe(true);
+      expect(raceMedal(track, s.t)).toBe('gold');
+    });
+    it(`${id}: a driver who never steers still finishes (no game over)`, () => {
+      const s = createRace(track);
+      for (let i = 0; i < 60 * 400 && !s.done; i++) stepRace(track, s, 1 / 60, { steer: 0 });
+      expect(s.done).toBe(true);
+    });
+  }
 });

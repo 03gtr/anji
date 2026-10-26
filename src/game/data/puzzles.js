@@ -47,4 +47,21 @@ export const PUZZLES = {
     success: 'البوابة تبتسم… إذا البوابات تبتسم.',
     reward: ['flag:gate-open'],
   },
+
+  // Clues: the hall clock stopped at 7:14, the recipe card timer 07:14,
+  // and the note "the garage likes the time the clock stopped at".
+  'garage-lock': {
+    type: 'lock',
+    title: 'قفل الكراج',
+    intro: 'أربع خانات أرقام. الكراج «يحب الوقت اللي توقفت بيه الساعة».',
+    config: {
+      symbols: ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'],
+      answer: [0, 7, 1, 4],
+      dialLabels: ['ساعة', 'ساعة', 'دقيقة', 'دقيقة'],
+    },
+    hints: ['شوفي الساعة الكبيرة بالممر.', 'الساعة واقفة على سبعة وأربعطعش دقيقة.', 'الرمز: ٠ ٧ ١ ٤'],
+    wrong: ['القفل ما تحرك.', 'سنوكي: جرّبي تاريخ ميلادي! …ما أعرفه بس جرّبي.', 'فكّري بالساعة.'],
+    success: 'تك! الكراج انفتح.',
+    reward: ['flag:garage-lock'],
+  },
 };
