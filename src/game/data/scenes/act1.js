@@ -222,6 +222,7 @@ export const CONSERVATORY = {
     { id: 'star.conservatory.1', x: 955, y: 100 },
     { id: 'star.conservatory.2', x: 1728, y: 14 },
     { id: 'seed.conservatory.1', x: 1400, y: GROUND - 26 },
+    { id: 'scrap.conservatory.1', x: 400, y: GROUND - 20, if: 'flag:recipe-torn' },
   ],
   actors: [{ id: 'needle', kind: 'needle', x: 620, facing: -1, if: ['flag:needle-met', '!flag:chase-done'] }],
   dynamic: [

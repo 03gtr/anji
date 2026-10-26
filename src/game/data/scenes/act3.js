@@ -5,7 +5,7 @@
 import { GROUND } from '../../world/props.js';
 import { ACT3_AMBIENT } from '../dialogue/act3.js';
 
-const CAR_COLORS = { cobalt: '#1f4fd1', midnight: '#1a1f5e', rose: '#e0567f', pearl: '#e9e7f2' };
+export const CAR_COLORS = { cobalt: '#1f4fd1', midnight: '#1a1f5e', rose: '#e0567f', pearl: '#e9e7f2', emerald: '#13806a' };
 
 export const GARAGE = {
   id: 'garage',
@@ -64,6 +64,8 @@ export const GARAGE = {
         { if: '!flag:car-uncovered', run: [{ say: 'a3.reveal' }] },
         { if: ['record:game:race-moon', '!flag:glovebox'], run: [{ say: 'glovebox' }] },
         { if: '!flag:car-ready', run: [{ bubble: 'snooki', text: 'ما تشتغل. جرّبي اللوحة اللي على الحايط.' }] },
+        // V2: the spare key from the waiting room opens a night run home
+        { if: ['item:night-key', 'flag:act3-done', '!record:game:race-night'], run: [{ say: 's.night-key' }, { game: 'race-night', then: [{ say: 's.night-done' }] }] },
         { run: [{ bubble: 'snooki', text: 'زفيرو جاهزة. الطريق من الباب الكبير.' }] },
       ],
     },

@@ -6,6 +6,7 @@ import { ACT4 } from './act4.js';
 import { ACT5 } from './act5.js';
 import { ACT6 } from './act6.js';
 import { ACT78 } from './act78.js';
+import { SIDE } from './side.js';
 
 export const DIALOGUE = {
   ...ACT1,
@@ -15,4 +16,5 @@ export const DIALOGUE = {
   ...ACT5,
   ...ACT6,
   ...ACT78,
+  ...SIDE,
 };

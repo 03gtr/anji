@@ -8,7 +8,7 @@ import { createHunt, tapAt, useHint, huntMedal, hitBox, MIN_HIT } from '../../sr
 import { HIDDEN_SCENES } from '../../src/game/minigames/hidden-scenes.js';
 import { RECIPES, INGREDIENTS, checkRecipe, exampleSolution } from '../../src/game/minigames/kitchen-logic.js';
 import { PIPE_LEVELS, parseLevel, scramble, isSolved, rotateAt, flow } from '../../src/game/minigames/pipes-logic.js';
-import { TRACKS, createRace, stepRace, centerAt, raceMedal } from '../../src/game/minigames/racing-logic.js';
+import { TRACKS, CAR, createRace, stepRace, raceMedal, botInput, createRaceController, beatRival } from '../../src/game/minigames/racing-logic.js';
 import { deal, flipCard, hideOpen, cardsMedal } from '../../src/game/minigames/cards-logic.js';
 import { createQuiz, answerQuiz, quizMedal } from '../../src/game/minigames/quiz-logic.js';
 import { QUIZ_SETS } from '../../src/game/minigames/quiz-sets.js';
@@ -217,32 +217,142 @@ describe('logic machine', () => {
   });
 });
 
-describe('racing', () => {
-  function bot(track, s) {
-    const ahead = track.obstacles
-      .map((o, i) => {
-        const tc = s.traffic.find((c) => c.i === i);
-        return { d: tc ? tc.d : o[0], x: tc ? tc.x : o[1], i };
-      })
-      .filter((o) => !s.hitSet.has(o.i) && o.d - s.d > -30 && o.d - s.d < 320)
-      .sort((a, b) => a.d - b.d)[0];
-    if (!ahead) return { targetX: centerAt(track, s.d + 120) };
-    const c = centerAt(track, ahead.d);
-    return { targetX: ahead.x > c ? c - track.roadHalf * 0.6 : c + track.roadHalf * 0.6 };
-  }
+describe('racing (pseudo-3D)', () => {
+  const run = (track, s, input, max = 60 * 400) => {
+    for (let i = 0; i < max && !s.done; i++) stepRace(track, s, 1 / 60, typeof input === 'function' ? input(track, s) : input);
+    return s;
+  };
   for (const [id, track] of Object.entries(TRACKS)) {
-    it(`${id}: a careful driver finishes inside the gold time`, () => {
-      const s = createRace(track);
-      for (let i = 0; i < 60 * 180 && !s.done; i++) stepRace(track, s, 1 / 60, bot(track, s));
-      expect(s.done).toBe(true);
-      expect(raceMedal(track, s.t)).toBe('gold');
+    it(`${id}: a careful driver finishes inside the gold time on every difficulty`, () => {
+      for (const difficulty of ['easy', 'normal', 'hard']) {
+        const s = run(track, createRace(track, { difficulty }), botInput);
+        expect(s.done, difficulty).toBe(true);
+        expect(raceMedal(track, s.t), `${difficulty} ${s.t}`).toBe('gold');
+      }
     });
     it(`${id}: a driver who never steers still finishes (no game over)`, () => {
-      const s = createRace(track);
-      for (let i = 0; i < 60 * 400 && !s.done; i++) stepRace(track, s, 1 / 60, { steer: 0 });
+      const s = run(track, createRace(track), { steer: 0 });
       expect(s.done).toBe(true);
     });
+    it(`${id}: three checkpoints are passed in order and recorded`, () => {
+      const s = run(track, createRace(track), botInput);
+      expect(s.checkpoint).toBe(3);
+      expect(s.splits).toHaveLength(3);
+      expect(s.splits[0]).toBeLessThan(s.splits[1]);
+    });
   }
+
+  const moon = TRACKS.moon;
+  it('steering moves the car sideways, scaled by speed (none when stopped)', () => {
+    const s = createRace(moon);
+    stepRace(moon, s, 1 / 60, { steer: 1 });
+    const slow = s.x;
+    expect(slow).toBeGreaterThanOrEqual(0);
+    const fast = createRace(moon);
+    fast.v = CAR.vmax;
+    stepRace(moon, fast, 1 / 60, { steer: 1 });
+    expect(fast.x).toBeGreaterThan(slow);
+    const stopped = createRace(moon);
+    stepRace(moon, stopped, 1 / 60, { brake: true, steer: 1 });
+    expect(stopped.x).toBe(0);
+  });
+
+  it('speed builds up to the top speed and drops on the verge', () => {
+    const s = createRace(moon);
+    for (let i = 0; i < 60 * 5; i++) stepRace(moon, s, 1 / 60, botInput(moon, s));
+    expect(s.v).toBeGreaterThan(CAR.vmax * 0.6);
+    s.x = 1.8;
+    for (let i = 0; i < 60; i++) stepRace(moon, s, 1 / 60, { steer: 0 });
+    expect(s.v).toBeLessThanOrEqual(CAR.offroadV + 1);
+  });
+
+  it('hitting a traffic car costs speed and counts a hit, but never stops the race', () => {
+    const s = createRace(moon);
+    s.v = CAR.vmax;
+    const car = s.traffic[0];
+    s.z = car.z - CAR.length * 0.5;
+    s.x = car.x;
+    const ev = stepRace(moon, s, 1 / 60, { targetX: car.x });
+    expect(ev.hit).toBe(true);
+    expect(s.hits).toBe(1);
+    expect(s.v).toBeLessThan(CAR.vmax * 0.8);
+    expect(s.z).toBeLessThan(car.z);
+    // no double hit from the same car straight after
+    expect(stepRace(moon, s, 1 / 60, { targetX: car.x }).hit).toBe(false);
+  });
+
+  it('even at boost speed a car is not driven through (swept collision)', () => {
+    const s = createRace(moon);
+    s.v = CAR.boostV * 1.5;
+    const car = s.traffic[0];
+    s.z = car.z - 200;
+    s.x = car.x;
+    let hit = false;
+    for (let i = 0; i < 3; i++) hit = stepRace(moon, s, 1 / 30, { targetX: car.x }).hit || hit;
+    expect(hit).toBe(true);
+  });
+
+  it('blue lights fill the boost meter; a full meter fires a boost', () => {
+    const s = createRace(moon);
+    s.meter = 1;
+    const ev = stepRace(moon, s, 1 / 60, { boost: true });
+    expect(ev.boost).toBe(true);
+    expect(s.meter).toBe(0);
+    expect(s.boost).toBeGreaterThan(0);
+    const t = createRace(moon);
+    t.v = CAR.vmax;
+    t.z = moon.orbs[0].z - 50;
+    t.x = moon.orbs[0].x;
+    expect(stepRace(moon, t, 1 / 60, { targetX: t.x }).orb).toBe(true);
+    expect(t.meter).toBeCloseTo(0.25);
+  });
+
+  it('easy difficulty has fewer cars and helps back onto the road', () => {
+    expect(createRace(moon, { difficulty: 'easy' }).traffic.length).toBeLessThan(createRace(moon).traffic.length);
+    expect(createRace(moon, { difficulty: 'hard' }).traffic.length).toBeGreaterThan(createRace(moon).traffic.length);
+    const s = createRace(moon, { difficulty: 'easy' });
+    s.v = CAR.vmax;
+    s.x = 1.2;
+    stepRace(moon, s, 1 / 60, {});
+    expect(s.x).toBeLessThan(1.2);
+  });
+
+  it('controller: countdown, pause/resume freezes the race, retry restarts cleanly', () => {
+    const c = createRaceController(moon, { countdown: 1 });
+    expect(c.phase).toBe('countdown');
+    c.tick(0.6, {});
+    c.tick(0.6, {});
+    expect(c.phase).toBe('racing');
+    for (let i = 0; i < 60; i++) c.tick(1 / 60, { steer: 0 });
+    const z = c.state.z;
+    c.pause();
+    expect(c.phase).toBe('paused');
+    for (let i = 0; i < 60; i++) expect(c.tick(1 / 60, { steer: 0 })).toBeNull();
+    expect(c.state.z).toBe(z);
+    c.resume();
+    c.tick(1 / 60, {});
+    expect(c.state.z).toBeGreaterThan(z);
+    c.retry('easy');
+    expect(c.phase).toBe('countdown');
+    expect(c.state.z).toBe(0);
+    expect(c.state.t).toBe(0);
+    expect(c.difficulty).toBe('easy');
+  });
+
+  it('controller: reaching the finish ends the race', () => {
+    const c = createRaceController(moon, { countdown: 0 });
+    c.tick(0.01, {});
+    let ev = null;
+    for (let i = 0; i < 60 * 120 && c.phase !== 'finished'; i++) ev = c.tick(1 / 60, botInput(moon, c.state)) || ev;
+    expect(c.phase).toBe('finished');
+    expect(c.state.done).toBe(true);
+  });
+
+  it('night run: the rival keeps a steady pace and a careful driver can beat it', () => {
+    const night = TRACKS.night;
+    const s = run(night, createRace(night), botInput);
+    expect(beatRival(night, s)).toBe(true);
+  });
 });
 
 describe('memory cards', () => {

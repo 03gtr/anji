@@ -12,6 +12,7 @@ import { CINEMATICS } from '../../src/game/data/cinematics.js';
 import { ITEMS, COLLECTIBLES, JOURNAL, COSMETICS } from '../../src/game/data/items.js';
 import { WORLDS, ROUTES } from '../../src/game/data/worlds.js';
 import { ACTS } from '../../src/game/data/chapters.js';
+import { MISSIONS } from '../../src/game/data/missions.js';
 import { walkScript } from '../../src/game/narrative/dialogue.js';
 import { atoms } from '../../src/game/core/conditions.js';
 import { isValidEffect } from '../../src/game/core/effects.js';
@@ -155,7 +156,13 @@ describe('scenes', () => {
   it('every registered collectible appears somewhere a player can find it', () => {
     const placed = new Set(Object.values(SCENES).flatMap((s) => (s.items || []).map((i) => i.id)));
     const viaFx = new Set(
-      [...Object.values(SCENES).flatMap((s) => sceneActions(s)), ...Object.values(DIALOGUE).flat()]
+      [
+        ...Object.values(SCENES).flatMap((s) => sceneActions(s)),
+        ...Object.values(DIALOGUE).flat(),
+        ...Object.values(PUZZLES).map((p) => ({ fx: p.reward })),
+        ...Object.values(MINIGAMES).map((m) => ({ fx: [...(m.reward || []), ...(m.goldReward || [])] })),
+        ...MISSIONS.map((m) => ({ fx: m.reward })),
+      ]
         .flatMap((a) => [].concat(a.fx || a.do || []))
         .filter((e) => typeof e === 'string' && e.startsWith('got:'))
         .map((e) => e.slice(4)),

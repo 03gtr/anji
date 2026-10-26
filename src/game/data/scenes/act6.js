@@ -42,7 +42,15 @@ export const CORRIDOR = {
   props: [{ type: 'pot', x: 200, tone: 'blue' }],
   platforms: [],
   items: [{ id: 'seed.corridor.1', x: 1800, y: GROUND - 26 }],
-  dynamic: FRAME_X.map((x, i) => ({
+  dynamic: [
+    {
+      // V2: the letters archive
+      x: 1720,
+      reach: 60,
+      if: 'flag:act6-done',
+      draw: (ctx, { P, game }) => P.archiveCabinet(ctx, 1720, GROUND + 2, { filled: Math.min(8, game.countGroup('note')), open: game.flag('archive-open') }),
+    },
+    ...FRAME_X.map((x, i) => ({
     x,
     reach: 70,
     draw(ctx, { P, game, t }) {
@@ -52,7 +60,24 @@ export const CORRIDOR = {
       P.sconce(ctx, x, 46, game.memory(m.id).solved ? 1 : 0.15);
     },
   })),
-  interact: FRAME_X.map((x, i) => ({
+  ],
+  interact: [
+    {
+      id: 'archive',
+      x: 1720,
+      w: 80,
+      h: 110,
+      label: 'خزانة الأرشيف',
+      icon: '🗄',
+      if: 'flag:act6-done',
+      glowIf: ['count:note>=8', '!flag:archive-open'],
+      cases: [
+        { if: 'flag:archive-open', run: [{ say: 's.archive-done' }] },
+        { if: 'count:note>=8', run: [{ say: 's.archive-open' }] },
+        { run: [{ say: 's.archive-early' }] },
+      ],
+    },
+    ...FRAME_X.map((x, i) => ({
     id: `frame-${i + 1}`,
     x,
     w: 90,
@@ -71,6 +96,7 @@ export const CORRIDOR = {
       },
     ],
   })),
+  ],
   triggers: [{ id: 'enter', x1: 200, x2: 300, if: '!flag:corridor-entered', run: [{ say: 'a6.corridor-enter' }, { chapter: { act: 6 } }] }],
   enter: [() => refreshCorridor()],
   exits: [{ side: 'right', to: 'lake', spawn: 140, if: 'flag:corridor-entered' }],

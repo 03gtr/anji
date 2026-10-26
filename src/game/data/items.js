@@ -11,6 +11,11 @@ export const ITEMS = {
   'blue-thread': { name: 'خيط أزرق', icon: 'leaf', text: 'خيط من فستان قديم. سنوكي يگول «دليل».' },
   'rose-key': { name: 'مفتاح الوردة', icon: 'key', text: 'مفتاح على شكل وردة، طلع من البحيرة. يفتح الورشة.' },
   treat: { name: 'بسكويت سنوكي', icon: 'bone', text: 'عملة سنوكي الرسمية.' },
+  // V2
+  'shelf-key': { name: 'مفتاح صغير بشكل وردة', icon: 'key', text: 'من درج ميز ريان. يفتح الرف العالي بالمكتب.' },
+  'night-key': { name: 'مفتاح زفيرو الاحتياطي', icon: 'car', text: 'مكتوب عليه بقلم: «للطريق للبيت».' },
+  lunchbox: { name: 'علبة أكل البيت', icon: 'apple', text: 'أكل البيت، مطبوخ من وصفة كانت ممزقة. ريحته… ريحة بيت.' },
+  diploma: { name: 'شهادة محققة', icon: 'paw', text: '«تشهد أكاديمية سنوكي إن أنجي محققة ممتازة. التوقيع: 🐾». الختم بالبسكويت.' },
 };
 
 /** Collectibles: id → { name, world, text? } */
@@ -62,12 +67,39 @@ export const COLLECTIBLES = {
     world: 'workshop',
     text: '«أنجي. ما اختفيت. چنت أبني آخر غرفة… وهاي الغرفة ما تنفتح من جوّا. تنفتح بس من برّا، بإيد اللي انبنت إلها. وهسه… تعالي. — R»',
   },
+  // V2 side missions
+  'star.study.1': { name: 'نجمة فوق رف المكتب', world: 'study' },
+  'scrap.study.1': { name: 'قصاصة وصفة: «بروتين»', world: 'study', text: '«…شي يقوّي: بيض أو سمچ…»' },
+  'scrap.conservatory.1': { name: 'قصاصة وصفة: «خضرة»', world: 'conservatory', text: '«…شي أخضر من الأرض…»' },
+  'scrap.sanctuary.1': { name: 'قصاصة وصفة: «يشبّع»', world: 'sanctuary', text: '«…شي يشبّع: تمّن أو خبز. وبدون أكل سريع!»' },
+  'star.passage.1': { name: 'نجمة فوق رفوف الممر', world: 'passage' },
+  'star.passage.2': { name: 'نجمة جنب العتلة', world: 'passage' },
+  'seed.passage.1': { name: 'بذور بالممر المخفي', world: 'passage' },
+  'note.ryan.7': {
+    name: 'ورقة على شباك الانتظار',
+    world: 'passage',
+    text: '«من هالشباك أشوف الطريق اللي تجين منه. الوقت مو دايماً نفسه، وهذا طبيعي. أحلى شي بالانتظار… إنه ينتهي بيچ. — R»',
+  },
+  'star.meadow.1': { name: 'نجمة فوق الشجرة الكبيرة', world: 'meadow' },
+  'star.meadow.2': { name: 'نجمة فوق الصخور', world: 'meadow' },
+  'seed.meadow.1': { name: 'بذور بين الزهور', world: 'meadow' },
+  'note.ryan.8': {
+    name: 'ورقة بطوق فيروز',
+    world: 'meadow',
+    text: '«إذا لگيتي فيروز، فإنتي لگيتي أكثر مخلوق عنيد بالحديقة. ثاني أكثر واحد. — R»',
+  },
+  'star.observatory.2': { name: 'نجمة من السما الثانية', world: 'observatory' },
+  'note.ryan.9': {
+    name: 'الرسالة التاسعة (من الأرشيف)',
+    world: 'corridor',
+    text: '«كل رسالة كتبتها چانت جملة وحدة بس. لأن الكلام الطويل… أحب أگوله وجهاً لوجه. — R»',
+  },
   'petal.hedge.1': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.2': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.3': { name: 'بتلة المتاهة', world: 'maze' },
 };
 
-export const GROUP_NAMES = { star: 'نجوم', note: 'رسائل ريان', seed: 'بذور', petal: 'بتلات' };
+export const GROUP_NAMES = { star: 'نجوم', note: 'رسائل ريان', seed: 'بذور', petal: 'بتلات', scrap: 'قصاصات الوصفة' };
 
 /** Journal entries (story knowledge). */
 export const JOURNAL = {
@@ -76,23 +108,40 @@ export const JOURNAL = {
   mark: { title: 'ختم الصانع', icon: 'mark', text: 'وردة ساقها ملفوف على شكل حرف R. موجود على كل شي سوّاه ريان.' },
   'map-1': { title: 'قطعة الخريطة الأولى', icon: 'map', text: 'خريطة المتاهة. تقدرين تلقين نظرة عليها مرتين داخل المتاهة.' },
   house: { title: 'البيت اللي يتذكر', icon: 'key', text: 'الأضواء تشتعل ويّا خطواتي، والإطارات كلها فاضية. «الإطارات تنطر الوجوه الصح.»' },
-  clock: { title: 'الساعة الواقفة', icon: 'moon-half', text: 'ساعة الممر واقفة على ٧:١٤. «الوحيدة اللي تعرف الوقت الصح.»' },
-  recipe: { title: 'بطاقة الوصفة', icon: 'honey', text: 'زبادي، توت، عسل… «خلّي المؤقت على ٠٧:١٤».' },
+  clock: { title: 'الساعة الواقفة', icon: 'moon-half', text: 'ساعة الممر واقفة على ٢:٣٠. سنوكي يگول: «كأن صاحب البيت چان ينتظر أحد». وآني أعرف هالوقت… وقت ما يخلص الدوام، تقريباً.' },
+  recipe: { title: 'بطاقة الوصفة', icon: 'honey', text: 'زبادي، توت، عسل… «خلّي المؤقت على ٠٢:٣٠».' },
   'letter-1': { title: 'رسالة من المستقبل', icon: 'heart', text: 'رسالة ريان مكتوب عليها تاريخ باچر. «لا تدوّرين عليّ هسه.»' },
-  contradiction: { title: 'التناقض الأول', icon: 'coffee', text: 'ريان «مختفي»… بس الشاي على مكتبه بعده دافي. سنوكي يعرف أكثر مما يگول.' },
+  contradiction: { title: 'التناقض الأول', icon: 'coffee', text: 'ريان «مختفي»… بس القهوة على ميزه بعدها دافية. سنوكي يعرف أكثر مما يگول.' },
   'voice-1': { title: 'صوت ريان بالراديو', icon: 'note', text: '«الطريق الأزرق إله ثلاث مراحل… وإذا وصلتي للجسر بالليل، باوعي يمين.»' },
   'map-2': { title: 'قطعة الخريطة الثانية', icon: 'map', text: 'تل، وفوقه برج بقبة: المرصد.' },
   'observatory-light': { title: 'ضوء بالمرصد', icon: 'star', text: 'من فوق الجسر شفت ضوء بالمرصد. أحد هناك… ريان؟' },
   case: { title: 'قضية الخريطة المختفية', icon: 'map', text: 'قطعة الخريطة الثانية اختفت من جنطتي بالليل. سنوكي فتح «أكاديمية» للتحقيق.' },
   confession: { title: 'اعتراف سنوكي', icon: 'paw', text: 'سنوكي خبّى الخريطة بتعليمات من ريان: «خلّيها تعرف الحديقة قبل ما تعرف ليش انبنت.» والمرصد يضوي بالليل.' },
-  hoot: { title: 'دكتور هوت', icon: 'star', text: 'بومة فلكية متعبة. «الصانع شال العدسة للمكتبة… لحد ما تجي هي».' },
+  munther: { title: 'العم منذر', icon: 'star', text: 'بومة فلكية طيبة وغريبة الأطوار. واثق من نفسه أكثر من اللازم، ويسمّي سنوكي «ذيب». «الصانع شال العدسة للمكتبة… لحد ما تجي هي».' },
   'mark-a': { title: 'الختم الحقيقي', icon: 'mark', text: 'الورقة اللي جنب ساق الوردة مو ورقة: هي حرف A. الختم مو بس R.' },
   name: { title: 'اسمي بالنجوم', icon: 'heart', text: 'ريان كتب «أنجي» بالنجوم. الحديقة انبنت إلي.' },
   'map-3': { title: 'قطعة الخريطة الثالثة', icon: 'map', text: 'ممر طويل بإطارات، وبحيرة يضويها القمر.' },
   'rose-key': { title: 'مفتاح الوردة', icon: 'key', text: 'لمن الإطارات ضوت والفوانيس طارت، طلع مفتاح من البحيرة.' },
   'final-letter': { title: 'الرسالة الأخيرة', icon: 'heart', text: 'الماكينة خيّطت قطع الخريطة سوا، وبنصها رسالة: «تعالي.»' },
-  ending: { title: 'الحديقة المخفية', icon: 'rose', text: 'لگيت ريان تحت شجرة الورد الزرقاء. «الحديقة إلچ. وآني راح أكون هنا.» — وعد.' },
+  ending: { title: 'الحديقة المخفية', icon: 'rose', text: 'لگيت ريان تحت شجرة الورد الزرقاء. گال الحقيقة بوضوح، وما طلب شي. زرعنا وردة زرقاء سوا — والباقي نحچيه إحنا.' },
   'shadow-1': { title: 'الظل عند البوابة', icon: 'mark', text: 'شخص طويل بجنطة ظهر، اختفى ورا البوابة. سنوكي يگول «غيمة».' },
+  // V2
+  symbols: { title: 'رموز بالظلام', icon: 'moon-new', text: 'لمن طفيت الأباجورة، لمعت أربع رموز على الحايط. من اليمين لليسار: وردة، سيارة، كف، قمر.' },
+  'build-message': { title: 'رسالة الدرج', icon: 'note', text: '«الساعة بالممر؟ وقفتها على الوقت اللي دايماً أكون بيه ناطر برّا… الوقت يتغير، وماكو مشكلة. بس هذا صار أحلى وقت باليوم.»' },
+  'waiting-room': { title: 'غرفة الانتظار', icon: 'heart', text: 'ورا رف المكتب، غرفة صغيرة بشباك يطل على الطريق. كرسي واحد، وساعة واقفة على ٢:٣٠. الانتظار هنا مو ثقل… هو عادة حلوة.' },
+  'night-run': { title: 'الطريق للبيت', icon: 'car', text: 'سباق ليلي للبيت، وسيارة رصاصية قدّامنا. سنوكي رفض يگول منو ربح. «الحكم محايد».' },
+  'home-meal': { title: 'أكل البيت', icon: 'apple', text: 'ريان كتب: «أطيب أكل چان اللي جابته من البيت. ما أعرف الوصفة… بس أعرف شلون حسّيت.» هسه الوصفة كاملة.' },
+  kitten: { title: 'فيروز', icon: 'paw', text: 'قطوة صغيرة بعيون فيروزية ضاعت بالمرج. نزلت من الشجرة لمن گعدت واطية وحچيت بهدوء. هسه بأمان ويّا أمها.' },
+  'second-sky': { title: 'السما الثانية', icon: 'star', text: 'ثلاث كوكبات بكتاب العم منذر: كف، سيارة، و«عظمة» — اللي طلعت دمبل. العم منذر: «دمبل فضائي.»' },
+  robo: { title: 'روبو-سنوكي', icon: 'paw', text: 'روبوت صغير بشكل جرو، v0.3. برمجته يمشي للعظمة. سنوكي غار… بعدين صاروا أصدقاء. تقريباً.' },
+  diploma: { title: 'شهادة المحققة', icon: 'paw', text: 'نجحت بامتحان سنوكي. هو يگول الامتحان «أصعب امتحان بالتاريخ». أغلب الأسئلة چانت عنه.' },
+  style: { title: 'منسّق الأزياء', icon: 'crown', text: 'سنوكي حكم على ثلاث إطلالات. رأيه قاسي، بس بالآخر عطاني فيونكة.' },
+  archive: { title: 'أرشيف الرسائل', icon: 'note', text: 'ثمان رسائل بثمان فتحات… وبالدرج رسالة تاسعة: «الكلام الطويل أحب أگوله وجهاً لوجه.»' },
+  gardener: { title: 'حديقتي', icon: 'rose', text: 'الحديقة المخفية صار بيها أشياء من كل مغامرة: بيت فيروز، روبو-سنوكي، طاولة أكل البيت… على ذوقي.' },
+  drawing: { title: 'الرسمة', icon: 'heart', text: 'ورقة مطوية صغيرة، بيها رسمة بخط اليد. محفوظة هنا، أفتحها وقت ما أريد.', open: 'drawing', openLabel: 'افتحي الرسمة' },
+  'ending-hope': { title: 'حديقة الأمل', icon: 'rose', text: 'زرعنا وردة زرقاء سوا. كل الأدلة چانت تگول نفس الشي: الوقت اللي نختاره لبعض أهم من أي شي ثاني.' },
+  'ending-memories': { title: 'حديقة الذكريات', icon: 'rose', text: 'زرعنا وردة زرقاء سوا، والرسائل كلها صارت أوراق بالشجرة. اللي فات حلو… واللي جاي نكتبه سوا.' },
+  'ending-growing': { title: 'حديقة بعدها تكبر', icon: 'rose', text: 'زرعنا وردة زرقاء سوا. بعد أكو أبواب ما انفتحت وأسرار ما انلگت — والحديقة، مثلنا، بعدها تكبر.' },
 };
 
 /** Cosmetic unlocks: id → { slot, value, name } */
@@ -108,6 +157,8 @@ export const COSMETICS = {
   'bow-rose': { slot: 'anjiBow', value: 'rose', name: 'فيونكة وردية', hint: 'بغرفة الملابس' },
   'bow-midnight': { slot: 'anjiBow', value: 'midnight', name: 'فيونكة ليلية', hint: 'ذهبية بفوانيس البحيرة' },
   'bow-gold': { slot: 'anjiBow', value: 'gold', name: 'فيونكة ذهبية', hint: 'اجمعي ١٠ نجوم' },
+  'bow-emerald': { slot: 'anjiBow', value: 'emerald', name: 'فيونكة زمردية', hint: 'تحدي الإطلالة' },
+  'outfit-sport': { slot: 'anjiOutfit', value: 'sport', name: 'بدلة الجيم', hint: 'تحدي الإطلالة' },
   'snooki-hat-none': { slot: 'snookiHat', value: 'none', name: 'بدون قبعة', free: true },
   'snooki-hat-detective': { slot: 'snookiHat', value: 'detective', name: 'قبعة المحقق', hint: 'أكاديمية سنوكي' },
   'snooki-hat-party': { slot: 'snookiHat', value: 'party', name: 'قبعة الحفلة', hint: 'ذهبية بمطبخ الطاقة' },
@@ -118,10 +169,12 @@ export const COSMETICS = {
   'collar-rose': { slot: 'snookiCollar', value: 'rose', name: 'قلادة وردية', hint: 'ذهبية بهروب الإبرة' },
   'collar-gold': { slot: 'snookiCollar', value: 'gold', name: 'قلادة ذهبية', hint: 'ذهبية بكل سباقات الطريق' },
   'collar-mint': { slot: 'snookiCollar', value: 'mint', name: 'قلادة نعناعية', hint: 'محمية الحيوانات' },
+  'collar-sky': { slot: 'snookiCollar', value: 'sky', name: 'قلادة سماوية', hint: 'مهمة فيروز' },
   'car-cobalt': { slot: 'carColor', value: 'cobalt', name: 'كوبالت', free: true },
   'car-midnight': { slot: 'carColor', value: 'midnight', name: 'منتصف الليل', hint: 'خلّصي الحلبة الثانية' },
   'car-rose': { slot: 'carColor', value: 'rose', name: 'وردي ناري', hint: 'ذهبية بالحلبة الأولى' },
   'car-pearl': { slot: 'carColor', value: 'pearl', name: 'لؤلؤي', hint: 'خلّصي كل الحلبات' },
+  'car-emerald': { slot: 'carColor', value: 'emerald', name: 'زمردي', hint: 'الطريق للبيت' },
 };
 
 export function itemName(id) {

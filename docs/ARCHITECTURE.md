@@ -14,7 +14,7 @@ index.html ─► src/game/main.js ─► app.js
                                    ├─ narrative/ dialogue runner (pure)
                                    ├─ characters/SVG character generators + rasteriser
                                    ├─ memories/  memory schema, story memories, registry
-                                   ├─ progression/achievements
+                                   ├─ progression/achievements, missions
                                    └─ data/      ALL story content: dialogue, scenes, puzzles,
                                                  items, chapters, map, cinematics
 gift.html ─► src/main.js (the original 24-hour gift, unchanged)
@@ -32,6 +32,21 @@ gift.html ─► src/main.js (the original 24-hour gift, unchanged)
 | `audio.js` | Synthesised Web Audio (no files); optional samples; silent fallback |
 | `settings.js` | Preferences stored separately from the save |
 | `sw-client.js` | Service-worker registration, genuine install progress, update prompt |
+
+## V2 additions
+
+| Module | Responsibility |
+| --- | --- |
+| `data/missions.js` + `progression/missions.js` | side-mission chains; state derived from flags; rewards applied once |
+| `ui/tips.js` | contextual one-time tips (one at a time, wait for overlays, can be disabled/reset) |
+| `ui/menus.js` → `openHelp` | permanent help screen (pause menu) |
+| `ui/drawing.js` | the finale's folded-paper reveal of the private drawing |
+| `puzzles/rules.js` | new types `candles`, `code`, `connect`, `program`; `solve()` (one solver used by tests and «شوفي الحل») |
+| `puzzles/host.js` | goal line, example, hint ladder, solution, skip (`canSkip`) |
+| `minigames/racing-logic.js` | pseudo-3D track model (segments, curves, hills), traffic, checkpoints, boost meter, difficulty, controller (countdown/pause/retry), test bot |
+| `minigames/racing.js` | chase-camera renderer, original coupe, navigator, HUD |
+| `world/props-v2.js` | study, passage, meadow, cat, robot, archive props |
+| `data/scenes/side-house.js`, `side-meadow.js` | Ryan's study, the hidden passage, the meadow |
 
 ## Content flow
 
@@ -70,7 +85,8 @@ overlay and when the tab is hidden.
 
 `snooki-game:save` (+ `:backup`, and `:broken` if a corrupt save was quarantined),
 `snooki-game:settings`, `snooki-game:memories` (imported personal memories).
-Schema version: `SAVE_VERSION` in `core/save.js`.
+Schema version: `SAVE_VERSION` in `core/save.js` (V2 = 2; migration 1 → 2
+renames the owl's journal entry). Tips seen / race difficulty live in settings.
 
 ## Offline
 
@@ -79,8 +95,9 @@ and a content-hash cache name. The worker precaches everything on install
 (reporting progress to the title screen), serves cache-first, deletes only older
 caches of this game, and waits for the player to accept updates.
 `scripts/verify-offline.mjs` fails the build if the list and `dist/` disagree.
-Verified: production build, headless Edge, network disabled after install —
-title, new game, garden and lazy minigame chunks all load (see QA checklist).
+Verified (V2): production build, headless Edge, network disabled after
+install — 48 files precached; title, new game, garden and the maze, racing,
+kitchen, dress-up and quiz chunks all load with zero errors (see QA checklist).
 
 ## Security & privacy
 

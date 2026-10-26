@@ -60,7 +60,9 @@ export const HOUSE = {
     { x: 760, reach: 60, draw: (ctx, { P, game }) => P.blankFrame(ctx, 760, 64, 40, 50, { glow: game.flag('act7-done') ? 1 : 0 }) },
     { x: 1700, reach: 60, draw: (ctx, { P, game }) => P.blankFrame(ctx, 1700, 70, 50, 40, { glow: game.flag('act7-done') ? 1 : 0 }) },
     { x: 2280, reach: 60, draw: (ctx, { P, game }) => P.blankFrame(ctx, 2280, 66, 44, 56, { glow: game.flag('act7-done') ? 1 : 0 }) },
-    { x: 1150, reach: 60, draw: (ctx, { P }) => P.grandfatherClock(ctx, 1150, GROUND + 2, { h: 7, m: 14 }) },
+    // stopped at 2:30 — the time Ryan is usually outside, waiting after her shift
+    { x: 1150, reach: 60, draw: (ctx, { P }) => P.grandfatherClock(ctx, 1150, GROUND + 2, { h: 2, m: 30 }) },
+    { x: 990, reach: 40, draw: (ctx, { P, game }) => P.recipeBoard(ctx, 990, 96, { torn: !game.flag('mission:missing-recipe') }) },
     doorDyn(420, 'الملابس', 'closed'),
     doorDyn(900, 'المطبخ', 'closed'),
     doorDyn(1380, 'المكتب', 'closed'),
@@ -78,6 +80,9 @@ export const HOUSE = {
       label: 'غرفة الملابس',
       icon: '👗',
       cases: [
+        // V2 challenge: Snooki the stylist
+        { if: ['flag:wardrobe-done', 'flag:act4-done', '!flag:style-offered'], run: [{ say: 's.style-offer' }, { game: 'wardrobe-challenge' }] },
+        { if: ['flag:style-offered', '!record:game:wardrobe-challenge'], run: [{ game: 'wardrobe-challenge' }] },
         { if: 'flag:wardrobe-done', run: [{ game: 'wardrobe' }] },
         { run: [{ say: 'a2.wardrobe-first' }, { game: 'wardrobe', then: [{ say: 'a2.wardrobe-after' }] }] },
       ],
@@ -90,22 +95,47 @@ export const HOUSE = {
       label: 'المطبخ',
       icon: '🍳',
       cases: [
+        // V2: the missing recipe, once the three scraps are back
+        { if: ['flag:recipe-torn', 'count:scrap>=3', '!record:game:kitchen-home'], run: [{ say: 's.kitchen-home' }, { game: 'kitchen-home', then: [{ say: 's.kitchen-home-done' }] }] },
         { if: 'flag:kitchen-done', run: [{ game: 'kitchen' }] },
         { run: [{ say: 'a2.kitchen-first' }, { game: 'kitchen', then: [{ say: 'a2.kitchen-done' }] }] },
       ],
     },
-    { id: 'clock', x: 1150, w: 50, h: 160, label: 'الساعة الكبيرة', icon: '🕰', run: [{ say: 'a2.clock' }] },
+    {
+      id: 'clock',
+      x: 1150,
+      w: 50,
+      h: 160,
+      label: 'الساعة الكبيرة',
+      icon: '🕰',
+      cases: [
+        { if: 'flag:clock-seen', run: [{ say: 'a2.clock-again' }] },
+        { run: [{ say: 'a2.clock' }] },
+      ],
+    },
+    {
+      id: 'recipes',
+      x: 990,
+      w: 50,
+      h: 170,
+      label: 'لوح الوصفات',
+      icon: '📌',
+      if: 'flag:kitchen-done',
+      glowIf: '!flag:recipe-torn',
+      cases: [
+        { if: 'flag:mission:missing-recipe', run: [{ say: 's.recipe-board-done' }] },
+        { if: 'flag:recipe-torn', run: [{ say: 's.recipe-board-again' }] },
+        { run: [{ say: 's.recipe-board' }] },
+      ],
+    },
     {
       id: 'study',
       x: 1380,
       w: 60,
       h: 110,
-      label: 'المكتب',
-      icon: '🔎',
-      cases: [
-        { if: 'flag:study-done', run: [{ game: 'study' }] },
-        { run: [{ say: 'a2.study-first' }, { game: 'study', then: [{ say: 'a2.study-done' }] }] },
-      ],
+      label: 'مكتب ريان',
+      icon: '💻',
+      run: [{ fade: 'out' }, { goto: 'study', x: 140 }],
     },
     {
       id: 'library',

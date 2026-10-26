@@ -1,7 +1,7 @@
 /**
  * Anji — original stylised design based on the owner's reference art:
  * long wavy auburn hair with golden highlights, a burgundy bow at the back of
- * her head, warm brown eyes, red lips, a black jacket over a red/black/white
+ * her head, green eyes, red lips, a black jacket over a red/black/white
  * plaid shirt (default outfit). One head drawing is shared by the sprite
  * (facing right, viewBox 100×200, feet on y≈196) and the dialogue portrait,
  * so every pose and expression stays the same character.
@@ -14,7 +14,9 @@ export const ANJI_PALETTE = {
   hair: '#9c4a26',
   hairDark: '#6e2f18',
   hairLight: '#d98b4f',
-  eye: '#5a3220',
+  eye: '#3d7a46',
+  eyeLight: '#8cc36e',
+  pupil: '#13210f',
   lips: '#c42a3c',
   brow: '#7a3a20',
 };
@@ -25,6 +27,7 @@ export const BOWS = {
   rose: ['#e0567f', '#b03a60'],
   midnight: ['#24223a', '#141225'],
   gold: ['#d8a73a', '#a77b1e'],
+  emerald: ['#1f8a5a', '#136b44'],
 };
 
 /** Outfits: colours + small details. Ids are stable (saved in cosmetics). */
@@ -34,6 +37,7 @@ export const OUTFITS = {
   racer: { jacket: '#1f4fd1', jacketShade: '#163a9c', shirt: 'white', pants: '#16161c', boots: '#16161c', label: 'جاكيت السباق', stripes: true },
   evening: { jacket: '#1b2a6b', jacketShade: '#121d4d', shirt: 'dress', pants: '#1b2a6b', boots: '#c9a24a', label: 'فستان السهرة', dress: true },
   cozy: { jacket: '#efe2cf', jacketShade: '#d8c6ad', shirt: 'knit', pants: '#3a4f78', boots: '#7b4a35', label: 'البلوزة الدافية' },
+  sport: { jacket: '#3f9ad8', jacketShade: '#2c7ab4', shirt: 'white', pants: '#1d1f28', boots: '#f3f1ff', label: 'بدلة الجيم', stripes: true },
   detective: { jacket: '#8a6a45', jacketShade: '#6c5134', shirt: 'plaid', pants: '#2e2a33', boots: '#3c2a22', label: 'معطف المحققة', coat: true },
 };
 
@@ -71,14 +75,15 @@ function eye(cx, cy, rx, style, P) {
         <path d="M${cx + rx} ${cy - 1} l2 -1.6" stroke="#2b1710" stroke-width="1.2" stroke-linecap="round"/>`;
     case 'half':
       return `<ellipse cx="${cx}" cy="${cy + 1}" rx="${rx}" ry="${rx * 0.95}" fill="${P.eye}"/>
-        <circle cx="${cx + 0.8}" cy="${cy + 1}" r="${rx * 0.45}" fill="#24130c"/>
+        <circle cx="${cx + 0.8}" cy="${cy + 1}" r="${rx * 0.45}" fill="${P.pupil}"/>
         <circle cx="${cx + 1.6}" cy="${cy - 0.3}" r="1.1" fill="#fff"/>
         <path d="M${cx - rx - 1.2} ${cy - 1} H${cx + rx + 1.2}" stroke="#2b1710" stroke-width="2.4" stroke-linecap="round"/>`;
     default: {
       const ry = style === 'wide' ? rx * 1.45 : rx * 1.22;
       return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff"/>
         <ellipse cx="${cx + 0.5}" cy="${cy + 0.4}" rx="${rx * 0.86}" ry="${ry * 0.9}" fill="${P.eye}"/>
-        <circle cx="${cx + 0.7}" cy="${cy + 0.8}" r="${style === 'wide' ? rx * 0.32 : rx * 0.48}" fill="#24130c"/>
+        <ellipse cx="${cx + 0.5}" cy="${cy + ry * 0.35}" rx="${rx * 0.62}" ry="${ry * 0.42}" fill="${P.eyeLight}" opacity=".55"/>
+        <circle cx="${cx + 0.7}" cy="${cy + 0.8}" r="${style === 'wide' ? rx * 0.32 : rx * 0.48}" fill="${P.pupil}"/>
         <circle cx="${cx + 1.8}" cy="${cy - ry * 0.35}" r="${rx * 0.34}" fill="#fff"/>
         <circle cx="${cx - 1.2}" cy="${cy + ry * 0.35}" r="${rx * 0.16}" fill="#fff" opacity=".8"/>
         <path d="M${cx - rx - 1.2} ${cy - ry * 0.55} Q${cx} ${cy - ry * 1.25} ${cx + rx + 1.4} ${cy - ry * 0.6}" stroke="#2b1710" stroke-width="2" fill="none" stroke-linecap="round"/>

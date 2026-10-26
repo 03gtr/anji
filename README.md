@@ -1,6 +1,8 @@
 # الحديقة السرّية: سنوكي والصانع المفقود
 ### Secret Garden: Snooki & the Missing Creator
 
+**V2 — «غدنا اللي ما خلص» (Our Unfinished Tomorrow).** See *What changed in V2* below.
+
 A mysterious, funny, emotional story adventure for the web. Anji wakes up in a
 moonlit garden of blue roses, meets Snooki — a fluffy white husky who calls
 himself "a security consultant with fur" — and slowly uncovers why the garden's
@@ -37,13 +39,15 @@ builds):
 | --- | --- |
 | `/?scene=house` | jump straight into a location |
 | `/?scene=garage&flags=garage-open,act2-done` | …with story flags set |
+| `/?scene=garage&game=race-night` | …then open a minigame |
+| `/?scene=library&puzzle=library-candles` | …or a puzzle |
 | `/?timer=1` | drive the game loop with timers (for automated testing in hidden tabs) |
 | `/dev/art.html?zoom=2` | character sheet: every pose, outfit and expression |
 
 ## Test and build
 
 ```bash
-npm test                # 334 unit, content-integrity and app-flow tests (Vitest)
+npm test                # 483 unit, content-integrity and app-flow tests (Vitest)
 npm run build           # production build in dist/ + offline precache verification
 npm run preview         # serve dist/ (service worker works on localhost)
 npm run verify:offline  # re-check that dist/sw.js precaches exactly the files in dist/
@@ -56,24 +60,45 @@ Eight acts, twelve explorable locations, a world map, and these activities:
 | Act | Location | Gameplay |
 | --- | --- | --- |
 | I · الحديقة الضائعة | Lost Garden, Rose Conservatory | exploration & platforming, moon-roses sequence puzzle, hedge maze, Nurse Needle chase, the talking gate |
-| II · البيت اللي يتذكر | The House | wardrobe dress-up, healthy-kitchen logic, Ryan's study (hidden objects), garage combination lock |
-| III · طريق الأضواء الزرقاء | Garage & road | logic machine (3 circuits), paint booth, three races |
+| II · البيت اللي يتذكر | The House, Ryan's study | wardrobe dress-up, healthy-kitchen logic, the programmer's study (desk search, laptop, lamp), the 2:30 clock, garage combination lock |
+| III · طريق الأضواء الزرقاء | Garage & road | logic machine (3 circuits), paint booth, three third-person races |
 | IV · تحقيق سنوكي الكبير | Detective Academy, Animal Sanctuary | memory cards, evidence search, track-reading quiz, deduction board |
-| V · مرصد النجوم الضائعة | Observatory, Secret Library | candle lights-out, constellation rings, star cipher |
+| V · مرصد النجوم الضائعة | Observatory (العم منذر), Secret Library | staged candle puzzle, constellation rings, star cipher |
 | VI · ممر الذكريات | Memory Corridor, Moonlit Lake | six memory frames (owner memories or story memories), lantern release |
 | VII · ورشة الأشياء المفقودة | Workshop | three-stage final machine (circuits, lamps, journey lock) |
-| VIII · ما وراء الحديقة | Hidden Garden | the meeting, ending variations, credits, garden designer |
+| VIII · ما وراء الحديقة | Hidden Garden | the meeting, the drawing, planting a blue rose together, three hopeful endings, credits, garden designer |
 
-Plus: collectible stars, Ryan's letters, seed pouches and maze petals in every
-location; medals and replayable challenges (including two harder versions);
-17 achievements; unlockable outfits, bows, Snooki hats, collars and car colours;
-a journal of story clues.
+Plus **eleven side missions** (journal → «المهمات»), collectible stars, Ryan's
+letters, seed pouches, recipe scraps and maze petals; medals and replayable
+challenges (minigames *and* solved puzzles); 17 achievements; unlockable
+outfits, bows, Snooki hats, collars and car colours; a journal of clues.
+
+## What changed in V2
+
+| Owner request | What was done |
+| --- | --- |
+| «بول ما بعد الجم» | now «وجبة ما بعد الجيم» (and every «الجم» → «الجيم / التمرين») |
+| The clock | stops at **2:30**: Snooki's line, a journal entry, the garage code `0230`, the recipe timer, and a full clue chain |
+| Ryan's study | a programmer's workspace you walk around: laptop with fictional *GardenCore / BlueRoseEngine* code, terminal + debug panel, circuit diagrams, cables, warm coffee, pulled-out chair, sticky notes, a lamp, a hidden clue and two easter eggs |
+| Racing | rebuilt as a **third-person pseudo-3D chase camera** with an original GT-R-inspired coupe (four round tail lights, no logos), traffic, scenery, boost, blue lights, checkpoints, a navigator (Snooki), difficulty, reduced motion, pause/resume/retry |
+| The candle puzzle | three short stages (3 in a row → 5 in a row → a plus), a one-line goal, a visual example, three action hints, «شوفي الحل», and a story-safe skip |
+| Tutorials | one-at-a-time contextual tips (can be turned off / reset) + a permanent help screen in the pause menu |
+| The owl | is «العم منذر» everywhere (warm, clever, a bit eccentric, often more confident than correct); old saves migrate |
+| The ending | rewritten: honest about work and responsibilities, nothing is owed, a mutual choice; the drawing reveal (private asset), planting a blue rose together, three hopeful endings |
+| Missions | eleven new chains (see `docs/GAME_DESIGN.md` → V2 missions) |
+| Mobile | tighter portrait framing (less empty sky), ≥ 44 px targets, landscape race layout, no overlap |
+| Anji | green eyes |
 
 ## Owner-supplied content (kept out of this public repository)
 
 **Artwork.** Put painted panels in `private-art/*.webp` (git-ignored). A local
 build then uses them for the title screen, cinematics, chapter cards and memory
 frames; without them the game uses its own illustrations. See `docs/ASSETS.md`.
+
+**The drawing (finale).** The owner's handmade drawing goes in
+`private-art/finale-drawing.webp` (git-ignored; crop it to the paper, about
+440×750). The finale shows it folded and unfolds it on a tap. Without the file a
+neutral placeholder card appears. It is never committed.
 
 **Personal memories.** Real memories are never stored in the repository. Either
 import a memories file on her device (Settings → «ذكريات خاصة»), or put

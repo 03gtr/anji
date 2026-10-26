@@ -1,7 +1,7 @@
 {
   "name": "anji-secret-garden",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Secret Garden: Snooki & the Missing Creator — an offline-first, mobile-first story adventure game (static site, no backend).",
   "type": "module",
   "scripts": {

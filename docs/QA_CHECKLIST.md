@@ -3,7 +3,7 @@
 Legend: ✅ verified automatically · 👀 verified by playing in a browser
 (mobile viewport 375×812 / 390×844) · ☐ to check by hand on a real phone.
 
-## Automated (`npm test`, 334 tests)
+## Automated (`npm test`, 483 tests, 15 files)
 
 - ✅ Saves: save/load, backup recovery, corrupted save quarantine, migrations,
   future-version refusal, quota error, export/import round trip, wrong file.
@@ -30,6 +30,24 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
   host records a gold result; unknown location falls back; pause → title.
 - ✅ Offline precache list equals `dist/` (build step).
 - ✅ Original gift: its 49 tests still pass.
+- ✅ V2 puzzles: candles (stages, undo, solver from any state), code (line of
+  the error, 14:30), connect (draw/erase, exact shape), program (walls, limits,
+  BFS solutions); the skip rule; every puzzle has a goal and ≥ 3 hints.
+- ✅ V2 racing: bot gold on every track × difficulty, no-steer finish,
+  checkpoints, steering scaled by speed, verge slowdown, traffic hit (and no
+  double hit), swept collision at boost speed, blue lights → boost, difficulty
+  differences, controller countdown/pause/resume/retry/finish, rival beatable.
+- ✅ V2 content: ≥ 10 missions; every flag/item/record/count a mission waits
+  for can happen (no soft-locks); rewards once; chain connected; owl renamed
+  everywhere; 2:30 clue + garage code; kitchen wording; green eyes; finale tone
+  guard (no family-opposition words, "nothing is owed"); the drawing is never
+  described in code; three endings selected correctly; save migration v1 → v2;
+  settings; tips (once, wait for overlays, off/reset); home-meal recipe,
+  stylist briefs, exam answers, robot circuit.
+- ✅ V2 app flows (DOM): the full study chain via the world (laptop code →
+  lamp → symbols → drawer → mission reward → passage); hint → solution →
+  skip; missions journal; help screen; drawing unfold + journal; race host
+  (ready card, countdown, pause freezes, finish records the result).
 
 ## Played in the browser 👀
 
@@ -43,6 +61,14 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
 - 👀 **Offline**: production build in headless Microsoft Edge, 47 files
   precached, network disabled → title, new game, garden and a lazily loaded
   minigame chunk all load with zero errors.
+
+- 👀 V2 (in-app browser, 375×812 and 812×375): race moon/night/bridge
+  (portrait + landscape), study (lamp on/off, glowing symbols), desk search,
+  code / constellation / robot / candle puzzles, house clock at 2:30, meadow,
+  the drawing reveal (folded → unfolded).
+- 👀 **Offline (V2)**: production build, headless Edge, 48 files precached,
+  network off → title, new game, garden; maze, racing, kitchen, dress-up and
+  quiz chunks load; zero errors.
 
 ## By hand on a real phone ☐
 
@@ -58,8 +84,19 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
 - ☐ Memories: import an example memories file (see docs/MEMORIES.md).
 - ☐ Long session: play 15+ minutes, switch apps and come back (game pauses,
   resumes, audio stops in background).
+- ☐ Race by touch: hold ◀/▶, drag on the road, ⚡ when full; try all three
+  difficulties; landscape (steering left, boost right).
+- ☐ The finale with `private-art/finale-drawing.webp` in place: unfold by
+  tap and by sideways drag; reopen from the journal.
+- ☐ Tips: first-time tips appear one at a time; «إيقاف النصائح» works;
+  Settings → «رجّعي كل النصائح» brings them back.
 
 ## Known limitations
+
+- V2: the whole campaign was not replayed start-to-finish by hand in one
+  sitting; flows were verified by tests and by jumping into each scene.
+- The pseudo-3D race is drawn on a 2D canvas (no WebGL); on very old phones
+  the draw distance may need lowering (`DRAW_DISTANCE` in `racing.js`).
 
 - The in-app browser pane used during development cannot register service
   workers; offline was verified with headless Edge instead.

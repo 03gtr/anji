@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createDialogue, scriptTexts } from '../../src/game/narrative/dialogue.js';
-import { RULES, nextHint, replay, switches } from '../../src/game/puzzles/rules.js';
+import { RULES, nextHint, replay, switches, solve } from '../../src/game/puzzles/rules.js';
 import { PUZZLES } from '../../src/game/data/puzzles.js';
 
 describe('dialogue runner', () => {
@@ -194,11 +194,13 @@ describe('puzzle content', () => {
     },
   };
   for (const [id, def] of Object.entries(PUZZLES)) {
-    it(`${id}: has a title, intro, hints, reward and a valid solution`, () => {
-      expect(def.title && def.intro).toBeTruthy();
+    it(`${id}: has a title, goal, intro, hints, reward and a valid solution`, () => {
+      expect(def.title && def.intro && def.goal).toBeTruthy();
+      // the shared solver (used by «شوفي الحل») must also finish it
+      expect(replay(def.type, def.config, solve(def.type, def.config)).outcome).toBe('solved');
       expect(def.hints?.length).toBeGreaterThanOrEqual(2);
       expect(RULES[def.type]).toBeTruthy();
-      const moves = def.solution ?? SOLVERS[def.type]?.(def.config);
+      const moves = def.solution ?? SOLVERS[def.type]?.(def.config) ?? solve(def.type, def.config);
       expect(moves, `add a solution for ${id}`).toBeTruthy();
       expect(replay(def.type, def.config, moves).outcome).toBe('solved');
     });

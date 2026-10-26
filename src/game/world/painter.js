@@ -519,6 +519,90 @@ export const THEMES = {
     ],
   },
 
+  // V2: Ryan's study — warm wood, dark walls, faint circuit traces
+  study: interior({
+    wall: '#1c2046',
+    pattern: '#20255a',
+    trim: '#5a3a2c',
+    wainscot: '#191b3c',
+    floorColors: { wood: '#4a2f2a', light: '#5a3a32' },
+    rug: '#2b3a8c',
+    extra(ctx, u0, u1) {
+      ctx.strokeStyle = 'rgba(159,215,255,.07)';
+      ctx.lineWidth = 1;
+      for (let x = Math.floor(u0 / 90) * 90; x < u1 + 90; x += 90) {
+        ctx.beginPath();
+        ctx.moveTo(x, 14);
+        ctx.lineTo(x, 40);
+        ctx.lineTo(x + 30, 40);
+        ctx.lineTo(x + 30, 70);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(159,215,255,.1)';
+        ctx.fillRect(x + 28, 68, 4, 4);
+      }
+    },
+  }),
+
+  // V2: the hidden passage — cold stone, blue lamps
+  passage: interior({
+    wall: '#1a1c2e',
+    pattern: '#1a1c2e',
+    trim: '#2a2d44',
+    wainscot: '#15172a',
+    floor: 'concrete',
+    floorColors: { floor: '#2a2c3e', line: '#22243a' },
+    extra(ctx, u0, u1) {
+      ctx.strokeStyle = 'rgba(255,255,255,.05)';
+      ctx.lineWidth = 1;
+      for (let y = 14; y < GROUND - 70; y += 20) {
+        for (let x = Math.floor(u0 / 44) * 44 + ((y / 20) % 2) * 22; x < u1 + 44; x += 44) ctx.strokeRect(x, y, 44, 20);
+      }
+    },
+  }),
+
+  // V2: the meadow behind the sanctuary — dusk, wildflowers
+  meadow: {
+    sky: nightSky('#283070', '#8a5fa0', '#f0a882'),
+    stars: 18,
+    moon: [0.8, 0.18, 11],
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          ctx.fillStyle = '#4a3f7e';
+          ctx.beginPath();
+          ctx.moveTo(u0 - 2, 210);
+          for (let u = u0 - 2; u <= u1 + 2; u += 10) ctx.lineTo(u, 170 + Math.sin(u * 0.006 + 1) * 20 + Math.sin(u * 0.017) * 6);
+          ctx.lineTo(u1 + 2, 215);
+          ctx.lineTo(u0 - 2, 215);
+          ctx.fill();
+          each(u0, u1, 90, 40, seed, (i, x, r) => P.tree(ctx, x, 214, 40 + r() * 30, r, { color: '#3b3a7a', trunk: '#2a2a5a' }));
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.55,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 140, 60, seed, (i, x, r) => P.tree(ctx, x, GROUND - 6, 90 + r() * 50, r, { color: '#2c4a5a', round: true }));
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          grassGround(ctx, u0, u1, seed, { grass: '#3a6a4c', light: '#4a7d58', path: '#d8c09c', pathEdge: '#b49a74', soil: '#24332a' });
+          each(u0, u1, 22, 10, seed + 9, (i, x, r) => {
+            ctx.fillStyle = ['#ffd977', '#f7b6cb', '#9fd7ff', '#ffffff'][Math.floor(r() * 4)];
+            ctx.beginPath();
+            ctx.arc(x, GROUND + 4 + r() * 8, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        },
+      },
+    ],
+  },
+
   house: {
     sky: null,
     ceiling: '#25285a',

@@ -19,7 +19,7 @@ const C = {
   tongue: '#f07f95',
 };
 
-export const COLLARS = { navy: ['#1d2b5c', '#3a72d8'], rose: ['#8e1c3e', '#e0567f'], gold: ['#6b4e12', '#e2b544'], mint: ['#1d5b52', '#5cd0b5'] };
+export const COLLARS = { navy: ['#1d2b5c', '#3a72d8'], rose: ['#8e1c3e', '#e0567f'], gold: ['#6b4e12', '#e2b544'], mint: ['#1d5b52', '#5cd0b5'], sky: ['#2c7ab4', '#bfe8ff'] };
 
 /** Scalloped (fluffy) closed shape around an ellipse. */
 export function fluff(cx, cy, rx, ry, bumps = 12, amp = 0.12, phase = 0) {

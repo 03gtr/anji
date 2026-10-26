@@ -24,5 +24,6 @@ export const CINEMATICS = {
     { art: 'world-4-academy', scene: 'roses', caption: 'المحقق والمساعد الوسيم: سنوكي', ms: 3200 },
     { art: 'ryan-gate', scene: 'gate', caption: 'الصانع: ريان', ms: 3200 },
     { art: 'story-5-ending', scene: 'roses', caption: 'شكراً لأنچ مشيتي بكل الحديقة 💙', ms: 4200 },
+    { art: 'finale-drawing', scene: 'roses', caption: 'الباقي… مو باللعبة 💙', ms: 5200 },
   ],
 };

@@ -143,6 +143,7 @@ export function createExplore(app, scene, { spawnX } = {}) {
       loading.remove();
       game.setLocation(scene.id, world.player.x);
       world.on('target', (it) => {
+        if (it) app.tips?.show('interact');
         interactBtn.disabled = !it;
         interactBtn.querySelector('.pad-label').textContent = it ? it.label : 'فحص';
         interactBtn.setAttribute('aria-label', it ? `فحص: ${it.label}` : 'لا شي قريب للفحص');
@@ -154,6 +155,11 @@ export function createExplore(app, scene, { spawnX } = {}) {
       el.classList.add('is-ready');
       if (scene.music) app.audio.startBed(scene.music);
       world.start();
+      // contextual tips, one at a time: moving first, then glowing objects
+      scope.timeout(() => app.tips?.show('move'), 1200);
+      scope.interval(() => {
+        if (!app.overlays.count && world.mode === 'play' && world.visibleGlows().length) app.tips?.show('glow');
+      }, 4000);
     },
     exit() {
       world?.saveLocation();

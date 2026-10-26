@@ -58,6 +58,9 @@ export const SYMBOLS = {
   feather: wrap('<path d="M12 40 C14 24 26 10 38 8 C38 22 26 34 12 40Z" fill="#2f8f6a"/><circle cx="32" cy="16" r="4" fill="#e2b544"/><circle cx="32" cy="16" r="2" fill="#1d3fa0"/><path d="M12 40 L32 16" stroke="#1f5a44" stroke-width="1.6"/>'),
   hoof: wrap('<path d="M14 14 C14 32 22 36 22 36 L22 14Z M34 14 C34 32 26 36 26 36 L26 14Z" fill="#c9b8de"/>'),
   claw: wrap('<circle cx="24" cy="30" r="7" fill="#c9b8de"/><path d="M14 20 l-3 -8 M20 16 l-1 -9 M28 16 l1 -9 M34 20 l3 -8" stroke="#c9b8de" stroke-width="3" stroke-linecap="round"/>'),
+  rice: wrap('<path d="M8 26 H40 C40 36 32 42 24 42 C16 42 8 36 8 26Z" fill="#e9e7f2"/><path d="M8 26 H40" stroke="#9aa3b8" stroke-width="2"/><path d="M14 24 C16 16 32 16 34 24Z" fill="#fff"/><circle cx="20" cy="21" r="1.2" fill="#d8d4c4"/><circle cx="26" cy="19" r="1.2" fill="#d8d4c4"/><circle cx="30" cy="22" r="1.2" fill="#d8d4c4"/>'),
+  robot: wrap('<rect x="12" y="16" width="24" height="18" rx="5" fill="#c7d3e6"/><rect x="16" y="20" width="16" height="9" rx="2" fill="#0b1020"/><circle cx="20" cy="24" r="2" fill="#9fd7ff"/><circle cx="28" cy="24" r="2" fill="#9fd7ff"/><path d="M24 16 V10" stroke="#9aa3b8" stroke-width="2.4"/><circle cx="24" cy="9" r="2.4" fill="#7fd38a"/><path d="M16 34 V40 M32 34 V40" stroke="#16161c" stroke-width="3"/>'),
+  cat: wrap('<path d="M12 18 L14 8 L20 15 H28 L34 8 L36 18 C38 30 32 38 24 38 C16 38 10 30 12 18Z" fill="#e9e3d6"/><ellipse cx="19" cy="24" rx="2.2" ry="3" fill="#2bb5a0"/><ellipse cx="29" cy="24" rx="2.2" ry="3" fill="#2bb5a0"/><path d="M23 30 h2 l-1 1.4Z" fill="#e8899e"/>'),
   bird: wrap('<path d="M24 34 V20 M24 20 L16 12 M24 20 L32 12 M24 20 L24 10" stroke="#c9b8de" stroke-width="3" stroke-linecap="round"/>'),
 };
 

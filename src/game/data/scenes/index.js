@@ -6,6 +6,8 @@ import { ACADEMY, SANCTUARY } from './act4.js';
 import { OBSERVATORY, LIBRARY } from './act5.js';
 import { CORRIDOR, LAKE } from './act6.js';
 import { WORKSHOP, FINAL } from './act78.js';
+import { STUDY, PASSAGE } from './side-house.js';
+import { MEADOW } from './side-meadow.js';
 
 export const SCENES = {
   [GARDEN.id]: GARDEN,
@@ -20,4 +22,7 @@ export const SCENES = {
   [LAKE.id]: LAKE,
   [WORKSHOP.id]: WORKSHOP,
   [FINAL.id]: FINAL,
+  [STUDY.id]: STUDY,
+  [PASSAGE.id]: PASSAGE,
+  [MEADOW.id]: MEADOW,
 };

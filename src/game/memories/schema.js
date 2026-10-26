@@ -27,7 +27,7 @@ export const MEMORY_CATEGORIES = {
   colors: 'الألوان المفضلة',
   music: 'الموسيقى',
   birthday: 'أعياد الميلاد',
-  gym: 'الجم والحياة الصحية',
+  gym: 'الجيم والحياة الصحية',
   animals: 'الحيوانات',
   flowers: 'الورد والهدايا',
   everyday: 'مغامرات يومية',

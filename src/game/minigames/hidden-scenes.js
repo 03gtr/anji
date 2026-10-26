@@ -21,8 +21,8 @@ const PALETTE = ['#8e1c2e', '#2f5fd0', '#e2b544', '#2f6a5a', '#6b4fa0', '#c9a77a
 
 export const HIDDEN_SCENES = {
   study: {
-    title: 'مكتب ريان',
-    intro: 'مكتب مليان أغراض. دوّري على الأشياء الثمانية اللي بالقائمة.',
+    title: 'ميز ريان',
+    intro: 'ميز مبرمج: شاشات، أسلاك، وأغراض بكل مكان. دوّري على الثمانية اللي بالقائمة.',
     background: `
       <defs>
         <pattern id="hs-wall" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#22265a"/><path d="M12 4 L16 12 L12 20 L8 12Z" fill="#2a2f6c"/></pattern>
@@ -53,6 +53,12 @@ export const HIDDEN_SCENES = {
       <path d="M188 200 L206 206 L198 222 Z" fill="#2d2f45"/>
       <circle cx="200" cy="218" r="16" fill="rgba(255,217,140,.25)"/>
       <rect x="110" y="236" width="44" height="14" fill="#f3e3c3"/><path d="M112 240 H150 M112 244 H140" stroke="#a88b5c"/>
+      <rect x="96" y="186" width="70" height="46" rx="3" fill="#16161c"/><rect x="100" y="190" width="62" height="38" fill="#0b1020"/>
+      ${[0, 1, 2, 3, 4].map((i) => `<rect x="${104 + (i % 2) * 6}" y="${194 + i * 7}" width="${18 + ((i * 11) % 24)}" height="2.4" fill="${['#9fd7ff', '#ffd977', '#e85d8c', '#9ee6a8', '#c9b8de'][i]}"/>`).join('')}
+      <rect x="126" y="232" width="10" height="5" fill="#16161c"/>
+      <rect x="64" y="244" width="40" height="5" rx="1.5" fill="#1d1f28"/>
+      <path d="M40 256 C30 290 70 300 60 330 M150 250 C170 300 120 300 140 340" stroke="#15161b" stroke-width="2.4" fill="none"/>
+      <rect x="236" y="300" width="30" height="8" rx="2" fill="#2b2f3a"/><circle cx="242" cy="304" r="1.4" fill="#7fd38a"/><circle cx="248" cy="304" r="1.4" fill="#7fd38a"/>
       <ellipse cx="150" cy="392" rx="120" ry="20" fill="#5b1f34"/><ellipse cx="150" cy="392" rx="100" ry="14" fill="none" stroke="#e2b544" stroke-width="1.5" opacity=".6"/>
       <path d="M118 300 H190 V312 H118Z M126 312 V380 M182 312 V380" stroke="#3b2630" stroke-width="6" fill="#4a3040"/>
       <path d="M22 400 L16 352 H48 L42 400Z" fill="#b4674a"/>
@@ -67,15 +73,15 @@ export const HIDDEN_SCENES = {
       <rect x="208" y="368" width="26" height="8" rx="2" fill="#8e1c2e" transform="rotate(12 220 372)"/>`,
     objects: [
       {
-        id: 'compass',
-        line: 'بوصلة. ريان دايماً يضيع… بس بأناقة.',
-        label: 'بوصلة',
-        icon: 'star',
-        x: 212,
+        id: 'duck',
+        line: 'بطة مطاطية؟ ريان يشرحلها الكود لمن ما يشتغل. تگول تفهم أكثر من الناس.',
+        label: 'بطة مطاطية',
+        icon: 'bird',
+        x: 210,
         y: 98,
-        w: 18,
+        w: 20,
         h: 18,
-        svg: '<circle cx="9" cy="9" r="8" fill="#e2b544" stroke="#8a6a20" stroke-width="1.4"/><circle cx="9" cy="9" r="5.5" fill="#fff6e6"/><path d="M9 4 L10.6 9 L9 14 L7.4 9Z" fill="#c9304a"/>',
+        svg: '<ellipse cx="10" cy="13" rx="9" ry="5" fill="#ffd977"/><circle cx="13" cy="6" r="5" fill="#ffd977"/><path d="M17 6 L21 7 L17 8Z" fill="#f08a3c"/><circle cx="14" cy="5" r="1" fill="#16161c"/>',
       },
       {
         id: 'keytag',
@@ -112,8 +118,8 @@ export const HIDDEN_SCENES = {
       },
       {
         id: 'mug',
-        line: 'لحظة… الشاي بعده دافي؟ هذا… هذا مستحيل.',
-        label: 'كوب شاي… لسه دافي',
+        line: 'لحظة… القهوة بعدها دافية؟ يعني ما صارله هواية تارك المكان.',
+        label: 'كوب قهوة… لسه دافي',
         icon: 'coffee',
         x: 64,
         y: 230,
@@ -133,15 +139,15 @@ export const HIDDEN_SCENES = {
         svg: '<rect x="0" y="0" width="30" height="24" rx="2" fill="#f3e3c3" transform="rotate(-8 15 12)"/><path d="M6 15 L9 11 L15 10 L18 7 H22 L25 11 Z" fill="#1f4fd1" transform="rotate(-8 15 12)"/>',
       },
       {
-        id: 'starchart',
-        line: 'خريطة نجوم. مكتوب عليها: «للمرصد».',
-        label: 'خريطة نجوم ملفوفة',
-        icon: 'star',
+        id: 'usb',
+        line: 'فلاشة زرقاء مكتوب عليها «BlueRose — نسخة احتياطية». حتى الحدائق تحتاج باك أب.',
+        label: 'فلاشة زرقاء',
+        icon: 'key',
         x: 74,
         y: 136,
-        w: 30,
-        h: 9,
-        svg: '<rect x="0" y="1" width="30" height="7" rx="3.5" fill="#1d2b5c"/><circle cx="8" cy="4.5" r="1" fill="#ffe28a"/><circle cx="15" cy="3.5" r="1" fill="#ffe28a"/><circle cx="22" cy="5" r="1" fill="#ffe28a"/><rect x="0" y="1" width="4" height="7" rx="2" fill="#2b3a8c"/>',
+        w: 22,
+        h: 10,
+        svg: '<rect x="0" y="1" width="16" height="8" rx="2" fill="#2f5fd0"/><rect x="16" y="2.5" width="6" height="5" fill="#c7d3e6"/><circle cx="6" cy="5" r="2" fill="#9fd7ff"/>',
       },
       {
         id: 'letter',

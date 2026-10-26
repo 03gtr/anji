@@ -31,6 +31,7 @@ export const WORKSHOP = {
   dynamic: [
     { x: 380, reach: 60, draw: (ctx, { P }) => P.bicycle(ctx, 380, GROUND + 2) },
     { x: 560, reach: 40, draw: (ctx, { P, t }) => { P.table(ctx, 560, GROUND + 2, 60, { cloth: '#5b1f34' }); P.musicBox(ctx, 560, GROUND - 38, t); } },
+    { x: 1250, reach: 50, if: 'flag:act7-done', draw: (ctx, { P, game, t, world }) => P.roboDog(ctx, 1250, GROUND + 2, { awake: game.flag('robo-coded'), t, facing: -1, reduced: world.reduced }) },
     {
       x: 950,
       reach: 160,
@@ -41,6 +42,22 @@ export const WORKSHOP = {
   interact: [
     { id: 'bicycle', x: 380, w: 60, h: 60, label: 'دراجة بفيونكة', icon: '🚲', run: [{ say: [{ s: 'anji', e: 'soft', t: 'دراجة… بنفس لون فيونكتي.' }, { s: 'snooki', e: 'guilty', t: 'صدفة. أكبر صدفة بالتاريخ.' }] }] },
     { id: 'musicbox', x: 560, w: 50, h: 70, label: 'صندوق موسيقى', icon: '🎵', run: [{ say: [{ s: 'anji', e: 'thinking', t: 'صندوق موسيقى ناقصه المفتاح… وعليه ورقة: «الأغنية تنضاف لمن هي تختارها».' }] }] },
+    {
+      id: 'robo',
+      x: 1250,
+      w: 50,
+      h: 70,
+      label: 'روبوت صغير',
+      icon: '🤖',
+      if: 'flag:act7-done',
+      cases: [
+        { if: 'flag:robo-done', run: [{ say: 's.robo-done' }] },
+        { if: 'flag:robo-coded', run: [{ say: 's.robo-meet' }] },
+        { if: 'record:game:pipes-robo', run: [{ say: 's.robo-powered' }, { puzzle: 'robo-code', then: [{ say: 's.robo-meet' }] }] },
+        { if: 'flag:robo-found', run: [{ game: 'pipes-robo', then: [{ say: 's.robo-powered' }, { puzzle: 'robo-code', then: [{ say: 's.robo-meet' }] }] }] },
+        { run: [{ say: 's.robo-found' }, { game: 'pipes-robo', then: [{ say: 's.robo-powered' }, { puzzle: 'robo-code', then: [{ say: 's.robo-meet' }] }] }] },
+      ],
+    },
     {
       id: 'machine',
       x: 950,
@@ -98,6 +115,29 @@ export const FINAL = {
   dynamic: [
     { x: 1560, reach: 260, draw: (ctx, { P, t }) => P.roseTree(ctx, 1560, GROUND + 2, t) },
     {
+      // the rose planted together in the finale
+      x: 1360,
+      reach: 60,
+      if: 'flag:rose-planted',
+      draw(ctx, { P, t, world }) {
+        const pulse = world.reduced ? 1 : 0.85 + 0.15 * Math.sin(t * 2);
+        const g = ctx.createRadialGradient(1360, GROUND - 26, 2, 1360, GROUND - 26, 40 * pulse);
+        g.addColorStop(0, 'rgba(159,215,255,.6)');
+        g.addColorStop(1, 'rgba(159,215,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(1360, GROUND - 26, 40 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#3f7a4a';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(1360, GROUND + 2);
+        ctx.quadraticCurveTo(1356, GROUND - 14, 1360, GROUND - 24);
+        ctx.stroke();
+        P.rose(ctx, 1360, GROUND - 28, 6, 'blue');
+      },
+    },
+    {
       // the garden she planted with the designer
       x: 1000,
       reach: 1200,
@@ -119,6 +159,17 @@ export const FINAL = {
       icon: '💙',
       if: 'flag:game-complete',
       run: [{ say: 'a8.ryan-idle' }],
+    },
+    {
+      id: 'planted-rose',
+      x: 1360,
+      w: 40,
+      h: 60,
+      label: 'الوردة اللي زرعناها',
+      icon: '🌹',
+      if: 'flag:rose-planted',
+      glow: false,
+      run: [{ say: [{ s: 'anji', e: 'soft', t: 'وردتنا. تضوي أكثر لمن نكون قريبين.' }] }, { drawing: { revisit: true } }],
     },
     {
       id: 'plots',
@@ -144,6 +195,15 @@ export const FINAL = {
         { pose: 'snooki', anim: 'excited', for: 900 },
         { face: 'ryan', dir: -1 },
         { say: 'a8.meet' },
+        { drawing: true },
+        { say: 'a8.drawing' },
+        { say: 'a8.plant-intro' },
+        { move: 'snooki', x: 1330, speed: 220 },
+        { pose: 'snooki', anim: 'excited', for: 700 },
+        { puzzle: 'plant-rose', then: [], else: [{ fx: 'flag:rose-planted' }] },
+        { shake: 0.3 },
+        { say: 'a8.plant-done' },
+        { say: 'a8.ending' },
         { chapter: { act: 8, end: true } },
         { cine: 'credits' },
         { say: 'a8.after' },

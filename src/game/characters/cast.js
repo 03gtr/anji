@@ -4,7 +4,8 @@
  *    (dark hair, charcoal hoodie, black backpack, jeans — from the reference).
  *  - Nurse Needle: an over-enthusiastic cartoon syringe with a rubber safety
  *    ball on her tip. Harmless, theatrical, determined to vaccinate Snooki.
- *  - Doctor Hoot: the observatory's owl astronomer.
+ *  - Uncle Munther (العم منذر): the observatory's owl astronomer — warm,
+ *    clever, a bit eccentric and often more confident than correct.
  *  - Sultan: the sanctuary's vain peacock.
  *  - The Gate, the phone and the narrator only have voices / icons.
  */
@@ -92,7 +93,7 @@ export function needleSvg({ expr = 'cheerful', pose = 'idle', t = 0 } = {}) {
   </svg>`;
 }
 
-function hootPortrait() {
+function muntherPortrait() {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
     <ellipse cx="100" cy="126" rx="66" ry="70" fill="#6b5a86"/>
     <ellipse cx="100" cy="146" rx="42" ry="44" fill="#c9b8de"/>
@@ -103,6 +104,7 @@ function hootPortrait() {
     <circle cx="78" cy="100" r="9" fill="#2a2140"/><circle cx="122" cy="100" r="9" fill="#2a2140"/><circle cx="81" cy="97" r="3" fill="#fff"/><circle cx="125" cy="97" r="3" fill="#fff"/>
     <path d="M92 114 L100 132 L108 114Z" fill="#e8a33a"/>
     <path d="M44 182 Q100 196 156 182 L150 168 Q100 180 50 168Z" fill="#2b3a8c"/>
+    <path d="M150 40 L168 92" stroke="#f2c14e" stroke-width="7" stroke-linecap="round"/><path d="M150 40 l-3 -9 l7 3Z" fill="#3a2a48"/><path d="M166 86 l4 10" stroke="#ff9ec4" stroke-width="7" stroke-linecap="round"/>
     <circle cx="70" cy="178" r="2.4" fill="#ffe28a"/><circle cx="100" cy="184" r="2.4" fill="#ffe28a"/><circle cx="130" cy="178" r="2.4" fill="#ffe28a"/>
   </svg>`;
 }
@@ -154,7 +156,7 @@ const glyph = (char, bg) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 
 export const CAST = {
   ryan: { name: 'ريان', portrait: ({ expr }) => ryanPortrait({ expr }) },
   needle: { name: 'الممرضة إبرة', portrait: ({ expr }) => needleSvg({ expr }) },
-  hoot: { name: 'دكتور هوت', portrait: () => hootPortrait() },
+  munther: { name: 'العم منذر', portrait: () => muntherPortrait() },
   sultan: { name: 'السلطان', portrait: () => sultanPortrait() },
   gate: { name: 'البوابة', portrait: () => gatePortrait() },
   phone: { name: 'الموبايل', portrait: () => phonePortrait() },

@@ -15,6 +15,7 @@ export const INGREDIENTS = {
   honey: { name: 'عسل', icon: 'honey', tags: ['sugar'] },
   chocolate: { name: 'شوكولاتة', icon: 'chocolate', tags: ['sugar', 'dog-unsafe'] },
   bread: { name: 'خبز', icon: 'bread', tags: ['carb'] },
+  rice: { name: 'تمّن', icon: 'rice', tags: ['carb'] },
   pizza: { name: 'بيتزا', icon: 'pizza', tags: ['junk'] },
 };
 
@@ -28,8 +29,8 @@ export const RECIPES = [
   },
   {
     id: 'gym-bowl',
-    title: 'بول ما بعد الجم',
-    brief: 'أنجي راجعة من الجم وجوعانة. ٤ مكونات: بروتين، شي أخضر، دهون صحية، وبدون سكر ولا أكل سريع.',
+    title: 'وجبة ما بعد الجيم',
+    brief: 'أنجي راجعة من الجيم وجوعانة. ٤ مكونات: بروتين، شي أخضر، دهون صحية، وبدون سكر ولا أكل سريع.',
     size: 4,
     rules: [{ forbid: 'sugar' }, { forbid: 'junk' }, { need: 'protein' }, { need: 'green' }, { need: 'healthy-fat' }],
   },
@@ -37,23 +38,36 @@ export const RECIPES = [
     // the recipe card is found in the kitchen: it also carries the garage clue
     id: 'ryan-snack',
     title: 'سناك منتصف الليل',
-    brief: 'بطاقة وصفة بخط ريان: «زبادي، توت، وملعقة عسل. الفرن مو لازم… بس خلّي المؤقت على ٠٧:١٤.»',
+    brief: 'بطاقة وصفة بخط ريان: «زبادي، توت، وملعقة عسل. الفرن مو لازم… بس خلّي المؤقت على ٠٢:٣٠.»',
     size: 3,
     exact: ['yogurt', 'berries', 'honey'],
   },
+  {
+    // V2 «الوصفة الناقصة»: the three scraps (protein, green, filling; no fast food)
+    id: 'home-meal',
+    title: 'أكل البيت',
+    brief: 'البطاقة رجعت كاملة: «شي يقوّي، شي أخضر من الأرض، شي يشبّع، وبدون أكل سريع.» ٤ مكونات.',
+    size: 4,
+    side: true,
+    rules: [{ forbid: 'junk' }, { forbid: 'sugar' }, { need: 'protein' }, { need: 'veg' }, { need: 'carb' }],
+  },
 ];
+
+/** Recipes of the main kitchen order (the side recipe is played on its own). */
+export const MAIN_RECIPES = RECIPES.filter((r) => !r.side);
 
 const FAIL = {
   size: (n) => `العدد لازم يكون ${n}.`,
   'dog-unsafe:chocolate': 'سنوكي: شوكولاتة؟! تريدين تودّيني للمستوصف؟ (الشوكولاتة سامة للكلاب، صدگ.)',
   'dog-unsafe:avocado': 'سنوكي: الأفوكادو مو آمن للكلاب. أعرف لأني قريت. …مرة.',
   junk: 'بيتزا مو أكل صحي… بس سنوكي يحترم المحاولة.',
-  sugar: 'بدون سكر بعد الجم. العضلات ما تحب العسل… والشوكولاتة.',
+  sugar: 'بدون سكر هنا. العضلات (والوصفة) ما تحب العسل… والشوكولاتة.',
   protein: 'وين البروتين؟ لازم عضلات حتى نهرب من الإبرة.',
   veg: 'وين الخضرة؟ سنوكي يگول «اختيارية». سنوكي غلطان.',
   green: 'ناقص شي أخضر.',
-  'healthy-fat': 'ناقصها دهون صحية. (تلميح: شي أخضر ومحبوب بالجم.)',
+  'healthy-fat': 'ناقصها دهون صحية. (تلميح: شي أخضر ومحبوب بعد التمرين.)',
   exact: 'مو نفس الوصفة اللي بالبطاقة. اقرئيها مرة ثانية.',
+  carb: 'ناقصها شي يشبّع: تمّن أو خبز. (القصاصة الثالثة)',
 };
 
 export const hasTag = (id, tag) => INGREDIENTS[id]?.tags.includes(tag);

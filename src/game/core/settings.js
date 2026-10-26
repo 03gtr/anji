@@ -13,21 +13,26 @@ export const DEFAULT_SETTINGS = Object.freeze({
   hints: true,
   controlHints: true,
   vibration: false,
+  tips: true, // contextual one-time tips
+  tipsSeen: Object.freeze([]),
+  raceDifficulty: 'normal', // easy | normal | hard
 });
 
 const CHOICES = {
   textSpeed: ['slow', 'normal', 'fast', 'instant'],
   motion: ['system', 'reduce', 'full'],
+  raceDifficulty: ['easy', 'normal', 'hard'],
 };
 
 export function sanitizeSettings(raw) {
   const s = { ...DEFAULT_SETTINGS };
   if (!raw || typeof raw !== 'object') return s;
-  for (const k of ['sound', 'music', 'hints', 'controlHints', 'vibration']) {
+  for (const k of ['sound', 'music', 'hints', 'controlHints', 'vibration', 'tips']) {
     if (typeof raw[k] === 'boolean') s[k] = raw[k];
   }
   if (Number.isFinite(raw.volume)) s.volume = Math.min(1, Math.max(0, raw.volume));
   for (const [k, list] of Object.entries(CHOICES)) if (list.includes(raw[k])) s[k] = raw[k];
+  if (Array.isArray(raw.tipsSeen)) s.tipsSeen = [...new Set(raw.tipsSeen.filter((x) => typeof x === 'string'))].slice(0, 64);
   return s;
 }
 

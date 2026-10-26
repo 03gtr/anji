@@ -17,6 +17,11 @@ export const PIECES = {
   arch: { name: 'قوس ورد', icon: 'heart', unlock: 'flag:game-complete' },
   fountain: { name: 'نافورة صغيرة', icon: 'drop', unlock: 'flag:game-complete' },
   statue: { name: 'تمثال سنوكي', icon: 'paw', unlock: 'count:star>=15' },
+  // V2: one special piece per side mission
+  table: { name: 'طاولة أكل البيت', icon: 'apple', unlock: 'flag:mission:missing-recipe', special: true },
+  'cat-house': { name: 'بيت فيروز', icon: 'cat', unlock: 'flag:mission:lost-kitten', special: true },
+  telescope: { name: 'تلسكوب صغير', icon: 'star', unlock: 'flag:mission:second-sky', special: true },
+  robo: { name: 'روبو-سنوكي', icon: 'robot', unlock: 'flag:mission:robo-snooki', special: true },
 };
 
 export const roseBudget = (seedPouches) => seedPouches * ROSES_PER_POUCH;

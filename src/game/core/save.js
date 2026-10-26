@@ -9,7 +9,7 @@
  * except through an export the player starts herself.
  */
 export const GAME_ID = 'snooki-missing-creator';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const SAVE_KEY = 'snooki-game:save';
 
 /**
@@ -17,7 +17,13 @@ export const SAVE_KEY = 'snooki-game:save';
  * Add an entry here whenever the shape of the save changes, and bump
  * SAVE_VERSION. Never edit an existing migration.
  */
-export const MIGRATIONS = {};
+export const MIGRATIONS = {
+  // V2: the observatory owl became «العم منذر» (journal id 'hoot' → 'munther').
+  1: (save) => {
+    if (Array.isArray(save.journal)) save.journal = save.journal.map((id) => (id === 'hoot' ? 'munther' : id));
+    return save;
+  },
+};
 
 export class SaveError extends Error {
   constructor(code, message) {

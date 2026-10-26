@@ -3,6 +3,8 @@
  * Static props are baked into cached background chunks; dynamic ones (gates,
  * pedestals, doors…) are drawn every frame because their state changes.
  */
+import { cat, roboDog } from './props-v2.js';
+
 export const GROUND = 250;
 export const VIEW_H = 300;
 
@@ -325,6 +327,24 @@ export function star(ctx, x, y, r, color = '#ffe28a', t = 0) {
     ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
   }
   ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+/** A four-point twinkle: marks objects she has not examined yet (not a collectible). */
+export function sparkle(ctx, x, y, r, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x, y);
+  ctx.fillStyle = '#e8f6ff';
+  ctx.shadowColor = '#9fd7ff';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.moveTo(0, -r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.quadraticCurveTo(0, 0, 0, r);
+  ctx.quadraticCurveTo(0, 0, -r, 0);
+  ctx.quadraticCurveTo(0, 0, 0, -r);
   ctx.fill();
   ctx.restore();
 }
@@ -1102,7 +1122,7 @@ export function telescope(ctx, x, y, { lens = false, t = 0 } = {}) {
   ctx.restore();
 }
 
-/** Doctor Hoot the owl on his perch. */
+/** Uncle Munther, the observatory owl, on his perch. */
 export function owl(ctx, x, y, { awake = true, t = 0 } = {}) {
   ctx.fillStyle = '#5a3d2c';
   ctx.fillRect(x - 3, y - 80, 6, 80);
@@ -1482,6 +1502,57 @@ export function gardenPiece(ctx, id, x, y, rand, t = 0) {
       ctx.fillStyle = '#9aa3b8';
       ctx.fillRect(x - 16, y - 4, 32, 6);
       break;
+    // V2 special pieces (unlocked by side missions)
+    case 'cat-house':
+      ctx.fillStyle = '#c9a77a';
+      ctx.fillRect(x - 14, y - 18, 28, 18);
+      ctx.fillStyle = '#8e1c2e';
+      ctx.beginPath();
+      ctx.moveTo(x - 18, y - 18);
+      ctx.lineTo(x, y - 32);
+      ctx.lineTo(x + 18, y - 18);
+      ctx.fill();
+      ctx.fillStyle = '#2a1a16';
+      ctx.beginPath();
+      ctx.arc(x, y - 6, 6, Math.PI, 0);
+      ctx.fillRect(x - 6, y - 6, 12, 6);
+      ctx.fill();
+      cat(ctx, x + 18, y + 2, { small: true, t, facing: -1 });
+      break;
+    case 'robo':
+      roboDog(ctx, x, y, { awake: true, t, facing: rand() < 0.5 ? 1 : -1 });
+      break;
+    case 'telescope':
+      ctx.strokeStyle = '#8a6a20';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, y);
+      ctx.lineTo(x, y - 14);
+      ctx.lineTo(x + 8, y);
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(x, y - 16);
+      ctx.rotate(-0.6);
+      ctx.fillStyle = '#d8a73a';
+      ctx.fillRect(-14, -3, 26, 6);
+      ctx.fillStyle = '#9fd7ff';
+      ctx.fillRect(12, -3.5, 3, 7);
+      ctx.restore();
+      break;
+    case 'table':
+      table(ctx, x, y, 34, { cloth: '#2b3a8c' });
+      ctx.fillStyle = '#f3f1ff';
+      ctx.beginPath();
+      ctx.ellipse(x - 6, y - 42, 6, 2.4, 0, 0, Math.PI * 2);
+      ctx.ellipse(x + 7, y - 42, 6, 2.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4f8a5a';
+      ctx.beginPath();
+      ctx.arc(x - 6, y - 44, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      break;
     default:
   }
 }
+
+export * from './props-v2.js';

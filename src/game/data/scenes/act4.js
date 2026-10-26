@@ -42,6 +42,16 @@ export const ACADEMY = {
     { x: 380, reach: 40, draw: (ctx, { P }) => P.diploma(ctx, 380, 70) },
     { x: 420, reach: 40, draw: (ctx, { P }) => P.diploma(ctx, 420, 84) },
     { x: 960, reach: 70, draw: (ctx, { P }) => P.table(ctx, 960, GROUND + 2, 110, { cloth: '#2b3a8c' }) },
+    {
+      x: 1460,
+      reach: 90,
+      if: 'flag:act5-done',
+      draw: (ctx, { P, game }) =>
+        P.chalkboard(ctx, 1460, GROUND + 2, {
+          title: 'الامتحان النهائي',
+          lines: game.flag('mission:detective-exam') ? ['النتيجة: ممتاز 🐾', 'المصحّح: سنوكي'] : ['٦ أسئلة', 'ممنوع الغش', '(إلا بالبسكويت)'],
+        }),
+    },
   ],
   interact: [
     { id: 'diplomas', x: 400, w: 70, h: 200, label: 'شهادات سنوكي', icon: '🎓', run: [{ say: [{ s: 'anji', e: 'smirk', t: '«شهادة تقدير لسنوكي: أفضل كلب.» … موقّعة من سنوكي.' }, { s: 'snooki', e: 'proud', t: 'الاعتراف الذاتي أصدق اعتراف.' }] }] },
@@ -68,6 +78,21 @@ export const ACADEMY = {
       cases: [
         { if: 'flag:cards-done', run: [{ game: 'cards' }] },
         { run: [{ say: 'a4.cards-first' }, { game: 'cards', then: [{ say: 'a4.cards-done' }] }] },
+      ],
+    },
+    {
+      id: 'exam',
+      x: 1460,
+      w: 140,
+      h: 200,
+      label: 'سبورة الامتحان',
+      icon: '🎓',
+      if: 'flag:act5-done',
+      glowIf: '!record:game:exam',
+      cases: [
+        { if: 'record:game:exam', run: [{ game: 'exam' }] },
+        { if: 'flag:exam-offered', run: [{ game: 'exam', then: [{ say: 's.exam-pass' }] }] },
+        { run: [{ say: 's.exam-offer' }, { game: 'exam', then: [{ say: 's.exam-pass' }] }] },
       ],
     },
     {
@@ -111,6 +136,7 @@ export const SANCTUARY = {
   items: [
     { id: 'star.sanctuary.1', x: 1025, y: 22 },
     { id: 'star.sanctuary.2', x: 1980, y: GROUND - 30 },
+    { id: 'scrap.sanctuary.1', x: 760, y: GROUND - 20, if: 'flag:recipe-torn' },
   ],
   dynamic: [
     { x: 600, reach: 120, draw: (ctx, { P, t, game }) => P.peacock(ctx, 600, GROUND + 2, { fan: game.flag('sanctuary-met') ? 0.6 + 0.4 * Math.abs(Math.sin(t * 0.6)) : 0, t, facing: -1 }) },
@@ -120,6 +146,30 @@ export const SANCTUARY = {
     { x: 410, reach: 40, draw: (ctx, { P, t }) => P.bunny(ctx, 410, GROUND + 6, t + 1.3) },
     { x: 1150, reach: 40, draw: (ctx, { P, t }) => P.squirrel(ctx, 1150, GROUND + 2, t) },
     { x: 1640, reach: 160, draw: (ctx, { P, game }) => P.fence(ctx, 1560, 1720, GROUND + 4, { thread: !game.flag('thread-found') }) },
+    {
+      // V2: the cat and (once rescued) Feroz
+      x: 1850,
+      reach: 80,
+      if: 'flag:tracks-done',
+      draw(ctx, { P, game, t, world }) {
+        const home = game.flag('kitten-home');
+        P.cat(ctx, 1850, GROUND + 2, { t, facing: -1, sad: !home, reduced: world.reduced });
+        if (home) P.cat(ctx, 1810, GROUND + 4, { small: true, t: t + 1, facing: 1, reduced: world.reduced });
+      },
+    },
+    {
+      x: 1960,
+      reach: 60,
+      if: ['flag:kitten-heard', '!flag:kitten-tracks'],
+      draw(ctx) {
+        ctx.fillStyle = 'rgba(40,28,20,.55)';
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.ellipse(1930 + i * 22, GROUND + 18 + (i % 2) * 5, 4, 3, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      },
+    },
   ],
   interact: [
     { id: 'bunny', x: 395, w: 70, h: 50, label: 'الأرانب', icon: '🐇', if: '!flag:fed-bunny', run: [{ say: 'a4.bunny' }] },
@@ -137,8 +187,36 @@ export const SANCTUARY = {
       ],
     },
     { id: 'fence', x: 1600, w: 60, h: 60, label: 'خيط بالسياج', icon: '🧵', if: '!flag:thread-found', run: [{ say: 'a4.fence' }] },
+    {
+      id: 'cat',
+      x: 1850,
+      w: 60,
+      h: 70,
+      label: 'القطة الحزينة',
+      icon: '🐈',
+      if: 'flag:tracks-done',
+      cases: [
+        { if: 'flag:kitten-home', run: [{ say: 's.cat-happy' }] },
+        { if: 'flag:kitten-found', run: [{ say: 's.cat-home' }] },
+        { if: 'flag:kitten-heard', run: [{ say: 's.cat-waiting' }] },
+        { run: [{ say: 's.cat-mother' }] },
+      ],
+    },
+    {
+      id: 'small-tracks',
+      x: 1960,
+      w: 80,
+      h: 50,
+      label: 'آثار صغيرة',
+      icon: '🐾',
+      if: ['flag:kitten-heard', '!flag:kitten-tracks'],
+      run: [{ say: 's.small-tracks' }, { puzzle: 'kitten-tracks' }],
+    },
   ],
   triggers: [{ id: 'enter', x1: 200, x2: 320, if: '!flag:sanctuary-met', run: [{ say: 'a4.sanctuary' }] }],
-  exits: [{ side: 'left', to: 'academy', spawn: 1560 }],
+  exits: [
+    { side: 'left', to: 'academy', spawn: 1560 },
+    { side: 'right', to: 'meadow', spawn: 140, if: 'flag:kitten-tracks', locked: [{ bubble: 'snooki', text: 'السياج. ورا السياج ماكو شي. …لحد هسه.' }] },
+  ],
   ambient: ACT4_AMBIENT,
 };

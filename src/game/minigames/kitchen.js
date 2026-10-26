@@ -3,13 +3,14 @@
  * item to take it out, then "cook". Wrong combinations get a reason, never a
  * game over.
  */
-import { INGREDIENTS, RECIPES, checkRecipe, kitchenMedal } from './kitchen-logic.js';
+import { INGREDIENTS, RECIPES as ALL_RECIPES, MAIN_RECIPES, checkRecipe, kitchenMedal } from './kitchen-logic.js';
 import { symbol } from '../ui/symbols.js';
 import { snookiPortrait } from '../characters/snooki.js';
 import { h, esc } from '../ui/dom.js';
 import { num } from '../ui/format.js';
 
-export function mount(area, { app, scope, hud, finish }) {
+export function mount(area, { app, scope, options = {}, hud, finish }) {
+  const RECIPES = options.recipes ? ALL_RECIPES.filter((r) => options.recipes.includes(r.id)) : MAIN_RECIPES;
   let index = 0;
   let picked = [];
   let mistakes = 0;
@@ -77,11 +78,20 @@ export function mount(area, { app, scope, hud, finish }) {
       return;
     }
     app.audio.play('success');
-    say(index === 0 ? 'سنوكي: لذيذ! …بس كان ممكن يكون بيتزا.' : index === 1 ? 'سنوكي: هذا أكل أبطال. آني أحتاج واحد.' : 'سنوكي: ريان چان يسوّي هذا كل ليلة الساعة سبعة وربع… تقريباً.');
+    const id = RECIPES[index].id;
+    say(
+      id === 'snooki-dinner'
+        ? 'سنوكي: لذيذ! …بس كان ممكن يكون بيتزا.'
+        : id === 'gym-bowl'
+          ? 'سنوكي: هذا أكل أبطال. آني أحتاج واحد.'
+          : id === 'home-meal'
+            ? 'سنوكي: ريحته… ريحة بيت. حتى آني سكتت.'
+            : 'سنوكي: ريان چان يسوّي هذا بالليل لمن يشتغل لوقت متأخر… تقريباً.',
+    );
     index += 1;
     picked = [];
     if (index >= RECIPES.length) {
-      finish({ completed: true, medal: kitchenMedal(mistakes), score: mistakes, lowerIsBetter: true, title: 'المطبخ نجح! 🍳', summary: `أخطاء: ${num(mistakes)}` });
+      finish({ completed: true, medal: kitchenMedal(mistakes), score: mistakes, lowerIsBetter: true, title: options.doneTitle || 'المطبخ نجح! 🍳', summary: `أخطاء: ${num(mistakes)}` });
       return;
     }
     render();

@@ -125,9 +125,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const cssH = Math.max(1, r.height);
     const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
     // fit the 300-unit-tall scene; on narrow portrait phones zoom in so the
-    // characters are big enough (≥ 250 units of width), and let the sky fill
+    // characters are big enough (≥ 220 units of width), and let the sky fill
     // the remaining height above
-    const k = Math.min(cssH / VIEW_H, cssW / (cssW < cssH ? 250 : 360));
+    // (V2: 220 units in portrait — bigger characters, less empty sky above)
+    const k = Math.min(cssH / VIEW_H, cssW / (cssW < cssH ? 220 : 360));
     viewW = cssW / k;
     topY = VIEW_H - cssH / k;
     pixelScale = k * dpr;
@@ -159,7 +160,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const k = r.width / viewW;
     return { x: camX + (px - r.left) / k, y: topY + (py - r.top) / k };
   }
-  const near = (it, a = player) => Math.abs(a.x - it.x) <= (it.w || 40) / 2 + REACH && a.y >= (it.y ?? GROUND) - (it.h || 140);
+  // an interactable with its own `y` (e.g. on a high ledge) must be reached at that height
+  const near = (it, a = player) =>
+    Math.abs(a.x - it.x) <= (it.w || 40) / 2 + REACH && a.y >= (it.y ?? GROUND) - (it.h || 140) && (it.y === undefined || a.y <= it.y + 8);
 
   // ── scripted actions ──
   function moveActor(a, x, speed = 150) {
@@ -283,6 +286,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (act.goto) return app.go(act.goto, { spawnX: act.x });
     if (act.map) return app.ui.openMap();
     if (act.journal) return app.ui.openJournal(act.journal);
+    if (act.drawing) return app.ui.drawing(act.drawing === true ? {} : act.drawing);
     if (act.free) return;
     throw new Error(`Unknown action ${JSON.stringify(act)}`);
   }
@@ -306,9 +310,14 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     }
   }
 
+  const seenKey = (it) => `it.${scene.id}.${it.id}`;
+  /** Objects she has not examined yet (or that have something new) twinkle. */
+  const glows = (it) => it.glow !== false && (!game.seen(seenKey(it)) || (it.glowIf !== undefined && check(it.glowIf, game)));
+
   function interact(it) {
     if (!it || mode !== 'play') return;
     audio.play('tap');
+    game.markSeen(seenKey(it));
     const cases = it.cases || [{ run: it.run }];
     const chosen = cases.find((c) => check(c.if, game));
     if (chosen) run(chosen.run);
@@ -559,6 +568,14 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         ctx.restore();
       } else a.bubble = null;
     }
+    if (mode === 'play') {
+      for (const it of interactables()) {
+        if (it === interactTarget || it.x < camX - 20 || it.x > camX + viewW + 20 || !glows(it)) continue;
+        const y = (it.y ?? GROUND) - (it.h || 90) - 8;
+        const tw = app.reduced() ? 0.8 : 0.55 + 0.45 * Math.sin(t * 3 + it.x * 0.01);
+        P.sparkle(ctx, it.x + 10, y, 5 + tw * 3, 0.5 + tw * 0.5);
+      }
+    }
     if (interactTarget && mode === 'play') {
       const it = interactTarget;
       const y = (it.y ?? GROUND) - (it.h || 90) - 14 + Math.sin(t * 5) * 3;
@@ -627,9 +644,14 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     get viewW() {
       return viewW;
     },
+    get reduced() {
+      return app.reduced();
+    },
     get interactTarget() {
       return interactTarget;
     },
+    /** Interactables currently on screen that still twinkle (tips, tests). */
+    visibleGlows: () => interactables().filter((it) => it.x > camX && it.x < camX + viewW && glows(it)),
     start() {
       loop.start();
       if (scene.enter) run(scene.enter);

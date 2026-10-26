@@ -10,11 +10,14 @@ import { ACTS } from '../data/chapters.js';
 import { WORLDS, ROUTES, worldById } from '../data/worlds.js';
 import { JOURNAL, COLLECTIBLES, ITEMS, GROUP_NAMES, worldCompletion } from '../data/items.js';
 import { MINIGAMES } from '../minigames/registry.js';
+import { PUZZLES } from '../data/puzzles.js';
 import { check } from '../core/conditions.js';
 import { groupOf } from '../core/game.js';
 import { offlineText } from '../core/sw-client.js';
 import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
 import { ACHIEVEMENTS } from '../progression/achievements.js';
+import { MISSIONS, KIND_NAMES } from '../data/missions.js';
+import { missionState } from '../progression/missions.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -84,6 +87,12 @@ export function openSettings(app) {
           ${toggle('hints', 'إظهار زر التلميحات بالألغاز')}
           ${toggle('controlHints', 'كتابة أسماء الأزرار')}
           ${toggle('vibration', 'اهتزاز خفيف (إذا الجهاز يدعم)')}
+          ${toggle('tips', 'نصائح قصيرة أول مرة تحتاجينها')}
+          <button type="button" class="btn btn-ghost btn-small" data-tips-reset>رجّعي كل النصائح من جديد</button>
+          <h3>السباقات</h3>
+          <p class="field-label">صعوبة السياقة</p>
+          ${seg('raceDifficulty', [['easy', 'سهلة'], ['normal', 'عادية'], ['hard', 'صعبة']])}
+          <p class="muted small">«سهلة»: سيارات أقل، والمقود يساعدچ ترجعين للطريق، والوقت ما يأثر على تقدم القصة.</p>
           <h3>الحفظ</h3>
           <p class="muted">التقدم ينحفظ تلقائياً على هذا الجهاز فقط. ماكو حساب ولا إنترنت.</p>
           <div class="stack">
@@ -111,6 +120,11 @@ export function openSettings(app) {
           if (input.dataset.toggle === 'sound' && input.checked) app.audio.play('tap');
         }),
       );
+      scope.on(el.querySelector('[data-tips-reset]'), 'click', () => {
+        app.tips.reset();
+        el.querySelector('[data-toggle="tips"]').checked = true;
+        app.ui.toast('النصائح راح تطلع مرة ثانية ✓');
+      });
       scope.on(el.querySelector('[data-volume]'), 'input', (e) => settings.set({ volume: Number(e.target.value) }));
       el.querySelectorAll('[data-set]').forEach((b) =>
         scope.on(b, 'click', () => {
@@ -200,6 +214,7 @@ export function openPause(app) {
           <button type="button" class="btn btn-primary" data-act="resume" data-autofocus>كمّلي اللعب</button>
           ${mapOpen ? '<button type="button" class="btn btn-ghost" data-act="map">🗺️ الخريطة</button>' : ''}
           <button type="button" class="btn btn-ghost" data-act="journal">📖 الدفتر</button>
+          <button type="button" class="btn btn-ghost" data-act="help">❓ المساعدة</button>
           <button type="button" class="btn btn-ghost" data-act="settings">⚙️ الإعدادات</button>
           <button type="button" class="btn btn-ghost" data-act="title">🏠 الشاشة الرئيسية</button>
         </div>
@@ -217,6 +232,7 @@ export function openPause(app) {
           app.ui.openJournal();
         }
         if (act === 'settings') openSettings(app);
+        if (act === 'help') openHelp(app);
         if (act === 'title') {
           close();
           app.toTitle();
@@ -234,6 +250,7 @@ export function openJournal(app, tab = 'notes') {
     (el, { close, scope }) => {
       const tabs = [
         ['notes', 'الدفتر'],
+        ['missions', 'المهمات'],
         ['collection', 'المجموعات'],
         ['bag', 'الحقيبة'],
         ['challenges', 'التحديات'],
@@ -252,8 +269,22 @@ export function openJournal(app, tab = 'notes') {
           const entries = game.state.journal.filter((id) => JOURNAL[id]);
           const notes = game.state.collected.filter((id) => groupOf(id) === 'note');
           body.innerHTML = `
-            ${entries.length ? entries.map((id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(JOURNAL[id].text)}</p></div></article>`).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
+            ${entries.length ? entries.map((id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(JOURNAL[id].text)}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
             ${notes.length ? `<h3>رسائل ريان</h3>${notes.map((id) => `<article class="entry note"><span class="entry-icon">📜</span><div><h4>${esc(COLLECTIBLES[id]?.name || id)}</h4><p>${esc(COLLECTIBLES[id]?.text || '')}</p></div></article>`).join('')}` : ''}`;
+          body.querySelectorAll('[data-open]').forEach((b) =>
+            b.addEventListener('click', () => {
+              if (b.dataset.open === 'drawing') app.ui.drawing?.({ revisit: true });
+            }),
+          );
+        } else if (which === 'missions') {
+          body.innerHTML = renderMissions(game);
+          body.querySelectorAll('[data-mhint]').forEach((b) =>
+            b.addEventListener('click', () => {
+              const p = b.nextElementSibling;
+              p.hidden = !p.hidden;
+              b.setAttribute('aria-expanded', String(!p.hidden));
+            }),
+          );
         } else if (which === 'collection') {
           const worlds = [...new Set(Object.values(COLLECTIBLES).map((c) => c.world))];
           const groups = Object.keys(GROUP_NAMES);
@@ -284,19 +315,35 @@ export function openJournal(app, tab = 'notes') {
           }).join('')}`;
         } else {
           const list = Object.entries(MINIGAMES).filter(([id]) => game.record(`game:${id}`)?.completed || (MINIGAMES[id].unlock && check(MINIGAMES[id].unlock, game)));
-          body.innerHTML = list.length
+          const puzzles = Object.entries(PUZZLES).filter(([id]) => game.record(`puzzle:${id}`)?.completed);
+          body.innerHTML = list.length || puzzles.length
             ? `<p class="muted">العبي أي تحدي خلّصتيه مرة ثانية، وحاولي توصلين للذهبية.</p>${list
                 .map(([id, m]) => {
                   const r = game.record(`game:${id}`);
                   const medal = { gold: '🥇', silver: '🥈', bronze: '🥉' }[r?.medal] || '—';
                   return `<button type="button" class="entry entry-btn" data-play="${id}"><span class="entry-icon">${symbol(m.icon)}</span><div><h4>${esc(tx(m.title))}</h4><p>${medal} · لعبتيها ${num(r?.plays || 0)} مرة</p></div></button>`;
                 })
-                .join('')}`
+                .join('')}${
+                puzzles.length
+                  ? `<h3>الألغاز</h3>${puzzles
+                      .map(([id, p]) => {
+                        const skipped = game.flag(`skipped:${id}`) && game.record(`puzzle:${id}`).plays < 2;
+                        return `<button type="button" class="entry entry-btn" data-puzzle="${id}"><span class="entry-icon">🧩</span><div><h4>${esc(tx(p.title))}</h4><p>${skipped ? 'تخطّيتيه — جرّبي تحلّينه' : 'انحلّ ✓ · العبيه مرة ثانية'}</p></div></button>`;
+                      })
+                      .join('')}`
+                  : ''
+              }`
             : '<p class="muted">التحديات تنفتح هنا بعد ما تخلصينها بالقصة.</p>';
           body.querySelectorAll('[data-play]').forEach((b) =>
             b.addEventListener('click', () => {
               close();
               app.ui.minigame(b.dataset.play);
+            }),
+          );
+          body.querySelectorAll('[data-puzzle]').forEach((b) =>
+            b.addEventListener('click', () => {
+              close();
+              app.ui.puzzle(b.dataset.puzzle);
             }),
           );
         }
@@ -306,6 +353,57 @@ export function openJournal(app, tab = 'notes') {
       render(tab);
     },
     { className: 'overlay-panel', dismissible: true, label: 'الدفتر' },
+  );
+}
+
+/* ── missions (journal tab) ───────────────────────────────── */
+function renderMissions(game) {
+  const states = MISSIONS.map((m) => ({ m, st: missionState(m, game) }));
+  const active = states.filter((x) => x.st.status === 'active');
+  const done = states.filter((x) => x.st.status === 'complete');
+  const locked = states.length - active.length - done.length;
+  const card = ({ m, st }) => `<article class="mission ${st.status === 'complete' ? 'is-done' : ''}" data-mission="${m.id}">
+      <header><span class="mission-kind kind-${m.kind}">${esc(KIND_NAMES[m.kind])}</span><h4>${esc(m.title)}</h4>
+        <span class="mission-steps" aria-label="الخطوات">${num(st.step)}/${num(m.steps.length)}</span></header>
+      <p class="mission-where">📍 ${esc(m.where)}</p>
+      ${
+        st.status === 'complete'
+          ? `<p class="mission-reward">✅ خلصت · ${esc(m.rewardText)}</p>`
+          : `<p class="mission-summary">${esc(m.summary)}</p>
+           <p class="mission-next"><b>الخطوة الجاية:</b> ${esc(st.next.text)}</p>
+           <button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button>
+           <p class="mission-hint" hidden>${esc(st.next.hint || 'دوّري بالمكان المكتوب فوق.')}</p>
+           <p class="mission-reward muted small">الجايزة: ${esc(m.rewardText)}</p>`
+      }
+    </article>`;
+  return `${active.length ? active.map(card).join('') : '<p class="muted">ماكو مهمات مفتوحة هسه. كمّلي القصة… المهمات الجانبية تنفتح بالطريق.</p>'}
+    ${done.length ? `<h3>مهمات خلصت (${num(done.length)})</h3>${done.map(card).join('')}` : ''}
+    ${locked ? `<p class="muted small">بعد ${num(locked)} مهمات مخفية بالحديقة.</p>` : ''}`;
+}
+
+/* ── help ─────────────────────────────────────────────────── */
+export const HELP_SECTIONS = [
+  ['🎮 التحكم', ['◀ ▶ للمشي، ⬆ للقفز. أو المسي الأرض بالمشهد حتى تمشين لهناك.', 'بالكيبورد: الأسهم أو A/D للمشي، المسافة أو ↑ للقفز، E أو Enter للفحص، Esc للإيقاف، M للخريطة، J للدفتر.']],
+  ['✋ الفحص والأشياء', ['لمن تقربين من شي يطلع فوقه رمز، وزر «فحص» يصير أصفر. المسيه (أو المسي الشي نفسه).', 'النجمة الصغيرة اللي تلمع فوق شي يعني بعد ما فحصتيه.', 'النجوم والبذور والرسائل تنجمع بس تلمسينها. بعضها عالي ويحتاج قفزة من رف.']],
+  ['🗺️ الخريطة', ['تنفتح بعد الفصل الأول. زر الخريطة فوق ينقلچ لأي مكان انفتح.', 'الأماكن المقفولة تنفتح بالقصة.']],
+  ['📖 الدفتر', ['«الدفتر»: الأدلة والرسائل.', '«المهمات»: المهمات الجانبية، الخطوة الجاية، وتلميح لكل خطوة.', '«التحديات»: العبي أي لعبة خلصتيها مرة ثانية للذهبية.']],
+  ['💡 التلميحات والألغاز', ['كل لغز بيه هدف بجملة وحدة فوق.', 'زر «تلميح» يعطي مساعدة خطوة بخطوة: من فكرة عامة، للشي المهم، لشنو تسوين بالضبط.', 'بعد التلميحات تگدرين «تشوفين الحل» أو «تتخطين اللغز» — والقصة تكمل عادي.']],
+  ['🔁 الألعاب الصغيرة', ['⏸ يوقف أي لعبة، وبيه «من البداية» و«رجوع للمغامرة».', 'ماكو خسارة: الغلط يكلف وقت أو ميدالية بس، مو تقدم.', 'السباقات إلها صعوبة (سهلة / عادية / صعبة) من الإعدادات.']],
+  ['💾 الحفظ', ['كل شي ينحفظ تلقائياً على هذا الجهاز.', 'الإعدادات ← «نسخة احتياطية» تنزّل ملف. «استرجاع» يرجّع التقدم منه (حتى على جهاز ثاني).', 'اللعبة تشتغل بدون إنترنت بعد أول فتحة.']],
+];
+
+export function openHelp(app) {
+  return app.overlays.open(
+    (el, { close, scope }) => {
+      el.innerHTML = `<section class="panel help">
+        <header class="panel-head"><h2 tabindex="-1">المساعدة</h2>
+          <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
+        <div class="panel-scroll">
+          ${HELP_SECTIONS.map(([title, lines]) => `<h3>${esc(title)}</h3><ul class="help-list">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`).join('')}
+        </div></section>`;
+      scope.on(el.querySelector('[data-close]'), 'click', () => close());
+    },
+    { className: 'overlay-panel', dismissible: true, label: 'المساعدة' },
   );
 }
 

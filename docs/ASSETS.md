@@ -7,7 +7,9 @@
 | Anji sprite (9 poses + 6-frame walk/run cycles, 6 outfits, 5 bows) | `src/game/characters/anji.js` | SVG generated, rasterised at 300 px for the canvas |
 | Anji portraits (10 expressions) | same | shared head drawing → consistent face |
 | Snooki sprite (10 poses, 6 hats, 4 collars) and portraits (9 expressions) | `characters/snooki.js` | |
-| Ryan (back view, walk, shadow; portrait back/turn), Nurse Needle, Doctor Hoot, Sultan, the Gate, phone | `characters/cast.js` | |
+| Ryan (back view, walk, shadow; portrait back/turn), Nurse Needle, العم منذر (owl), Sultan, the Gate, phone | `characters/cast.js` | |
+| V2: programmer desk, laptop/terminal screens, coffee, lamp, chair, circuit posters, glowing symbols, secret shelf, passage torches, lever, stone door, waiting-room window, meadow tree, cats, Robo-Snooki, recipe board, archive cabinet | `world/props-v2.js` | procedural canvas |
+| V2: race car (original low coupe, four round tail lights, quad exhausts, no badges), traffic, road scenery | `minigames/racing.js` | drawn per frame |
 | Environments: 12 themes, ~40 props (gates, fountains, rose bushes, lanterns, car, telescope, machine…) | `world/props.js`, `world/painter.js` | procedural canvas, cached in chunks |
 | Puzzle / item symbols (~45) | `ui/symbols.js` | inline SVG |
 | Hidden-object scenes (Ryan's study, evidence table) | `minigames/hidden-scenes.js` | portrait SVG compositions |
@@ -32,6 +34,7 @@ present; replaced by the built-in illustrations otherwise.
 | `story-3-map`, `story-4-clues`, `story-5-ending`, `ryan-gate` | memory frames, credits |
 | `story-2-snooki`, `ryan-note`, `play-*`, `world-5-kitchen`, `world-6-clinic` | available for future use |
 | `reference-collage.png` | the full reference (not loaded by the game) |
+| `finale-drawing` | **the owner's handmade drawing**: the finale reveal, the journal, the last credits frame. Crop the photo to the paper (~440×750, portrait). The fold effect assumes the centre strip spans ~33 % → 89 % of the width (`FOLDED` in `ui/drawing.js`). |
 
 ## Missing / recommended assets
 

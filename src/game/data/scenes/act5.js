@@ -34,16 +34,35 @@ export const OBSERVATORY = {
   ],
   interact: [
     {
-      id: 'hoot',
+      id: 'munther',
       x: 560,
       w: 60,
       h: 140,
-      label: 'دكتور هوت',
+      label: 'العم منذر',
       icon: '🦉',
       cases: [
-        { if: 'flag:act5-done', run: [{ say: 'a5.hoot-done' }] },
-        { if: 'flag:library-open', run: [{ say: 'a5.hoot-again' }] },
-        { run: [{ say: 'a5.hoot' }, { toast: 'باب المكتبة بالبيت انفتح ✨', kind: 'hint' }] },
+        { if: ['flag:act5-done', '!flag:sky-started'], run: [{ say: 'a5.munther-done' }, { say: 's.munther-sky' }] },
+        { if: ['flag:sky-started', '!flag:sky-3'], run: [{ say: 's.sky-next' }] },
+        { if: 'flag:sky-3', run: [{ say: 's.skychart-done' }] },
+        { if: 'flag:act5-done', run: [{ say: 'a5.munther-done' }] },
+        { if: 'flag:library-open', run: [{ say: 'a5.munther-again' }] },
+        { run: [{ say: 'a5.munther' }, { toast: 'باب المكتبة بالبيت انفتح ✨', kind: 'hint' }] },
+      ],
+    },
+    {
+      id: 'skychart',
+      x: 1050,
+      w: 90,
+      h: 200,
+      label: 'خريطة السما الثانية',
+      icon: '✨',
+      if: 'flag:sky-started',
+      glowIf: '!flag:sky-3',
+      cases: [
+        { if: 'flag:sky-3', run: [{ puzzle: 'sky-bone' }] },
+        { if: 'flag:sky-2', run: [{ puzzle: 'sky-bone', then: [{ say: 's.sky-done' }] }] },
+        { if: 'flag:sky-1', run: [{ puzzle: 'sky-car' }] },
+        { run: [{ puzzle: 'sky-paw' }] },
       ],
     },
     {
@@ -55,7 +74,7 @@ export const OBSERVATORY = {
       icon: '🔭',
       cases: [
         { if: 'flag:act5-done', run: [{ bubble: 'snooki', text: 'اسمچ بعده بالسما. ما راح يروح.' }] },
-        { if: '!item:star-lens', run: [{ bubble: 'snooki', text: 'ناقصته العدسة. هوت يعرف وين.' }] },
+        { if: '!item:star-lens', run: [{ bubble: 'snooki', text: 'ناقصته العدسة. عمو منذر يعرف وين.' }] },
         {
           if: '!flag:rings-done',
           run: [

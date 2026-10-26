@@ -19,7 +19,7 @@ import { createOverlays } from './ui/overlay.js';
 import { createToasts } from './ui/toast.js';
 import { playDialogue } from './ui/dialogue-box.js';
 import { playCinematic } from './ui/cinematic.js';
-import { chapterCard, openJournal, openMap, openSettings } from './ui/menus.js';
+import { chapterCard, openJournal, openMap, openSettings, openHelp } from './ui/menus.js';
 import { openPuzzle } from './puzzles/host.js';
 import { openMinigame } from './minigames/host.js';
 import { createTitle } from './scenes/title.js';
@@ -31,6 +31,9 @@ import { corridorMemories, allMemories } from './memories/registry.js';
 import { memoryPuzzle } from './memories/schema.js';
 import { applyEffects } from './core/effects.js';
 import { syncAchievements } from './progression/achievements.js';
+import { syncMissions } from './progression/missions.js';
+import { createTips } from './ui/tips.js';
+import { openDrawing } from './ui/drawing.js';
 import { COLLECTIBLES } from './data/items.js';
 import { groupOf } from './core/game.js';
 import { h } from './ui/dom.js';
@@ -71,6 +74,9 @@ export function createGameApp(root, opts = {}) {
   const overlays = createOverlays(shell.querySelector('.overlays'), bus);
   const toasts = createToasts(shell, audio);
   const fader = shell.querySelector('.fader');
+  // exploration tips wait while a menu, puzzle, minigame or cinematic covers the screen
+  const tips = createTips(shell, { settings, audio, blocked: (tip) => tip.place !== 'top' && overlays.count > 0 });
+  bus.on('overlay', () => tips.refresh());
 
   let current = null; // { scope, scene }
   let sceneId = null;
@@ -85,6 +91,7 @@ export function createGameApp(root, opts = {}) {
     input,
     overlays,
     offline,
+    tips,
     loadStatus: loaded.status,
     reduced: () => settings.reducedMotion(),
     applyMotion() {
@@ -135,6 +142,8 @@ export function createGameApp(root, opts = {}) {
       openMap: () => openMap(app),
       openJournal: (tab) => openJournal(app, tab),
       openSettings: () => openSettings(app),
+      openHelp: () => openHelp(app),
+      drawing: (opts) => openDrawing(app, opts),
       fade: (dir = 'out', ms = 350) =>
         new Promise((resolve) => {
           fader.classList.toggle('is-on', dir === 'out');
@@ -198,13 +207,27 @@ export function createGameApp(root, opts = {}) {
   // achievements are checked after any progress change (not on their own flags)
   let syncing = false;
   bus.on('change', (c) => {
-    if (syncing || (c.kind === 'flag' && String(c.id).startsWith('ach:'))) return;
+    if (syncing || (c.kind === 'flag' && /^(ach|mission|mission-seen):/.test(String(c.id)))) return;
+    if (c.kind === 'replace') return; // a new game / restored backup is not "progress"
     syncing = true;
-    for (const a of syncAchievements(game)) {
-      toasts.toast(`🏆 إنجاز: ${a.name}`, 'unlock');
-      toasts.announce(a.changes);
+    try {
+      const missions = syncMissions(game);
+      if (missions.unlocked.length > 2) toasts.toast(`🧭 انفتحت ${missions.unlocked.length} مهمات جديدة بالدفتر`, 'hint');
+      else for (const m of missions.unlocked) toasts.toast(`🧭 مهمة جديدة: ${m.title}`, 'hint');
+      if (missions.unlocked.length) tips.show('missions');
+      for (const m of missions.completed) {
+        toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
+        toasts.announce(m.changes);
+      }
+      for (const a of syncAchievements(game)) {
+        toasts.toast(`🏆 إنجاز: ${a.name}`, 'unlock');
+        toasts.announce(a.changes);
+      }
+    } finally {
+      syncing = false;
     }
-    syncing = false;
+    if (c.kind === 'journal') tips.show('journal');
+    if (c.kind === 'flag' && c.id === 'map-open') tips.show('map');
   });
   bus.on('save-error', (err) =>
     toasts.toast(err === 'quota' ? 'المساحة على الجهاز ممتلئة: التقدم ما انحفظ. حرري شوية مساحة.' : 'ما گدرنا نحفظ التقدم على هذا الجهاز (التصفح الخاص؟).', 'warn'),

@@ -2,6 +2,9 @@
  * Wardrobe: change Anji's outfit and bow, Snooki's hat and collar. The
  * preview updates instantly; locked pieces show how to earn them. Saving
  * stores the look (the world sprites use it from then on).
+ *
+ * V2 challenge mode («تحدي الإطلالة»): Snooki the stylist gives three
+ * briefs; she dresses Anji (and Snooki) to match, then presents the look.
  */
 import { COSMETICS } from '../data/items.js';
 import { anjiSprite } from '../characters/anji.js';
@@ -25,6 +28,37 @@ const REACTIONS = {
 
 const ALL_TABS = [...TABS, ['carColor', 'لون السيارة']];
 
+/** Stylist briefs: each lists the accepted values per slot (pure, tested). */
+export const BRIEFS = [
+  {
+    title: 'يوم جيم',
+    text: 'رايحين للجيم: شي مريح للتمرين. (الفيونكة على ذوقچ.)',
+    need: { anjiOutfit: ['sport'] },
+    ok: 'سنوكي: جاهزة للأوزان! آني أحمل… البسكويت.',
+  },
+  {
+    title: 'ليلة سباق',
+    text: 'الليلة سباق على الطريق الأزرق: جاكيت سباق لأنجي، ونظارات سباق لسنوكي.',
+    need: { anjiOutfit: ['racer'], snookiHat: ['goggles'] },
+    ok: 'سنوكي: سريعة حتى وهي واقفة. والنظارات تخلّيني أبين ذكي. أكثر.',
+  },
+  {
+    title: 'تحقيق جديد',
+    text: 'قضية جديدة بالأكاديمية: معطف محققة، وسنوكي بقبعته الرسمية.',
+    need: { anjiOutfit: ['detective'], snookiHat: ['detective'] },
+    ok: 'سنوكي: فريق التحقيق الأقوى بالحديقة. والأكثر أناقة.',
+  },
+];
+
+const SLOT_NAMES = { anjiOutfit: 'ملابس أنجي', anjiBow: 'الفيونكة', snookiHat: 'قبعة سنوكي', snookiCollar: 'قلادة سنوكي' };
+
+/** Which slots of a look miss the brief (empty = accepted). */
+export function judgeLook(brief, look) {
+  return Object.entries(brief.need)
+    .filter(([slot, ok]) => !ok.includes(look[slot]))
+    .map(([slot]) => slot);
+}
+
 export function mount(area, { app, scope, options = {}, hud, finish }) {
   const { game } = app;
   const draft = { ...game.state.cosmetics };
@@ -41,7 +75,8 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
       <p class="dress-say"></p>
       <div class="tabs" role="tablist">${tabs.map(([id, label]) => `<button type="button" role="tab" data-tab="${id}">${label}</button>`).join('')}</div>
       <div class="dress-options"></div>
-      <div class="stack"><button type="button" class="btn btn-primary dress-save">${ICONS.check}<span>احفظي الإطلالة</span></button></div>
+      ${options.challenge ? '<section class="card dress-brief" aria-live="polite"><h3></h3><p></p></section>' : ''}
+      <div class="stack"><button type="button" class="btn btn-primary dress-save">${ICONS.check}<span>${options.challenge ? 'قدّمي الإطلالة 👗' : 'احفظي الإطلالة'}</span></button></div>
     </div>`),
   );
   const say = (t) => {
@@ -50,7 +85,7 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
 
   function preview() {
     if (tab === 'carColor') {
-      const colors = { cobalt: '#1f4fd1', midnight: '#1a1f5e', rose: '#e0567f', pearl: '#e9e7f2' };
+      const colors = { cobalt: '#1f4fd1', midnight: '#1a1f5e', rose: '#e0567f', pearl: '#e9e7f2', emerald: '#13806a' };
       area.querySelector('.dress-anji').innerHTML = '';
       area.querySelector('.dress-snooki').innerHTML = `<svg viewBox="0 0 96 64" aria-hidden="true"><path d="M6 46Q7 33 21 31L30 21Q34 17 41 17H57Q63 17 67 23L74 31Q86 33 88 46Z" fill="${colors[draft.carColor] || colors.cobalt}"/><path d="M33 29L39 22H56L62 29Z" fill="#bfe3ff"/><circle cx="24" cy="47" r="8" fill="#16161c"/><circle cx="68" cy="47" r="8" fill="#16161c"/></svg>`;
       return;
@@ -59,7 +94,7 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
     area.querySelector('.dress-snooki').innerHTML = snookiSprite({ hat: draft.snookiHat, collar: draft.snookiCollar, pose: 'sit' });
   }
 
-  function options() {
+  function renderOptions() {
     area.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     const list = Object.entries(COSMETICS).filter(([, c]) => c.slot === tab);
     const box = area.querySelector('.dress-options');
@@ -83,7 +118,7 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
         say(pool[Math.floor(Math.random() * pool.length)]);
         app.audio.play('tap');
         preview();
-        options();
+        renderOptions();
       }),
     );
   }
@@ -91,10 +126,46 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
   area.querySelectorAll('[data-tab]').forEach((b) =>
     scope.on(b, 'click', () => {
       tab = b.dataset.tab;
-      options();
+      renderOptions();
     }),
   );
+  let brief = 0;
+  let mistakes = 0;
+  const showBrief = () => {
+    const b = BRIEFS[brief];
+    const card = area.querySelector('.dress-brief');
+    card.querySelector('h3').textContent = `الطلب ${brief + 1} من ${BRIEFS.length}: ${b.title}`;
+    card.querySelector('p').textContent = b.text;
+    hud(`👗 ${brief}/${BRIEFS.length} · ملاحظات ${mistakes}`);
+  };
+
   scope.on(area.querySelector('.dress-save'), 'click', () => {
+    if (options.challenge) {
+      const miss = judgeLook(BRIEFS[brief], draft);
+      if (miss.length) {
+        mistakes += 1;
+        app.audio.play('fail');
+        say(`سنوكي: «لا لا لا.» ${miss.map((m) => SLOT_NAMES[m]).join(' و')} ما تناسب الطلب.`);
+        hud(`👗 ${brief}/${BRIEFS.length} · ملاحظات ${mistakes}`);
+        return;
+      }
+      app.audio.play('success');
+      say(BRIEFS[brief].ok);
+      brief += 1;
+      if (brief >= BRIEFS.length) {
+        finish({
+          completed: true,
+          medal: mistakes === 0 ? 'gold' : mistakes <= 2 ? 'silver' : 'bronze',
+          score: mistakes,
+          lowerIsBetter: true,
+          title: 'سنوكي يصفّق! 👏',
+          summary: `ثلاث إطلالات · ملاحظات سنوكي: ${mistakes}`,
+        });
+        return;
+      }
+      showBrief();
+      return;
+    }
     for (const [slot, value] of Object.entries(draft)) game.setCosmetic(slot, value);
     app.bus.emit('cosmetics', draft);
     finish({ completed: true, title: 'إطلالة جديدة ✨', summary: 'سنوكي يگول: «أخيراً شي يليق بمغامرة.»' });
@@ -103,9 +174,10 @@ export function mount(area, { app, scope, options = {}, hud, finish }) {
   return {
     start() {
       hud(options.slots ? 'ورشة الصبغ' : 'غرفة الملابس');
-      say('سنوكي: اختاري. آني رأيي محايد. (مو محايد.)');
+      say(options.challenge ? 'سنوكي: «اقرئي الطلب. وبعدين أدهشيني.»' : 'سنوكي: اختاري. آني رأيي محايد. (مو محايد.)');
+      if (options.challenge) showBrief();
       preview();
-      options();
+      renderOptions();
     },
     pause() {},
     resume() {},

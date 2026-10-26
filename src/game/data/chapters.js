@@ -67,7 +67,7 @@ export const ACTS = [
     art: null,
     objectives: [
       { done: 'flag:observatory-entered', text: 'روحي للمرصد (من الخريطة).' },
-      { done: 'flag:library-open', text: 'احچي ويّا دكتور هوت.' },
+      { done: 'flag:library-open', text: 'احچي ويّا العم منذر بالمرصد.' },
       { done: 'flag:lens-found', text: 'لگي العدسة بالمكتبة السرية (الباب اللي بيه نجمة بالبيت).' },
       { done: 'flag:rings-done', text: 'رجّعي العدسة للتلسكوب وصفّي الحلقات.' },
       { done: 'flag:act5-done', text: 'اقرئي رسالة النجوم.' },
