@@ -11,6 +11,9 @@ import { KIND, PROMPT_ICON_FONT, PROMPT_FONT } from '../../src/game/world/engine
 import { ryanSprite, ryanPortrait, ryanView } from '../../src/game/characters/cast.js';
 import { titleBackdrop, titleRoses, TITLE_LAYOUTS } from '../../src/game/art/title-scene.js';
 import { SCENES } from '../../src/game/data/scenes/index.js';
+import { ANJI_PALETTE, anjiPortrait } from '../../src/game/characters/anji.js';
+import { createGameApp } from '../../src/game/app.js';
+import { memoryStorage } from '../helpers.js';
 
 // the drawn figure fills about two thirds of a character's sprite box
 const visibleShare = (kind, cssW, cssH) => {
@@ -113,6 +116,24 @@ describe('title key art', () => {
       expect(svg).toMatch(/preserveAspectRatio="xMid(YMid|YMax) (slice|meet)"/);
     }
     for (const L of Object.values(TITLE_LAYOUTS)) expect(L.gateX).toBeGreaterThan(L.W * 0.3);
+  });
+
+  it("Anji's cover portrait has no skin-coloured disc on her face (the hand-on-cheek read as a giant mole)", async () => {
+    const root = document.createElement('div');
+    document.body.append(root);
+    const app = createGameApp(root, { storage: memoryStorage(), reducedMotion: true });
+    await app.toTitle();
+    const svg = root.querySelector('.cast-anji svg');
+    expect(svg).toBeTruthy();
+    const skin = [ANJI_PALETTE.skin, ANJI_PALETTE.skinShade].map((c) => c.toLowerCase());
+    // the face itself is a path with the skin gradient; a separate skin ellipse/circle is a blob
+    const blobs = [...svg.querySelectorAll('ellipse, circle')].filter((e) => skin.includes((e.getAttribute('fill') || '').toLowerCase()));
+    expect(blobs.map((e) => e.outerHTML)).toEqual([]);
+    app.destroy();
+    root.remove();
+    // positive control: the same check does find the hand in the dialogue "thinking" portrait
+    const thinking = new DOMParser().parseFromString(anjiPortrait({ expr: 'thinking' }), 'image/svg+xml');
+    expect([...thinking.querySelectorAll('ellipse')].some((e) => skin.includes((e.getAttribute('fill') || '').toLowerCase()))).toBe(true);
   });
 
   it('contains no raster image or private-art reference (public build)', () => {

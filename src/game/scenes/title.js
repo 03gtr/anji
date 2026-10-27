@@ -23,7 +23,7 @@ export function createTitle(app, { message } = {}) {
   const logo = painted('title-logo');
   const started = game.flag('intro-done');
   const cast = `<div class="title-cast">
-          <div class="cast-anji">${anjiPortrait({ expr: 'smile', handOnCheek: true, outfit: game.state.cosmetics.anjiOutfit, bow: game.state.cosmetics.anjiBow })}</div>
+          <div class="cast-anji">${anjiPortrait({ expr: 'smile', outfit: game.state.cosmetics.anjiOutfit, bow: game.state.cosmetics.anjiBow })}</div>
           <div class="cast-snooki">${snookiPortrait({ expr: 'happy' })}</div>
           <div class="title-roses">${titleRoses()}</div>
         </div>`;
