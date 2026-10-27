@@ -6,7 +6,7 @@
 import { check } from '../core/conditions.js';
 import { MISSIONS } from './missions.js';
 import { missionState } from '../progression/missions.js';
-import { SP2_GATE } from './missions-sp2.js';
+import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 
 export const ACTS = [
   {
@@ -101,6 +101,8 @@ export const ACTS = [
       { done: 'flag:wk-stage1', text: 'شغّلي قلب الماكينة.' },
       { done: 'flag:wk-stage2', text: 'شعّلي فوانيس الماكينة.' },
       { done: 'flag:act7-done', text: 'افتحي قفل الرحلة.' },
+      // Phase 03: the hidden garden opens only after «خريطة الغد» (`mission` shows its next step)
+      { done: SP2_FINAL_GATE, text: 'كمّلي «خريطة الغد» بالورشة.', mission: 'sp2-final' },
     ],
   },
   {
@@ -123,8 +125,8 @@ export function currentAct(game) {
 export function currentObjective(game) {
   for (const act of ACTS) {
     const next = act.objectives.find((o) => !check(o.done, game));
-    if (next?.pack) {
-      const m = MISSIONS.find((x) => x.pack === next.pack && x.kind === 'story' && missionState(x, game).status === 'active');
+    if (next?.pack || next?.mission) {
+      const m = MISSIONS.find((x) => (next.mission ? x.id === next.mission : x.pack === next.pack && x.kind === 'story') && missionState(x, game).status === 'active');
       if (m) return { act: act.act, title: act.title, text: missionState(m, game).next.text };
     }
     if (next) return { act: act.act, title: act.title, text: next.text };

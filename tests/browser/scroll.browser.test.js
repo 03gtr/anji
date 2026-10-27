@@ -444,4 +444,37 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
       await t.ctx.close();
     }
   }, 120000);
+
+  // Phase 03: with every place open, no place name overlaps another place's name or icon,
+  // and nothing sits outside the board — on a small phone, a phone, landscape and desktop
+  it('map: no overlapping labels or icons, nothing off the board, at every viewport', async () => {
+    for (const view of VIEWS) {
+      const { page, ctx, errors } = await open(view, WORLD);
+      const res = await page.evaluate(async () => {
+        // the flags that open every place on the map (see data/worlds.js)
+        window.__game.game.setFlags(['maze-done', 'act1-done', 'house-entered', 'garage-open', 'act3-done', 'case-open', 'act4-done', 'library-open', 'act5-done', 'act6-done', 'workshop-entered', 'kitten-tracks', 'act7-done', 'final-entered', 'game-complete', 'sp1-embrace', 'notice:sp1', 'notice:sp2']);
+        window.__game.ui.openMap();
+        await new Promise((r) => setTimeout(r, 400));
+        const board = document.querySelector('.map-board').getBoundingClientRect();
+        const boxes = [];
+        for (const n of document.querySelectorAll('.map-node')) for (const p of n.querySelectorAll('.map-name, .map-icon')) boxes.push({ w: n.dataset.world, name: p.classList.contains('map-name'), r: p.getBoundingClientRect() });
+        const hits = [];
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i];
+          const b = boxes[j];
+          if (a.w === b.w || !(a.name || b.name)) continue;
+          const ov = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
+          const oh = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
+          if (ov > 2 && oh > 2) hits.push(`${a.w}×${b.w}`);
+        }
+        const outside = boxes.filter((b) => b.r.left < board.left - 2 || b.r.right > board.right + 2 || b.r.top < board.top - 2 || b.r.bottom > board.bottom + 2).map((b) => b.w);
+        return { open: document.querySelectorAll('.map-node.is-open').length, hits, outside };
+      });
+      expect(res.open, `${view} places open`).toBeGreaterThan(15);
+      expect(res.hits, `${view} overlaps`).toEqual([]);
+      expect(res.outside, `${view} off the board`).toEqual([]);
+      expect(errors).toEqual([]);
+      await ctx.close();
+    }
+  }, 120000);
 });

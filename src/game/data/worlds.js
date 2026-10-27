@@ -1,37 +1,40 @@
-import { SP2_GATE } from './missions-sp2.js';
+import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 
 /**
- * World map: the fifteen locations of the garden, how they connect, and when
- * each opens. `scene` is the exploration scene to travel to; `ready` says
+ * World map: the locations of the garden, how they connect, and when
+ * each opens. Positions (x, y in %) sit on a 4 × 6 grid so no label or icon
+ * overlaps another place on a phone, in landscape or on a desktop.
+ * `scene` is the exploration scene to travel to; `ready` says
  * whether that location is playable in this build (unbuilt places are shown
  * honestly as "coming in a later update", never as broken screens).
  */
 export const WORLDS = [
-  { id: 'garden', name: 'الحديقة الضائعة', icon: 'rose', x: 18, y: 78, act: 1, scene: 'garden', spawn: 240, ready: true },
-  { id: 'maze', name: 'متاهة السياج', icon: 'leaf', x: 34, y: 66, act: 1, game: 'maze', unlock: 'flag:maze-done', ready: true },
-  { id: 'conservatory', name: 'البيت الزجاجي', icon: 'rose-white', x: 48, y: 76, act: 1, scene: 'conservatory', spawn: 140, unlock: 'flag:maze-done', ready: true },
-  { id: 'house', name: 'البيت الغامض', icon: 'key', x: 58, y: 56, act: 2, scene: 'house', spawn: 140, unlock: 'flag:act1-done', ready: true },
-  { id: 'wardrobe', name: 'غرفة الملابس', icon: 'crown', x: 72, y: 50, act: 2, scene: 'house', spawn: 470, unlock: 'flag:house-entered', ready: true },
-  { id: 'kitchen', name: 'المطبخ الصحي', icon: 'apple', x: 46, y: 46, act: 2, scene: 'house', spawn: 950, unlock: 'flag:house-entered', ready: true },
-  { id: 'garage', name: 'الكراج وطريق السباق', icon: 'car', x: 84, y: 66, act: 3, scene: 'garage', spawn: 160, unlock: 'flag:garage-open', ready: true },
-  { id: 'academy', name: 'أكاديمية سنوكي', icon: 'paw', x: 30, y: 40, act: 4, scene: 'academy', spawn: 140, unlock: 'flag:act3-done', ready: true },
-  { id: 'sanctuary', name: 'محمية الحيوانات', icon: 'feather', x: 14, y: 52, act: 4, scene: 'sanctuary', spawn: 140, unlock: 'flag:case-open', ready: true },
-  { id: 'observatory', name: 'المرصد', icon: 'star', x: 62, y: 22, act: 5, scene: 'observatory', spawn: 140, unlock: 'flag:act4-done', ready: true },
-  { id: 'library', name: 'المكتبة السرّية', icon: 'note', x: 80, y: 32, act: 5, scene: 'library', spawn: 140, unlock: 'flag:library-open', ready: true },
-  { id: 'lake', name: 'البحيرة القمرية', icon: 'moon-full', x: 40, y: 22, act: 6, scene: 'lake', spawn: 140, unlock: 'flag:act5-done', ready: true },
-  { id: 'corridor', name: 'ممر الذكريات', icon: 'heart', x: 22, y: 24, act: 6, scene: 'corridor', spawn: 140, unlock: 'flag:act5-done', ready: true },
+  { id: 'garden', name: 'الحديقة الضائعة', icon: 'rose', x: 12, y: 71, act: 1, scene: 'garden', spawn: 240, ready: true },
+  { id: 'maze', name: 'متاهة السياج', icon: 'leaf', x: 37, y: 71, act: 1, game: 'maze', unlock: 'flag:maze-done', ready: true },
+  { id: 'conservatory', name: 'البيت الزجاجي', icon: 'rose-white', x: 62, y: 71, act: 1, scene: 'conservatory', spawn: 140, unlock: 'flag:maze-done', ready: true },
+  { id: 'house', name: 'البيت الغامض', icon: 'key', x: 62, y: 55.5, act: 2, scene: 'house', spawn: 140, unlock: 'flag:act1-done', ready: true },
+  { id: 'wardrobe', name: 'غرفة الملابس', icon: 'crown', x: 87, y: 40, act: 2, scene: 'house', spawn: 470, unlock: 'flag:house-entered', ready: true },
+  { id: 'kitchen', name: 'المطبخ الصحي', icon: 'apple', x: 37, y: 40, act: 2, scene: 'house', spawn: 950, unlock: 'flag:house-entered', ready: true },
+  { id: 'garage', name: 'الكراج وطريق السباق', icon: 'car', x: 87, y: 55.5, act: 3, scene: 'garage', spawn: 160, unlock: 'flag:garage-open', ready: true },
+  { id: 'academy', name: 'أكاديمية سنوكي', icon: 'paw', x: 37, y: 24.5, act: 4, scene: 'academy', spawn: 140, unlock: 'flag:act3-done', ready: true },
+  { id: 'sanctuary', name: 'محمية الحيوانات', icon: 'feather', x: 12, y: 40, act: 4, scene: 'sanctuary', spawn: 140, unlock: 'flag:case-open', ready: true },
+  { id: 'observatory', name: 'المرصد', icon: 'star', x: 62, y: 24.5, act: 5, scene: 'observatory', spawn: 140, unlock: 'flag:act4-done', ready: true },
+  { id: 'library', name: 'المكتبة السرّية', icon: 'note', x: 87, y: 24.5, act: 5, scene: 'library', spawn: 140, unlock: 'flag:library-open', ready: true },
+  { id: 'lake', name: 'البحيرة القمرية', icon: 'moon-full', x: 37, y: 9, act: 6, scene: 'lake', spawn: 140, unlock: 'flag:act5-done', ready: true },
+  { id: 'corridor', name: 'ممر الذكريات', icon: 'heart', x: 12, y: 9, act: 6, scene: 'corridor', spawn: 140, unlock: 'flag:act5-done', ready: true },
   // Story Pack 02: Act VII also needs the archive seals (or that she is already past them)
-  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, scene: 'workshop', spawn: 140, unlock: ['flag:act6-done', SP2_GATE], ready: true },
+  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 87, y: 9, act: 7, scene: 'workshop', spawn: 140, unlock: ['flag:act6-done', SP2_GATE], ready: true, locked: 'ينفتح بعد الفصل السادس وأختام أرشيف الأسرار.' },
   // V2 side locations
-  { id: 'study', name: 'مكتب ريان', icon: 'note', x: 70, y: 42, act: 2, scene: 'study', spawn: 140, unlock: 'flag:house-entered', ready: true },
-  { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 50, y: 62, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
-  { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 6, y: 38, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
-  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, scene: 'final', spawn: 140, unlock: 'flag:act7-done', ready: true },
+  { id: 'study', name: 'مكتب ريان', icon: 'note', x: 62, y: 40, act: 2, scene: 'study', spawn: 140, unlock: 'flag:house-entered', ready: true },
+  { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 37, y: 55.5, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
+  { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 12, y: 24.5, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
+  // Phase 03: the finale is earned — Act VII and «خريطة الغد» (or she has already been there)
+  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تكتمل «خريطة الغد» بالورشة.' },
   // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
-  { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 8, y: 92, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
+  { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 12, y: 86.5, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
   // Story Pack 02 «أرشيف الأسرار» (main story, after Act IV)
-  { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 74, y: 84, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
-  { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 30, y: 92, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
+  { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 87, y: 71, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
+  { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
 ];
 
 /** Paths drawn between locations (ids). */

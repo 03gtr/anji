@@ -35,6 +35,7 @@ import { syncMissions } from './progression/missions.js';
 import { createTips } from './ui/tips.js';
 import { openDrawing } from './ui/drawing.js';
 import { askName } from './ui/name-picker.js';
+import { showGuide } from './ui/guide.js';
 import { COLLECTIBLES } from './data/items.js';
 import { groupOf } from './core/game.js';
 import { h } from './ui/dom.js';
@@ -224,8 +225,15 @@ export function createGameApp(root, opts = {}) {
       if (missions.unlocked.length > 2) toasts.toast(`🧭 انفتحت ${missions.unlocked.length} مهمات جديدة بالدفتر`, 'hint');
       else for (const m of missions.unlocked) toasts.toast(`🧭 مهمة جديدة: ${m.title}`, 'hint');
       if (missions.unlocked.length) tips.show('missions');
+      // a finished mission gets one notice: the next-objective card in the world (it names
+      // what was finished), or a toast elsewhere — never both
+      const guided =
+        missions.completed.length > 0 &&
+        sceneId &&
+        sceneId !== 'title' &&
+        showGuide(app, { finished: missions.completed.map((m) => m.title), host: current?.screen?.el, sceneId });
       for (const m of missions.completed) {
-        toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
+        if (!guided) toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
         toasts.announce(m.changes);
       }
       for (const a of syncAchievements(game)) {

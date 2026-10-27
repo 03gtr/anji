@@ -111,3 +111,126 @@ Tested with constructed saves (mid-story, finished, side missions done):
   at ≈7826.7, which the wheel reads as 7826; anything further short still fails.
 - Verified in headless Edge only (phone 390×844, desktop 1280×720). Not on a
   physical phone, Safari or Firefox.
+
+---
+
+# Phase 03 — a longer, earned road to the finale
+
+## 7. Gap analysis (what PR #5 had → what Phase 03 adds)
+
+| Area | Before | Phase 03 |
+|---|---|---|
+| Finale | Act VIII opened with `act7-done` | also needs **«خريطة الغد»** (`SP2_FINAL_GATE`), grandfathered by `final-entered` |
+| Long-form challenge | none | «خريطة الغد»: read the stitched map → find 3 inscriptions by matching its icons to the garden map (return visits after Act VII) → infer 3 rules → «الطريق الأخير» (2 levels, keys before doors, tight budget) |
+| Optional depth | sequence machine, trail | + «مسار الخبراء» (expert key/door route) |
+| Hints | 3 hints, the last often stated the answer | the first hint asks «متأكدة؟» first; last hints explain a reasoning step; answer-revealing hints and replies rewritten (Story Pack 01 cipher and machine too) |
+| Husky | met only after the ending | met **before** the ending: a white pup stands in front of the sanctuary post (archive clue 3) and moves once named; Story Pack 01 becomes a reunion for those players |
+| Journal | filters, numbers, statuses | + «الأدلة»: facts (with place) vs deductions, unfound only counted, a board to test the theory when all facts are found; finished entries only under «المكتملة»; open main before side |
+| Map | focus mode, route | + current objective highlighted by default, ★ story / ◆ side / ✓ done badges, legend, lock reasons, and an overlap-free layout on phone, small phone, landscape and desktop |
+| Guidance | toast | «الهدف التالي» card after a mission (one notice, not duplicated) → map focus |
+| Dialogue | tap anywhere | explicit «التالي» (44 px), «تخطي» smaller and secondary |
+| Ryan | back view only (by design: "never shows his face") | **profile** when he stands or walks; back view kept for scripted back-turned moments (the embrace, waiting at the gate) |
+
+## 8. Main-story dependency graph (new saves)
+
+```
+Act IV ─► Archives (house · academy · sanctuary[pup → name] · observatory)
+       ─► Shifting Maze ─► (Act V) Missing Letters (observatory · library · lake)
+       ─► Gate of Tomorrow plan (seals) ─► Act VII (workshop)
+       ─► «خريطة الغد»: map ─► 3 inscriptions (corridor · lake · observatory)
+                          ─► rule puzzle ─► final route ─► Act VIII (the hidden garden, the finale)
+optional: Sequence Machine · Expert Route · Husky's Trail (garden · meadow · sanctuary)
+```
+
+**Finale prerequisites (new saves):** Acts I–VII, Story Pack 02's archive chain
+(`sp2-done`), and «خريطة الغد» (`sp2-final-done`). Nothing optional is required.
+
+**Old saves:** in or past the workshop → no archive gate; in or past the hidden
+garden → no map gate; finished games keep `game-complete`, their ending, the
+post-game packs, and their husky name. Nobody is moved back.
+
+## 9. Puzzle rules and expected solutions (spoilers)
+
+| Puzzle | Rule | Solution |
+|---|---|---|
+| `sp2-ledger` | each mark excludes one place | observatory + the 3 marks (an opinion and a ribbon note are not evidence) |
+| `sp2-shifting-maze` | keys before their doors | 4 / 9 / 13 commands |
+| `sp2-sequence` | +3; ×2; moon cycle; +2/×2 alternating | 11, 40, crescent, 24 |
+| `sp2-letters-order` | each letter mentions the previous event | rose → lens → stars → plan |
+| `sp2-letters-facts` | quotable line = fact | facts: rose before lens, plan after the name |
+| `sp2-final-rule` | sum of the previous two; two interleaved rows; moon +2 phases | 15, 27, new moon |
+| `sp2-final-route` | keys before doors, the gold key behind another door | 14 and 23 commands (budgets 16 and 25) |
+| `sp2-maze-expert` | two keys in the right order | 36 commands (budget 38) |
+| `sp2-trail` | water + moon + boat | the moonlit lake |
+
+All are verified by the solver from their start; budgets are within 2 of the
+shortest route; without keys every key level is unsolvable (tested).
+
+## 10. Hint policy
+
+Hints are hidden until asked. The **first** tap only asks «متأكدة؟ المسي مرة ثانية»;
+the next taps reveal hint 1 (a direction of thought), hint 2 (a relationship
+between clues), hint 3 (a key reasoning step, never the answer). «شوفي الحل»
+appears only after all hints; skipping stays possible (after the hints or 3
+mistakes) so a puzzle never blocks the story. Wrong answers say only what is
+needed. Explanations follow the solve. Turning hints off in Settings acts as a
+challenge mode.
+
+## 11. Controls
+
+- **Dialogue**: «التالي» completes the line being typed, then advances; hidden
+  while a choice is open; Enter/Space do the same. «تخطي» (smaller) fast-forwards
+  to the next choice or the end — it never skips a choice. The silent embrace is
+  unchanged (no caption, no prompt).
+- **Movement audit**: unconsumed presses are dropped every frame, menus disable
+  input and release held keys, window blur releases everything — no buffered jump
+  after dialogue and no movement continuing under a menu (tested). No change to
+  speeds.
+
+## 12. Save compatibility (synthetic saves)
+
+No schema change (`SAVE_VERSION` 3); all new state is additive flags, journal ids
+and one keepsake. Tested with seven **synthetic** saves:
+
+1. mid original story;
+2. end of Act IV;
+3. inside Acts V–VI;
+4. already in the workshop;
+5. finished game;
+6. optional missions done;
+7. Story Pack 01 done with a named husky.
+
+For each: it loads unchanged, resumes forward (the HUD act never goes back), and
+pays nothing twice across a reload. Export/import keeps everything. **Not tested
+on Anji's real save.**
+
+## 13. Length estimate (from mechanics, not playtesting)
+
+Counting only stages that need exploration or reasoning:
+
+| Content | Stages | Estimate |
+|---|---|---|
+| Archives | 3 location trips, a 3-clue deduction, a return trip | 25–40 min |
+| Shifting Maze | 3 planning levels | 10–20 min |
+| Missing Letters | 3 trips, 2 puzzles | 20–30 min |
+| «خريطة الغد» | map reading, 3 return visits, 3-level rule puzzle, 2-level route | 30–50 min |
+| Optional (sequence, expert route, trail) | — | 30–50 min |
+
+**Total**: roughly **1.5–2.5 hours of new main-story play**, plus 0.5–1 hour of
+optional play. This is an estimate, not a measurement, and it is short of
+"several hours": reaching that would need more chapters of this kind (see
+limitations).
+
+## 14. Known limitations
+
+- **Length target not met:** about 1.5–2.5 h of new main play by estimate; "several
+  hours" needs further chapters. No playtest has measured it.
+- **No front view for Ryan:** the side-scrolling world never has him walk toward the
+  camera, so there is no front walking view. He shows his profile; his face is
+  never shown straight on.
+- **Pre-finale husky:** players who already finished the main story before this
+  update will not see the sanctuary pup scene (their husky comes from Story Pack 01).
+- **Bundle size:** the main bundle grew from 528.6 kB to 603.9 kB (166.8 → 187.2 kB
+  gzipped) for Story Pack 02 and Phase 03 combined; no new files are precached.
+- **Browsers:** verified in headless Edge at 320×640, 390×844, 844×390,
+  1280×720 and 1365×768. Not on a physical phone, Safari or Firefox.

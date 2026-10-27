@@ -17,7 +17,7 @@ import { groupOf } from '../core/game.js';
 import { offlineText } from '../core/sw-client.js';
 import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
 import { ACHIEVEMENTS } from '../progression/achievements.js';
-import { journalEntries, filterEntries, displayNo, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
+import { journalEntries, filterEntries, displayNo, evidenceView, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -251,6 +251,7 @@ export function openJournal(app, tab = 'notes') {
       const tabs = [
         ['notes', 'الدفتر'],
         ['missions', 'المهمات'],
+        ['evidence', 'الأدلة'],
         ['collection', 'المجموعات'],
         ['bag', 'الحقيبة'],
         ['challenges', 'التحديات'],
@@ -273,7 +274,7 @@ export function openJournal(app, tab = 'notes') {
           const entry = (id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(fillNames(JOURNAL[id].text, game))}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`;
           body.innerHTML = `
             ${entries.length ? entries.map(entry).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
-            ${clues.length ? `<h3 class="clue-head">🔎 دفتر الأدلة</h3>${clues.map(entry).join('')}` : ''}
+            ${clues.length ? `<p class="muted small clue-head">🔎 الأدلة والاستنتاجات صارت بتبويب «الأدلة».</p>` : ''}
             ${notes.length ? `<h3>رسائل ريان</h3>${notes.map((id) => `<article class="entry note"><span class="entry-icon">📜</span><div><h4>${esc(COLLECTIBLES[id]?.name || id)}</h4><p>${esc(COLLECTIBLES[id]?.text || '')}</p></div></article>`).join('')}` : ''}`;
           body.querySelectorAll('[data-open]').forEach((b) =>
             b.addEventListener('click', () => {
@@ -302,6 +303,33 @@ export function openJournal(app, tab = 'notes') {
               const e = entries.find((x) => x.id === b.dataset.mapfocus);
               close();
               app.ui.openMap({ focus: e });
+            }),
+          );
+        } else if (which === 'evidence') {
+          const views = evidenceView(game);
+          body.innerHTML = views.length
+            ? views
+                .map(
+                  (v) => `<section class="evidence ${v.optional ? 'is-optional' : ''}" data-evidence="${esc(v.mission.id)}">
+                  <header><span class="mission-no">${esc(displayNo(v.mission, num))}</span><h4>${esc(v.mission.title)}</h4>${v.optional ? '<span class="mission-kind kind-side">اختياري</span>' : ''}</header>
+                  ${v.facts.length ? `<p class="ev-label">👁 مشاهدات</p>${v.facts.map((f) => `<div class="ev-fact"><b>${esc(f.title)}</b><span>${esc(fillNames(f.text, game))}</span>${f.place ? `<small>📍 ${esc(f.place)}</small>` : ''}</div>`).join('')}` : ''}
+                  ${v.missing ? `<p class="ev-missing muted small">بعد ${num(v.missing)} ${v.missing === 1 ? 'دليل' : 'أدلة'} ما انلگت.</p>` : ''}
+                  <p class="ev-label">💡 استنتاج</p>
+                  ${
+                    v.deduction.status === 'solved'
+                      ? `<div class="ev-deduction is-solved">✅ ${v.deduction.title ? `<b>${esc(v.deduction.title)}</b> ` : ''}${esc(fillNames(v.deduction.text || 'انحل.', game))}</div>`
+                      : v.deduction.status === 'ready'
+                        ? `<div class="ev-deduction">❓ كل الأدلة بإيدچ. شنو تستنتجين؟${v.deduction.board ? ` <button type="button" class="btn btn-small btn-primary" data-board="${esc(v.deduction.board)}">🔎 جرّبي نظريتچ</button>` : ''}</div>`
+                        : '<div class="ev-deduction">❓ بعد ما انحل.</div>'
+                  }
+                </section>`,
+                )
+                .join('')
+            : '<p class="muted">ماكو أدلة بعد. الأدلة اللي تلگينها بالتحقيقات تنحفظ هنا.</p>';
+          body.querySelectorAll('[data-board]').forEach((b) =>
+            b.addEventListener('click', () => {
+              close();
+              app.ui.puzzle(b.dataset.board);
             }),
           );
         } else if (which === 'collection') {
@@ -412,8 +440,10 @@ export function renderMissions(game, entries = journalEntries(game), filter = 'a
         ${e.worlds.length && !e.hidden ? `<button type="button" class="btn btn-ghost btn-small" data-mapfocus="${esc(e.id)}">🗺️ على الخريطة</button>` : ''}
       </article>`;
   };
+  const doneCount = filterEntries(entries, 'done').length;
   return `<div class="chips" role="group" aria-label="تصفية المهمات">${chips}</div>
-    ${shown.length ? shown.map(card).join('') : '<p class="muted">ماكو شي هنا بعد. كمّلي القصة… المهمات تنفتح بالطريق.</p>'}`;
+    ${shown.length ? shown.map(card).join('') : '<p class="muted">ماكو شي هنا بعد. كمّلي القصة… المهمات تنفتح بالطريق.</p>'}
+    ${filter !== 'done' && doneCount ? `<button type="button" class="btn btn-ghost btn-small done-link" data-filter="done">✅ ${num(doneCount)} مكتملة — اعرضيها</button>` : ''}`;
 }
 
 /* ── help ─────────────────────────────────────────────────── */
@@ -470,11 +500,27 @@ export function mapPath(from, to) {
  *   locate: its places are highlighted, the route from here is drawn, and the panel
  *   says what to do there (or how it opens). Tapping a place still travels, as before.
  */
-export function openMap(app, { focus } = {}) {
+export function openMap(app, { focus: asked } = {}) {
   const { game } = app;
   return app.overlays.open(
     (el, { close, scope }) => {
       const here = game.state.location.scene;
+      // the same mission state as the journal and the HUD: without an explicit focus, the map
+      // shows the current objective; each place says what it holds (open story / side / done)
+      const entries = journalEntries(game);
+      const current = entries.find((e) => e.isCurrent && e.status !== 'locked' && e.worlds.length);
+      const focus = asked ?? current ?? null;
+      const isCurrentFocus = Boolean(focus && focus === current);
+      const badge = {};
+      for (const e of entries) {
+        if (e.hidden || e.status === 'locked') continue;
+        for (const w of e.worlds) {
+          const kind = e.status === 'complete' ? 'done' : e.category === 'main' ? 'main' : 'side';
+          const rankOf = { main: 3, side: 2, done: 1 };
+          if ((rankOf[kind] || 0) > (rankOf[badge[w]] || 0)) badge[w] = kind;
+        }
+      }
+      const BADGE = { main: '★', side: '◆', done: '✓' };
       const hereWorld = WORLDS.find((w) => w.scene && w.scene === here);
       const open = (w) => check(w.unlock, game);
       const targets = (focus?.worlds || []).map(worldById).filter(Boolean);
@@ -500,7 +546,7 @@ export function openMap(app, { focus } = {}) {
         ${
           focus
             ? `<div class="map-focus st-${focus.status}" role="status">
-                <p class="map-focus-title"><span class="mission-no">${esc(displayNo(focus, num))}</span> ${esc(focus.hidden ? 'مهمة مخفية' : focus.title)}</p>
+                <p class="map-focus-title">${isCurrentFocus ? '<small class="map-focus-kicker">الهدف الحالي</small> ' : ''}<span class="mission-no">${esc(displayNo(focus, num))}</span> ${esc(focus.hidden ? 'مهمة مخفية' : focus.title)}</p>
                 <p class="map-focus-text">${esc(focusText)}</p>
                 ${target && !open(target) ? `<p class="map-focus-text muted">«${esc(target.name)}» بعده مقفول بالخريطة.</p>` : ''}
                 ${canGo ? `<button type="button" class="btn btn-primary btn-small" data-go="${target.id}">🧭 روحي لـ«${esc(target.name)}»</button>` : ''}
@@ -513,12 +559,14 @@ export function openMap(app, { focus } = {}) {
             const unlocked = open(w);
             const playable = unlocked && w.ready;
             const isTarget = targets.includes(w);
-            return `<button type="button" class="map-node ${unlocked ? 'is-open' : 'is-locked'} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
+            return `<button type="button" class="map-node ${w.x < 50 ? 'label-after' : 'label-before'} ${unlocked ? 'is-open' : 'is-locked'} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
               style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${isTarget ? ' — مكان المهمة' : ''}">
               <span class="map-icon">${unlocked ? symbol(w.icon) : ICONS.lock}</span>
+              ${unlocked && badge[w.id] ? `<span class="map-badge b-${badge[w.id]}" aria-hidden="true">${BADGE[badge[w.id]]}</span>` : ''}
               <span class="map-name">${unlocked ? esc(w.name) : '؟؟؟'}</span></button>`;
           }).join('')}
         </div>
+        <p class="map-legend" aria-hidden="true"><span>★ القصة</span><span>◆ جانبية / لغز</span><span>✓ مكتملة</span><span>🔒 مقفول</span></p>
         <p class="map-info" aria-live="polite">${focus ? 'المكان المضوي هو وين المهمة. المسي أي مكان مفتوح حتى تسافرين.' : 'اختاري مكان.'}</p></section>`;
       const info = el.querySelector('.map-info');
       scope.on(el.querySelector('[data-close]'), 'click', () => close());
@@ -534,7 +582,7 @@ export function openMap(app, { focus } = {}) {
         scope.on(b, 'click', () => {
           const w = worldById(b.dataset.world);
           if (!open(w)) {
-            info.textContent = `مكان مقفول. ينفتح بالفصل ${ORD[w.act - 1]}.`;
+            info.textContent = w.locked ? `🔒 مكان مقفول. ${w.locked}` : `مكان مقفول. ينفتح بالفصل ${ORD[w.act - 1]}.`;
             app.audio.play('fail');
             return;
           }

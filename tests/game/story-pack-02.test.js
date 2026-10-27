@@ -46,12 +46,10 @@ function throughAct(n, g) {
 const MAIN_SP2 = ['flag:sp2-entered', 'flag:sp2-ledger-read', 'flag:sp2-clue-a', 'flag:sp2-clue-b', 'flag:sp2-clue-c', 'flag:sp2-deduced', 'flag:sp2-archives-done', 'flag:sp2-inner-open', 'flag:sp2-maze-done', 'flag:sp2-letter-1', 'flag:sp2-letter-2', 'flag:sp2-letter-3', 'flag:sp2-letters-ordered', 'flag:sp2-letters-done', 'flag:sp2-plan-studied', 'flag:sp2-done'].map((f) => f.slice(5));
 
 describe('Story Pack 02 sits inside the main story, before the ending', () => {
-  it('no Story Pack 02 mission depends on the ending (except the optional husky trail, which needs the husky)', () => {
-    for (const m of MISSIONS_SP2) {
-      const all = JSON.stringify([m.unlock, m.steps.map((s) => s.done)]);
-      if (m.id === 'sp2-trail') expect(all).toMatch(/sp1-husky-met/);
-      else expect(all, m.id).not.toMatch(/game-complete/);
-    }
+  it('no Story Pack 02 mission depends on the ending (the husky can now be met before it)', () => {
+    for (const m of MISSIONS_SP2) expect(JSON.stringify([m.unlock, m.steps.map((s) => s.done)]), m.id).not.toMatch(/game-complete/);
+    // the trail needs the husky: met at the sanctuary (pre-ending) or in Story Pack 01
+    expect(JSON.stringify(sp2('sp2-trail').unlock)).toMatch(/sp2-husky-early/);
   });
 
   it('nothing opens before Act IV; then only the first mission; the rest open one by one', () => {
@@ -211,12 +209,15 @@ describe('journal: numbering, filters, statuses, the current entry', () => {
     g.setFlags(['mission:unfinished-build']);
     const e = journalEntries(g);
     expect(filterEntries(e, 'main').every((x) => x.category === 'main')).toBe(true);
-    expect(filterEntries(e, 'main').some((x) => x.id === 'act:1')).toBe(true);
+    // finished entries live only under «المكتملة»; the other filters list what is ahead
+    expect(filterEntries(e, 'main').some((x) => x.id === 'act:6')).toBe(true);
+    expect(filterEntries(e, 'main').some((x) => x.id === 'act:1')).toBe(false);
+    expect(filterEntries(e, 'done').some((x) => x.id === 'act:1')).toBe(true);
     expect(filterEntries(e, 'puzzle').map((x) => x.id)).toEqual(expect.arrayContaining(['sp2-sequence', 'detective-exam', 'wardrobe-challenge']));
     expect(filterEntries(e, 'side').every((x) => x.category === 'side')).toBe(true);
     expect(filterEntries(e, 'done').every((x) => x.status === 'complete')).toBe(true);
     expect(filterEntries(e, 'done').some((x) => x.id === 'unfinished-build')).toBe(true);
-    expect(filterEntries(e, 'all')).toHaveLength(e.length);
+    expect(filterEntries(e, 'all')).toHaveLength(e.filter((x) => x.status !== 'complete').length);
   });
 
   it('statuses: locked, available, active, complete — and exactly one current entry', () => {

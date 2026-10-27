@@ -12,8 +12,8 @@
  *   sp2-gate       (main)   light the seals on the plan of «بوابة الغد» → opens Act VII
  * A step's `world` may list places as `{ id, done }`: the map then lights only those still to visit.
  *
- *   sp2-trail      (side, optional) the husky's trail — needs the husky, who is only met
- *                           after the ending (Story Pack 01), so in practice it is post-game
+ *   sp2-trail      (side, optional) the husky's trail — needs the husky, met at the sanctuary
+ *                           during the archive investigation (or in Story Pack 01 for older saves)
  *
  * Act VII (the workshop) now needs `sp2-done` — unless she has already been in
  * the workshop (any save at or past Act VII, finished games included), so no
@@ -23,6 +23,13 @@ export const PACK_SP2 = 'sp2';
 export const SP2_UNLOCK = 'flag:act4-done';
 /** The workshop opens when the archive seals are lit — or if she is already past that point. */
 export const SP2_GATE = { any: ['flag:sp2-done', 'flag:workshop-entered'] };
+/**
+ * Phase 03 — the finale is earned: the hidden garden (Act VIII) also needs «خريطة الغد»,
+ * unless she has already been there (any save that entered the finale keeps going).
+ */
+export const SP2_FINAL_GATE = { any: ['flag:sp2-final-done', 'flag:final-entered'] };
+/** She has met the husky: at the sanctuary before the ending, or in Story Pack 01 after it. */
+export const HUSKY_MET = { any: ['flag:sp2-husky-early', 'flag:sp1-husky-met'] };
 
 export const PACKS_SP2 = [
   { id: PACK_SP2, title: 'أرشيف الأسرار', unlock: SP2_UNLOCK, scene: 'archives', world: 'archives', notice: 'أنجي، بالحديقة انفتح مكان سري جديد: أرشيف الأسرار 🗝️' },
@@ -50,7 +57,7 @@ export const MISSIONS_SP2 = [
         hint: 'وحدة بالبيت (قرب الدرج)، وحدة بالأكاديمية (ورا لوحة التحقيق)، ووحدة بالمحمية (على عمود خشب).',
       },
       { done: 'flag:sp2-deduced', world: 'archives', text: 'استنتجي من العلامات وين المفتاح الثاني.', hint: 'كل علامة تشطب مكان واحد. العلامات الثلاث سوا تخلّي مكان واحد بس.' },
-      { done: 'flag:sp2-archives-done', world: 'observatory', text: 'جيبي المفتاح من المكان اللي استنتجتيه.', hint: 'المكان اللي يشوف السما، بعيد عن الماي، وما بيه ورد.' },
+      { done: 'flag:sp2-archives-done', world: 'observatory', text: 'جيبي المفتاح من المكان اللي استنتجتيه.', hint: 'المكان اللي استنتجتيه من السجل. الاستنتاج محفوظ بالدفتر ← الأدلة.' },
     ],
     reward: ['journal:sp2-key'],
     rewardText: 'مفتاح الأرشيف الثاني + أول ختم بالمخطط',
@@ -88,7 +95,7 @@ export const MISSIONS_SP2 = [
     locked: 'تنفتح لمن تفتحين الباب الداخلي بالأرشيف.',
     steps: [
       { done: 'seen:it.archives.machine', world: 'archives', text: 'افحصي الآلة القديمة بزاوية الأرشيف.', hint: 'ورا الباب الداخلي، جنب الرفوف العالية.' },
-      { done: 'flag:sp2-sequence-done', world: 'archives', text: 'شغّلي آلة التسلسل (أربع مستويات).', hint: 'قارني الأمثلة: شنو يتغير من رقم للي بعده؟ بالمستوى الأخير أكو قاعدتين يتناوبن.' },
+      { done: 'flag:sp2-sequence-done', world: 'archives', text: 'شغّلي آلة التسلسل (أربع مستويات).', hint: 'قارني الأمثلة خانة بخانة: شنو يتغير من رقم للي بعده؟' },
     ],
     reward: ['journal:sp2-sequence'],
     rewardText: 'ختم إضافي (اختياري) بالمخطط',
@@ -142,13 +149,13 @@ export const MISSIONS_SP2 = [
     id: 'sp2-trail',
     kind: 'side',
     pack: PACK_SP2,
-    chapter: 9,
-    world: ['garden', 'meadow', 'sanctuary', 'roseclinic'],
+    chapter: 6,
+    world: ['garden', 'meadow', 'sanctuary'],
     title: 'أثر الهاسكي',
-    where: 'الحديقة الضائعة · المرج · المحمية · عيادة الورد',
+    where: 'الحديقة الضائعة · المرج · محمية الحيوانات',
     summary: '{husky} لگت أثر كفوف قديم بالحديقة، ومصرّة نتبعه.',
-    unlock: ['flag:sp1-husky-met', 'flag:sp2-archives-done'],
-    locked: 'تنفتح لمن تتعرفين على الهاسكي البيضاء (بعد نهاية الحكاية) وتلگين مفتاح الأرشيف.',
+    unlock: [HUSKY_MET, 'flag:sp2-archives-done'],
+    locked: 'تنفتح لمن تتعرفين على الجروة البيضاء وتلگين مفتاح الأرشيف.',
     steps: [
       {
         done: ['flag:sp2-trail-1', 'flag:sp2-trail-2', 'flag:sp2-trail-3'],
@@ -156,10 +163,57 @@ export const MISSIONS_SP2 = [
         text: 'اتبعي آثار الكفوف الثلاثة.',
         hint: 'جنب النافورة بالحديقة الضائعة، تحت الشجرة الكبيرة بالمرج، وقرب السياج بالمحمية.',
       },
-      { done: 'flag:sp2-trail-done', world: 'roseclinic', text: 'گولي لـ{husky} وين ينتهي الأثر.', hint: 'المكان اللي بيه ماي، وضوء قمر، وقارب.' },
+      { done: 'flag:sp2-trail-done', world: 'sanctuary', text: 'گولي لـ{husky} وين ينتهي الأثر (بالمحمية).', hint: 'ارجعي لعلامات الكفوف بالدفتر ← الأدلة، وفكري بمكان يجمعها كلها.' },
     ],
     reward: ['journal:sp2-trail'],
     rewardText: 'ختم إضافي (اختياري) + جرس فضي صغير',
+    leadsTo: [],
+  },
+  // Phase 03: final preparation before the hidden garden (Act VIII)
+  {
+    id: 'sp2-final',
+    kind: 'story',
+    pack: PACK_SP2,
+    chapter: 7,
+    world: 'workshop',
+    title: 'خريطة الغد',
+    where: 'ورشة الأشياء المفقودة · ؟؟؟',
+    summary: 'الماكينة خيّطت الخريطة، بس عليها ثلاث علامات باهتة. الحديقة المخفية ما تنفتح لحد ما تكتمل.',
+    unlock: 'flag:act7-done',
+    locked: 'تنفتح بعد ما تخلصين ورشة الأشياء المفقودة.',
+    steps: [
+      { done: 'flag:sp2-final-read', world: 'workshop', text: 'افحصي الخريطة المخيّطة على طاولة الورشة.', hint: 'الطاولة بآخر الورشة، يمين الروبوت الصغير.' },
+      // the places are not named: she has to read the icons (the map does not reveal them)
+      {
+        done: ['flag:sp2-insc-1', 'flag:sp2-insc-2', 'flag:sp2-insc-3'],
+        world: 'workshop',
+        text: 'لگي النقوش اللي تأشر عليها العلامات الثلاث.',
+        hint: 'العلامات مو حروف… هي رسوم. شوفي وين نفس الرسوم بخريطة الحديقة.',
+      },
+      { done: 'flag:sp2-final-rule', world: 'workshop', text: 'لگي القاعدة اللي تربط النقوش الثلاثة.', hint: 'النقوش محفوظة بالدفتر ← الأدلة. كل نقش مثال على نفس القاعدة.' },
+      { done: 'flag:sp2-final-done', world: 'workshop', text: 'اعبري «الطريق الأخير» على الخريطة.', hint: 'نفس قواعد المتاهة المتغيرة: مفتاح قبل بابه، وخططي قبل ما تشغّلين.' },
+    ],
+    reward: ['journal:sp2-final'],
+    rewardText: 'الطريق للحديقة المخفية',
+    leadsTo: [],
+  },
+  {
+    id: 'sp2-expert',
+    kind: 'puzzle',
+    pack: PACK_SP2,
+    chapter: 6,
+    world: 'archives',
+    title: 'المتاهة المتغيرة: مسار الخبراء',
+    where: 'أرشيف الأسرار · الأرضية',
+    summary: 'بعد ما عبرتي المتاهة، الأرضية تحركت مرة ثانية… بشكل أصعب. اختياري تماماً.',
+    unlock: 'flag:sp2-maze-done',
+    locked: 'تنفتح لمن تعبرين المتاهة المتغيرة.',
+    steps: [
+      { done: 'seen:it.archives.floor-expert', world: 'archives', text: 'ارجعي للأرضية المتغيرة.', hint: 'نفس الأرضية، ورا الباب الداخلي.' },
+      { done: 'flag:sp2-expert-done', world: 'archives', text: 'اعبري مسار الخبراء.', hint: 'بابين ومفتاحين، وعدد أوامر قليل: لازم أقصر طريق.' },
+    ],
+    reward: ['got:keepsake.archives.1'],
+    rewardText: 'شارة المتاهة الذهبية',
     leadsTo: [],
   },
 ];

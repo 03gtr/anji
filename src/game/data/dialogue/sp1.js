@@ -188,9 +188,17 @@ export const SP1 = {
     { s: 'snooki', e: 'serious', t: '{husky}… اسم مقبول. بشرط تعرف إن آني الأقدم.' },
     { s: 'snooki', e: 'sniff', t: '…وريحتها حلوة. لا تگولون إني گلت.' },
   ],
+  // Phase 03: she met (and named) the husky at the sanctuary before the ending
+  'sp1.husky-reunion': [
+    { s: 'anji', e: 'surprised', t: '{husky}؟! هاي {husky} مالت المحمية!' },
+    { s: 'ryan', e: 'turn', t: 'گالولي بالمحمية إنها كل يوم توگف گدام نفس العمود… تنتظر. فصارت ويّانا.' },
+    { s: 'anji', e: 'shy', t: 'وتعرف اسمها؟' },
+    { s: 'ryan', e: 'turn', t: 'تعرفه أحسن مني. إنتِ اللي سمّيتيها.' },
+    { s: 'snooki', e: 'serious', t: 'ملاحظة رسمية: آني بعدني المدير.' },
+  ],
   'sp1.ryan-chat': [
     {
-      if: ['flag:husky-name', '!flag:sp1-gift-open'],
+      if: ['flag:sp1-husky-met', '!flag:sp1-gift-open'],
       then: [
         { s: 'ryan', e: 'turn', t: 'صندوق بلا توقيع؟ … ما أعرف عنه شي.' },
         { s: 'narrator', t: 'ريان يباوع للسما بتركيز كبير. كبير جداً.' },

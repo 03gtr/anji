@@ -257,3 +257,306 @@
 .reduce-motion .map-node.is-target .map-icon {
   animation: none;
 }
+
+/* ─── Dialogue: an explicit «التالي», «تخطي» stays small and secondary ─── */
+.dlg-box {
+  padding-bottom: 58px;
+}
+
+.dlg-nextbtn {
+  position: absolute;
+  bottom: 10px;
+  inset-inline-end: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 96px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 99px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--gold);
+  box-shadow: 0 3px 0 var(--gold-deep);
+}
+
+.dlg.has-choices .dlg-nextbtn {
+  display: none;
+}
+
+.dlg.has-choices .dlg-box {
+  padding-bottom: 16px;
+}
+
+.dlg-skip {
+  min-height: 32px;
+  font-size: 12.5px;
+  opacity: 0.6;
+}
+
+/* ─── Evidence notebook (journal → «الأدلة») ──────────── */
+.evidence {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(159, 215, 255, 0.07);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.evidence header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.evidence h4 {
+  flex: 1;
+  margin: 0;
+  font-size: 17px;
+  color: var(--gold);
+}
+
+.ev-label {
+  margin: 10px 0 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.ev-fact {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+}
+
+.ev-fact small {
+  opacity: 0.75;
+}
+
+.ev-deduction {
+  padding: 8px 10px;
+  border-radius: 12px;
+  line-height: 1.55;
+  background: rgba(255, 217, 119, 0.1);
+}
+
+.ev-deduction.is-solved {
+  background: rgba(185, 227, 164, 0.14);
+}
+
+.ev-deduction .btn {
+  margin-top: 6px;
+}
+
+.done-link {
+  display: block;
+  margin: 4px auto 0;
+}
+
+/* ─── Map: what each place holds, and a legend ─────────── */
+.map-badge {
+  position: absolute;
+  top: -4px;
+  left: calc(50% + 10px); /* top-right of the round icon, whatever the text direction */
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.map-badge.b-main {
+  background: var(--gold);
+}
+
+.map-badge.b-side {
+  background: var(--cyan);
+}
+
+.map-badge.b-done {
+  background: #b9e3a4;
+}
+
+.map-node.is-objective .map-icon {
+  box-shadow: inset 0 0 0 3px var(--gold), 0 0 0 4px rgba(255, 217, 119, 0.35);
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 14px;
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  opacity: 0.9;
+}
+
+/* ─── "Next objective" guidance after a mission ────────── */
+.guide-card {
+  position: absolute;
+  inset: calc(var(--safe-t) + 64px) 12px auto 12px;
+  z-index: 66;
+  width: min(calc(100% - 24px), 440px);
+  margin-inline: auto;
+  padding: 12px 14px;
+  border-radius: 18px;
+  color: var(--ink);
+  background: var(--cream);
+  box-shadow: var(--shadow), 0 0 0 2px var(--gold);
+  animation: toast-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+.guide-card p {
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.guide-card .guide-done {
+  font-weight: 700;
+}
+
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.guide-card .btn-ghost {
+  color: var(--ink-soft);
+  background: rgba(36, 31, 58, 0.06);
+  box-shadow: inset 0 0 0 1.5px rgba(36, 31, 58, 0.2);
+}
+
+.map-focus-kicker {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 99px;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+/* ─── Map on small screens: compact nodes, and a wide board in landscape ── */
+@media (max-width: 520px), (max-height: 560px) {
+  .map-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .map-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .map-name {
+    max-width: 78px;
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+
+  .map-badge {
+    width: 17px;
+    height: 17px;
+    font-size: 10px;
+    left: calc(50% + 7px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .map-board {
+    aspect-ratio: auto;
+    height: calc(100dvh - 120px);
+    max-height: none;
+  }
+}
+
+/* a node near the right edge must not shrink to the space left of it (its label wrapped
+   into three lines there); it sizes to its content, capped by the label's max width */
+.map-node {
+  width: max-content;
+}
+
+/* landscape phones: the board takes the full width (the objective panel follows below,
+   the panel scrolls); labels sit next to the icon, toward the middle of the board, so six
+   rows fit the short height */
+@media (orientation: landscape) and (max-height: 560px) {
+  .panel.map {
+    width: min(100%, 900px);
+  }
+
+  .panel.map > .map-board {
+    order: 2;
+    flex: none;
+    height: calc(100dvh - 104px);
+  }
+
+  .panel.map > .map-focus {
+    order: 3;
+  }
+
+  .panel.map > .map-legend,
+  .panel.map > .map-info {
+    order: 4;
+  }
+
+  /* places use 84 % of the width (the routes are scaled the same way), so every label can
+     sit after its icon without running off the board or into the next column */
+  .map-node {
+    left: calc(var(--x) * 0.84% + 1%);
+  }
+
+  .map-routes {
+    transform-origin: 0 0;
+    transform: translateX(1%) scaleX(0.84);
+  }
+
+  .map-node .map-name {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 4px);
+    translate: 0 -50%;
+    max-width: 112px;
+    margin: 0;
+    text-align: start;
+  }
+
+  .map-node .map-badge {
+    top: -6px;
+  }
+}
+
+/* very small phones (≤ 360 px wide): a taller board and smaller nodes, so names still fit */
+@media (max-width: 360px) and (orientation: portrait) {
+  .map-board {
+    aspect-ratio: 2 / 3;
+    max-height: none;
+  }
+
+  .map-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .map-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .map-name {
+    max-width: 66px;
+    font-size: 9.5px;
+  }
+}

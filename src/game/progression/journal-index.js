@@ -14,6 +14,8 @@ import { check } from '../core/conditions.js';
 import { ACTS } from '../data/chapters.js';
 import { MISSIONS, KIND_NAMES } from '../data/missions.js';
 import { WORLDS } from '../data/worlds.js';
+import { JOURNAL } from '../data/items.js';
+import { EVIDENCE } from '../data/evidence.js';
 import { missionState } from './missions.js';
 
 export const POST_GAME = 9; // chapter number used for content after the ending
@@ -141,8 +143,8 @@ function currentId(game, entries) {
   for (const a of ACTS) {
     const next = a.objectives.find((o) => !safe(o.done, game));
     if (!next) continue;
-    if (next.pack) {
-      const m = entries.find((e) => e.pack === next.pack && e.category === 'main' && (e.status === 'active' || e.status === 'available'));
+    if (next.pack || next.mission) {
+      const m = entries.find((e) => (next.mission ? e.id === next.mission : e.pack === next.pack && e.category === 'main') && (e.status === 'active' || e.status === 'available'));
       if (m) return m.id;
     }
     return `act:${a.act}`;
@@ -150,11 +152,13 @@ function currentId(game, entries) {
   return entries.find((e) => e.category === 'main' && e.chapter === POST_GAME && (e.status === 'active' || e.status === 'available'))?.id ?? null;
 }
 
-const ORDER = { active: 1, available: 2, locked: 3, complete: 4 };
+/** Sort rank: the current entry, open main story, open side/puzzles, locked, finished. */
+const rank = (e) => (e.isCurrent ? 0 : e.status === 'complete' ? 5 : e.status === 'locked' ? 4 : e.category === 'main' ? (e.status === 'active' ? 1 : 2) : 3);
 
 /**
- * Every entry, sorted: the current one first, then started, open, locked,
- * finished — each group in chapter / display-number order.
+ * Every entry, sorted: the current one first, then open main-story entries,
+ * open side missions and puzzles, locked, finished — each group in chapter /
+ * display-number order.
  */
 export function journalEntries(game) {
   const entries = [...actEntries(game), ...missionEntries(game)];
@@ -165,13 +169,42 @@ export function journalEntries(game) {
     // far-future locked entries keep their secret (no spoilers), but still say how they open
     e.hidden = e.status === 'locked' && e.chapter > reach + 1;
   }
-  return entries.sort((a, b) => (b.isCurrent - a.isCurrent) || ORDER[a.status] - ORDER[b.status] || a.chapter - b.chapter || a.no - b.no);
+  return entries.sort((a, b) => rank(a) - rank(b) || a.chapter - b.chapter || a.no - b.no);
 }
 
+/** Finished entries live under «المكتملة»; every other filter lists what is still ahead. */
 export function filterEntries(entries, filter) {
   if (filter === 'done') return entries.filter((e) => e.status === 'complete');
-  if (filter === 'all' || !filter) return entries;
-  return entries.filter((e) => e.category === filter);
+  const open = entries.filter((e) => e.status !== 'complete');
+  if (filter === 'all' || !filter) return open;
+  return open.filter((e) => e.category === filter);
+}
+
+/**
+ * The evidence notebook, per mission: the facts she found (with where), how many
+ * are still missing (never which), and the deduction — shown only once solved,
+ * or offered as a board to test a theory once every fact is in hand.
+ */
+export function evidenceView(game, entries = journalEntries(game)) {
+  const byId = Object.fromEntries(entries.map((e) => [e.id, e]));
+  const placeName = (id) => WORLDS.find((w) => w.id === id)?.name ?? '';
+  return EVIDENCE.map((ev) => {
+    const found = ev.facts.filter((f) => game.inJournal(f.id) && JOURNAL[f.id]);
+    const solved = safe(ev.deduction.solved, game);
+    const status = solved ? 'solved' : found.length === ev.facts.length && ev.facts.length ? 'ready' : 'open';
+    return {
+      mission: byId[ev.mission],
+      optional: Boolean(ev.optional),
+      facts: found.map((f) => ({ id: f.id, title: JOURNAL[f.id].title, text: JOURNAL[f.id].text, place: placeName(f.place) })),
+      missing: ev.facts.length - found.length,
+      deduction: {
+        status,
+        title: solved && game.inJournal(ev.deduction.id) ? JOURNAL[ev.deduction.id]?.title : null,
+        text: solved && game.inJournal(ev.deduction.id) ? JOURNAL[ev.deduction.id]?.text : null,
+        board: status === 'ready' ? ev.deduction.board ?? null : null,
+      },
+    };
+  }).filter((v) => v.mission && (v.facts.length || v.deduction.status === 'solved'));
 }
 
 /** «٥·٢» for missions, «الفصل ٥» for acts, «✦٢» after the ending. */

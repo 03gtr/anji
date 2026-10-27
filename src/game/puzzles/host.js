@@ -45,6 +45,7 @@ export function openPuzzle(app, def) {
       let solved = false;
       let showSolution = Boolean(def.guided); // guided: the next step simply glows
       let mistakes = 0;
+      let hintArmed = false; // the first hint asks once: think first, help is a choice
       el.append(
         h(`<section class="panel puzzle puzzle-${def.type}">
           <header class="panel-head">
@@ -76,7 +77,7 @@ export function openPuzzle(app, def) {
       const updateButtons = () => {
         const hintsOn = settings.get().hints;
         const left = (def.hints?.length || 0) - hintsUsed;
-        hintBtn.querySelector('span').textContent = left > 0 ? `تلميح (${left})` : 'خلصت التلميحات';
+        hintBtn.querySelector('span').textContent = left <= 0 ? 'خلصت التلميحات' : hintArmed ? 'متأكدة؟ المسي مرة ثانية' : `تلميح (${left})`;
         hintBtn.disabled = left <= 0 || solved;
         hintBtn.hidden = !hintsOn || !def.hints?.length || solved;
         solBtn.hidden = solved || showSolution || !hasSolution || !(hintsOn && left <= 0);
@@ -151,6 +152,12 @@ export function openPuzzle(app, def) {
       scope.on(hintBtn, 'click', () => {
         const next = nextHint(def.hints || [], hintsUsed);
         if (!next) return;
+        if (hintsUsed === 0 && !hintArmed) {
+          hintArmed = true;
+          updateButtons();
+          return;
+        }
+        hintArmed = false;
         hintsUsed = next.used;
         hintsEl.hidden = false;
         hintsEl.append(h(`<li>${esc(tx(next.text))}</li>`));

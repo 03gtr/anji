@@ -1,7 +1,8 @@
 /**
  * Supporting cast. All original designs.
- *  - Ryan: the missing creator. Only ever seen from behind or as a shadow
- *    (dark hair, charcoal hoodie, black backpack, jeans — from the reference).
+ *  - Ryan: the missing creator. Seen from behind or as a shadow while he is
+ *    missing; in profile once he is found (dark hair, charcoal hoodie, black
+ *    backpack, jeans — from the reference).
  *  - Nurse Needle: an over-enthusiastic cartoon syringe with a rubber safety
  *    ball on her tip. Harmless, theatrical, determined to vaccinate Snooki.
  *  - Uncle Munther (العم منذر): the observatory's owl astronomer — warm,
@@ -17,8 +18,9 @@ let uid = 0;
  * Ryan's look (from the owner's reference, as a cartoon): tall and athletic —
  * broad shoulders tapering to the waist, strong arms with the hoodie sleeves
  * pushed up — short dark hair faded at the sides, a full beard, glasses.
- * The story still never shows his face straight on: he is seen from behind,
- * half-turned, or backlit.
+ * In the world he walks and stands in profile (ryanSide); the back view
+ * (ryanSprite) is kept for back-turned moments and the Act I silhouette.
+ * The side-scrolling world never has him walk toward the camera.
  */
 /** Short hair seen from behind: dark on top, fading lighter toward the neck (no hard edge). */
 const fadeDef = (id) =>
@@ -65,6 +67,58 @@ export function ryanSprite({ pose = 'idle', t = 0, shadow = false, size } = {}) 
       ${shadow ? '' : `<path d="M38 46 C44 48.5 56 48.5 62 46" stroke="${R.fade}" stroke-width="1.2" fill="none"/>
       <path d="M31.5 31.5 C34 32 35 33.5 34.6 36 M68.5 31.5 C66 32 65 33.5 65.4 36" stroke="${R.frame}" stroke-width="1.3" fill="none"/>
       <path d="M40 18 C46 14.5 54 14.5 60 18 M38 25 C44 22 56 22 62 25" stroke="#2c211b" stroke-width="1.2" fill="none" opacity=".8"/>`}
+    </g>
+  </svg>`;
+}
+
+/**
+ * Ryan in profile, facing right (viewBox 100×200, feet on y≈195), for walking and
+ * standing in the world: the same build, palette, beard and glasses as the back
+ * view, now with his face in profile. The back view (ryanSprite) stays for
+ * scripted back-turned moments (the silent embrace, waiting at the gate).
+ */
+export function ryanSide({ pose = 'idle', t = 0 } = {}) {
+  const s = Math.sin(t * Math.PI * 2);
+  const walk = pose === 'walk';
+  const legA = walk ? 20 * s : 0;
+  const armA = walk ? -16 * s : 0;
+  const bob = walk ? -Math.abs(s) * 1.4 : 0;
+  const id = `rs${++uid}`;
+  const R = RYAN;
+  const leg = (angle, jeans, shoe) => `<g transform="rotate(${angle.toFixed(1)} 50 138)">
+      <path d="M43 136 L44 184 L56 184 L57 136Z" fill="${jeans}"/>
+      <path d="M42 182 H58 C63 182 66 186 66 190 L66 194 H42Z" fill="${shoe}"/><path d="M42 191 H66 V194.5 H42Z" fill="#e9e9ef"/>
+    </g>`;
+  const arm = (angle, sleeve, near) => `<g transform="rotate(${angle.toFixed(1)} 50 66)">
+      <path d="M43 62 C52 60 58 66 58 74 L57 102 L45 102 L43 74Z" fill="${sleeve}"/>
+      <path d="M45.5 100 L56.5 100 L57.5 105 L45 105Z" fill="${R.hoodieShade}"/>
+      <path d="M46 104 C46 114 47 124 49 131 L56 131 C57 122 57 112 56.5 104Z" fill="${near ? R.skin : R.skinShade}"/>
+      <ellipse cx="52.5" cy="134" rx="5.2" ry="5.6" fill="${near ? R.skin : R.skinShade}"/>
+    </g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+    <defs>${lightingDefs(id)}<linearGradient id="hf${id}" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#15100d"/><stop offset=".6" stop-color="#1f1712"/><stop offset="1" stop-color="#4a382d"/></linearGradient></defs>
+    <g filter="url(#v3d-${id})" transform="translate(0 ${bob.toFixed(1)})">
+      ${leg(-legA, '#33507a', '#1c1d23')}
+      ${arm(-armA, R.hoodieShade, false)}
+      <rect x="20" y="70" width="18" height="54" rx="7" fill="${R.pack}"/>
+      <path d="M37 62 C44 57 58 57 63 61 C69 67 70 80 67 96 L66 140 L35 140 L34 100 C32 86 32 70 37 62Z" fill="${R.hoodie}"/>
+      <path d="M35 132 H66 V141 H35Z" fill="${R.hoodieShade}"/>
+      <path d="M50 118 H66 V131 H52Z" fill="${R.hoodieShade}"/>
+      <path d="M40 61 C48 63 55 70 57 86" stroke="${R.pack}" stroke-width="4" fill="none"/>
+      ${leg(legA, R.jeans, '#24252c')}
+      ${arm(armA, R.hoodie, true)}
+      <path d="M45 46 H57 L58 60 H44Z" fill="${R.skinShade}"/>
+      <g transform="translate(0 3.5)">
+      <path d="M52 15 C62 15 68 22 68 30 L71.5 37 L68 39.5 C68 46 63 50 56 50 C50 50 45 47 43 41 C41 33 42 17 52 15Z" fill="${R.skin}"/>
+      <path d="M48 37 C51 43 55 48 60 50 C65 50.5 68.5 47 69 41.5 C66 43.5 62 43.5 60 41.5 C56 43.5 51 41.5 48 37Z" fill="${R.beard}"/>
+      <path d="M62.5 41.2 q3.5 1.2 6.5 0" stroke="${R.beard}" stroke-width="1.6" fill="none"/>
+      <path d="M36 35 C34 20 42 11.5 52 11.5 C62 11.5 68.5 17 67.5 25.5 C62 21.5 56 21.5 52 23.5 C48.5 27 48 33 46.5 39.5 C42.5 43.5 38 42 36 35Z" fill="url(#hf${id})"/>
+      <ellipse cx="47.5" cy="34" rx="3.2" ry="5" fill="${R.skin}"/><path d="M47.6 31.5 q-1.6 2.5 0 5" stroke="${R.skinShade}" stroke-width="1" fill="none"/>
+      <path d="M59.5 27 L67.5 27.6" stroke="#2c211b" stroke-width="1.5" stroke-linecap="round"/>
+      <ellipse cx="64.4" cy="31.6" rx="1.3" ry="1.5" fill="#1a1411"/>
+      <path d="M59.5 28.8 L67.8 29.4 L67.2 34.8 C64.5 35.8 61.5 35.6 59.8 34.6Z" fill="rgba(159,215,255,.2)" stroke="${R.frame}" stroke-width="1.3"/>
+      <path d="M59.6 30.6 L49.5 32" stroke="${R.frame}" stroke-width="1.3"/>
+      </g>
     </g>
   </svg>`;
 }

@@ -161,6 +161,10 @@ describe('V2 flows', () => {
     expect($('.puzzle-goal').textContent).toMatch(/شعّلي كل الشموع/);
     expect($('.candle-example')).toBeTruthy();
     expect($('[data-act="skip"]').hidden).toBe(true);
+    // Phase 03: the first hint is a deliberate choice — one tap only asks «متأكدة؟»
+    $('[data-act="hint"]').click();
+    expect(root.querySelectorAll('.puzzle-hints li').length).toBe(0);
+    expect($('[data-act="hint"]').textContent).toMatch(/متأكدة/);
     for (let i = 0; i < 3; i++) $('[data-act="hint"]').click();
     expect(root.querySelectorAll('.puzzle-hints li').length).toBe(3);
     expect($('[data-act="solution"]').hidden).toBe(false);

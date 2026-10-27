@@ -8,6 +8,7 @@
  * interrupted beat can be replayed and a finished one never repeats.
  */
 import { GROUND } from '../../world/props.js';
+import { HUSKY_MET } from '../missions-sp2.js';
 
 const PLAN = 470;
 const LEDGER = 760;
@@ -261,6 +262,20 @@ export const ARCHIVES = {
       ],
     },
     {
+      // Phase 03 (optional): the expert route on the same floor
+      id: 'floor-expert',
+      x: FLOOR + 70,
+      w: 50,
+      h: 60,
+      label: 'مسار الخبراء',
+      icon: '🏅',
+      if: 'flag:sp2-maze-done',
+      cases: [
+        { if: '!flag:sp2-expert-done', run: [{ say: 'sp2.expert' }, { puzzle: 'sp2-maze-expert', then: [{ say: 'sp2.expert-done' }], else: [] }] },
+        { run: [{ say: 'sp2.expert-again' }] },
+      ],
+    },
+    {
       id: 'machine',
       x: MACHINE,
       w: 60,
@@ -295,8 +310,35 @@ const clue = (id, x, label, flag, say) => ({
   run: [{ say }, { fx: [`flag:${flag}`, `journal:${flag}`] }],
 });
 const LETTERS_OPEN = ['flag:sp2-maze-done', 'flag:act5-done'];
+// Phase 03: the inscriptions only appear after Act VII (the machine's light woke them) and once
+// she has read the stitched map — a return visit to places she already knows
+const INSC_OPEN = ['flag:act7-done', 'flag:sp2-final-read'];
+const inscription = (id, x, flag, say) => ({
+  id,
+  x,
+  w: 60,
+  h: 100,
+  label: 'نقش يضوي',
+  icon: '✦',
+  if: [...INSC_OPEN, `!flag:${flag}`],
+  run: [{ say }, { fx: [`flag:${flag}`, `journal:${flag}`] }],
+});
+const inscriptionGlow = (x, flag) => ({
+  x,
+  reach: 40,
+  if: [...INSC_OPEN, `!flag:${flag}`],
+  draw(ctx, { t, world }) {
+    const a = world.reduced ? 0.7 : 0.45 + 0.3 * Math.sin(t * 2.4);
+    ctx.strokeStyle = `rgba(159,215,255,${a})`;
+    ctx.lineWidth = 1.6;
+    ctx.strokeRect(x - 16, GROUND - 92, 32, 40);
+    ctx.fillStyle = `rgba(159,215,255,${a * 0.5})`;
+    for (let i = 0; i < 4; i++) ctx.fillRect(x - 11 + i * 6, GROUND - 76, 3, 10);
+  },
+});
 const letter = (id, x, flag, say) => ({ id, x, w: 50, h: 80, label: 'قطعة رسالة', icon: '✉️', if: [...LETTERS_OPEN, `!flag:${flag}`], run: [{ say }, { fx: [`flag:${flag}`, `journal:${flag}`] }] });
-const TRAIL_OPEN = ['flag:sp1-husky-met', 'flag:sp2-archives-done'];
+// the husky can now be met before the ending (the sanctuary pup), so the trail is pre-finale too
+const TRAIL_OPEN = [HUSKY_MET, 'flag:sp2-archives-done'];
 const trail = (id, x, flag, say) => ({ id, x, w: 70, h: 50, label: 'آثار كفوف', icon: '🐾', if: [...TRAIL_OPEN, `!flag:${flag}`], run: [{ say }, { fx: `flag:${flag}` }] });
 const trailDraw = (x, flag) => ({ x, reach: 50, if: [...TRAIL_OPEN, `!flag:${flag}`], draw: pawPrints(x) });
 
@@ -304,7 +346,32 @@ export const SP2_EXTRAS = {
   house: { interact: [clue('sp2-tile', 1700, 'بلاطة منقوشة', 'sp2-clue-a', 'sp2.clue-a')] },
   academy: { interact: [clue('sp2-board-note', 1200, 'ورقة ورا اللوحة', 'sp2-clue-b', 'sp2.clue-b')] },
   sanctuary: {
-    interact: [clue('sp2-post', 1120, 'عمود خشب', 'sp2-clue-c', 'sp2.clue-c'), trail('sp2-trail-3', 1730, 'sp2-trail-3', 'sp2.trail-3')],
+    // the white husky pup stands in front of the third mark's post: she moves once she has a name
+    actors: [{ id: 'husky', kind: 'husky', x: 1170, facing: -1, if: { any: ['flag:sp2-ledger-read', 'flag:husky-name'] } }],
+    interact: [
+      {
+        id: 'sp2-pup',
+        x: 1170,
+        w: 50,
+        h: 60,
+        label: 'جروة بيضاء',
+        icon: '🐾',
+        if: ['flag:sp2-ledger-read', '!flag:husky-name'],
+        run: [{ say: 'sp2.pup-meet' }, { pose: 'husky', anim: 'excited', for: 700 }, { askName: 'husky' }, { pose: 'husky', anim: 'wag', for: 900 }, { say: 'sp2.pup-named' }, { fx: ['flag:sp2-husky-early', 'journal:sp2-husky'] }],
+      },
+      { ...clue('sp2-post', 1110, 'عمود خشب', 'sp2-clue-c', 'sp2.clue-c'), if: ['flag:sp2-ledger-read', 'flag:husky-name', '!flag:sp2-clue-c'] },
+      trail('sp2-trail-3', 1730, 'sp2-trail-3', 'sp2.trail-3'),
+      {
+        id: 'sp2-trail-end',
+        x: 900,
+        w: 60,
+        h: 60,
+        label: 'نهاية الأثر؟',
+        icon: '🐾',
+        if: ['flag:sp2-trail-1', 'flag:sp2-trail-2', 'flag:sp2-trail-3', '!flag:sp2-trail-done'],
+        run: [{ say: 'sp2.trail-ask' }, { puzzle: 'sp2-trail', then: [{ say: 'sp2.trail-done' }], else: [] }],
+      },
+    ],
     dynamic: [trailDraw(1730, 'sp2-trail-3')],
   },
   observatory: {
@@ -320,23 +387,58 @@ export const SP2_EXTRAS = {
         run: [{ say: 'sp2.key-found' }, { fx: ['item:archive-key', 'flag:sp2-archives-done'] }],
       },
       letter('sp2-letter-1', 400, 'sp2-letter-1', 'sp2.letter-1'),
+      inscription('sp2-insc-3', 1215, 'sp2-insc-3', 'sp2.insc-3'),
     ],
+    dynamic: [inscriptionGlow(1215, 'sp2-insc-3')],
   },
   library: { interact: [letter('sp2-letter-2', 470, 'sp2-letter-2', 'sp2.letter-2')] },
-  lake: { interact: [letter('sp2-letter-3', 620, 'sp2-letter-3', 'sp2.letter-3')] },
+  lake: { interact: [letter('sp2-letter-3', 620, 'sp2-letter-3', 'sp2.letter-3'), inscription('sp2-insc-2', 1180, 'sp2-insc-2', 'sp2.insc-2')], dynamic: [inscriptionGlow(1180, 'sp2-insc-2')] },
   garden: { interact: [trail('sp2-trail-1', 1250, 'sp2-trail-1', 'sp2.trail-1')], dynamic: [trailDraw(1250, 'sp2-trail-1')] },
   meadow: { interact: [trail('sp2-trail-2', 640, 'sp2-trail-2', 'sp2.trail-2')], dynamic: [trailDraw(640, 'sp2-trail-2')] },
-  roseclinic: {
+  corridor: { interact: [inscription('sp2-insc-1', 1205, 'sp2-insc-1', 'sp2.insc-1')], dynamic: [inscriptionGlow(1205, 'sp2-insc-1')] },
+  workshop: {
     interact: [
       {
-        id: 'sp2-trail-end',
-        x: 1050,
-        w: 60,
-        h: 60,
-        label: 'نهاية الأثر؟',
-        icon: '🐾',
-        if: ['flag:sp2-trail-1', 'flag:sp2-trail-2', 'flag:sp2-trail-3', '!flag:sp2-trail-done'],
-        run: [{ say: 'sp2.trail-ask' }, { puzzle: 'sp2-trail', then: [{ say: 'sp2.trail-done' }], else: [] }],
+        // Phase 03: «خريطة الغد» — the stitched map on the workshop table
+        id: 'sp2-map-table',
+        x: 1580,
+        w: 70,
+        h: 80,
+        label: 'الخريطة المخيّطة',
+        icon: '🗺️',
+        if: 'flag:act7-done',
+        cases: [
+          { if: '!flag:sp2-final-read', run: [{ say: 'sp2.map-read' }, { fx: ['flag:sp2-final-read', 'journal:sp2-map-marks'] }] },
+          { if: ['flag:sp2-final-done'], run: [{ say: 'sp2.map-done' }] },
+          { if: ['flag:sp2-final-rule'], run: [{ puzzle: 'sp2-final-route', then: [{ say: 'sp2.route-done' }], else: [{ say: 'sp2.route-later' }] }] },
+          {
+            if: ['flag:sp2-insc-1', 'flag:sp2-insc-2', 'flag:sp2-insc-3'],
+            run: [{ puzzle: 'sp2-final-rule', then: [{ say: 'sp2.rule-done' }, { puzzle: 'sp2-final-route', then: [{ say: 'sp2.route-done' }], else: [{ say: 'sp2.route-later' }] }], else: [{ say: 'sp2.rule-later' }] }],
+          },
+          { run: [{ say: 'sp2.map-wait' }] },
+        ],
+      },
+    ],
+    dynamic: [
+      {
+        x: 1580,
+        reach: 50,
+        if: 'flag:act7-done',
+        draw(ctx, { game }) {
+          ctx.fillStyle = '#5a3d2c';
+          ctx.fillRect(1548, GROUND - 40, 64, 6);
+          ctx.fillRect(1552, GROUND - 34, 5, 38);
+          ctx.fillRect(1603, GROUND - 34, 5, 38);
+          ctx.fillStyle = '#efe2c4';
+          ctx.fillRect(1554, GROUND - 48, 52, 9);
+          const lit = ['sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3'].map((f) => game.flag(f));
+          lit.forEach((on, i) => {
+            ctx.fillStyle = on ? '#9fd7ff' : 'rgba(90,70,60,.4)';
+            ctx.beginPath();
+            ctx.arc(1564 + i * 16, GROUND - 44, 2.6, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        },
       },
     ],
   },
@@ -348,6 +450,7 @@ export function withExtras(scene) {
   if (!extra) return scene;
   return {
     ...scene,
+    actors: [...(scene.actors || []), ...(extra.actors || [])],
     interact: [...(scene.interact || []), ...(extra.interact || [])],
     dynamic: [...(scene.dynamic || []), ...(extra.dynamic || [])],
   };
