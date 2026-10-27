@@ -55,13 +55,15 @@
       <feComposite in="all" in2="SourceAlpha" operator="in"/>
     </filter></defs>
       <g filter="url(#v3d-rv3)">
-        <path d="M42 138 L40 188 L54 188 L55 140Z" fill="#2c3e5c"/><path d="M38 186 H58 L60 195 H36Z" fill="#1c1d24"/>
-        <path d="M34 72 C34 62 44 58 54 58 C62 58 68 64 68 74 L70 142 L34 142Z" fill="#23252d"/>
-        <path d="M22 76 C14 80 14 118 22 128 L34 126 L34 76Z" fill="#111216"/>
-        <path d="M60 78 L66 126 L60 128 L54 82Z" fill="#1d1f26"/>
-        <rect x="48" y="48" width="10" height="12" fill="#3a3038"/>
-        <path d="M40 34 C40 16 52 10 60 12 C70 14 74 24 72 36 C72 46 66 52 56 52 C46 52 40 46 40 34Z" fill="#1d1612"/>
-        <path d="M70 30 C74 34 75 40 72 44" stroke="#9fd7ff" stroke-width="1.6" fill="none"/>
+        <path d="M40 138 L38 188 L54 188 L56 140Z" fill="#2c3e5c"/><path d="M36 186 H58 L61 195 H34Z" fill="#1c1d24"/>
+        <path d="M30 74 C30 62 42 57 54 57 C66 57 74 64 74 78 C74 92 70 104 68 112 L68 142 L34 142 L32 110 C30 98 30 86 30 74Z" fill="#23252d"/>
+        <path d="M18 76 C10 80 10 118 18 128 L31 126 L31 76Z" fill="#111216"/>
+        <path d="M58 72 C68 78 70 96 66 108 L66 128 L58 130 L56 108 C54 96 54 84 58 72Z" fill="#1d1f26"/>
+        <rect x="46" y="44" width="13" height="15" fill="#3a3038"/>
+        <path d="M58 38 C64 44 66 50 62 54 C56 56 50 54 46 50Z" fill="#141010"/>
+        <path d="M40 32 C40 15 52 10 60 12 C70 14 74 24 72 34 C72 44 66 50 56 50 C46 50 40 44 40 32Z" fill="#1d1612"/>
+        <path d="M62 31 L72 31" stroke="#0a0a0c" stroke-width="2"/>
       </g>
-      <path d="M68 74 L70 142 M72 36 C72 46 66 52 60 52" stroke="#9fd7ff" stroke-width="1.2" fill="none" opacity=".7"/>
+      <path d="M72 78 C74 92 70 104 68 112 M72 34 C72 44 66 50 60 52" stroke="#9fd7ff" stroke-width="1.2" fill="none" opacity=".7"/>
+      <path d="M70 29 C74 33 75 39 72 43" stroke="#9fd7ff" stroke-width="1.6" fill="none"/>
     </svg>

@@ -48,7 +48,7 @@ builds):
 ## Test and build
 
 ```bash
-npm test                # 574 unit, content, app-flow and real-browser scroll tests (Vitest, 21 files)
+npm test                # 586 unit, content, app-flow, visual and real-browser tests (Vitest, 22 files)
                         # the browser file drives an installed Edge/Chrome (playwright-core, no download)
                         # and is skipped, with the reason shown, if neither can be launched
 npm run build           # PUBLIC build in dist/: no private art/memories + offline check + private audit

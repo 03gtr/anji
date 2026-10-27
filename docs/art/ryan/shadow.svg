@@ -1,22 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200" >
-    <defs><linearGradient id="shr5" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0d22"/><stop offset=".85" stop-color="#151a3a"/><stop offset="1" stop-color="#6fd3ff"/></linearGradient></defs>
+    <defs><linearGradient id="shr5" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b0d22"/><stop offset=".85" stop-color="#151a3a"/><stop offset="1" stop-color="#6fd3ff"/></linearGradient><linearGradient id="hdr5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15100d"/><stop offset=".55" stop-color="#1f1712"/><stop offset="1" stop-color="#4a382d"/></linearGradient></defs>
     <g opacity="0.92" >
-      <path d="M36 138 L34 186 L48 186 L49 140Z" fill="url(#shr5)"/>
-      <path d="M51 140 L52 186 L66 186 L64 138Z" fill="url(#shr5)"/>
-      <path d="M31 184 H49 V193 H29Z" fill="url(#shr5)"/><path d="M29 191 H49 V195 H29Z" fill="url(#shr5)"/>
-      <path d="M51 184 H69 L71 193 H51Z" fill="url(#shr5)"/><path d="M51 191 H71 V195 H51Z" fill="url(#shr5)"/>
-      <path d="M24 70 C26 62 36 58 50 58 C64 58 74 62 76 70 L78 142 L22 142Z" fill="url(#shr5)"/>
-      <path d="M22 72 L14 126 L22 128 L28 84Z" fill="url(#shr5)"/>
-      <path d="M78 72 L86 126 L78 128 L72 84Z" fill="url(#shr5)"/>
-      <circle cx="18" cy="131" r="5" fill="url(#shr5)"/><circle cx="82" cy="131" r="5" fill="url(#shr5)"/>
-      <path d="M34 60 C40 66 60 66 66 60 C64 54 36 54 34 60Z" fill="url(#shr5)"/>
-      <rect x="31" y="72" width="38" height="52" rx="8" fill="url(#shr5)"/>
-      <rect x="36" y="96" width="28" height="20" rx="5" fill="url(#shr5)"/>
-      <path d="M36 72 L34 64 M64 72 L66 64" stroke="#0b0d22" stroke-width="4"/>
+      <path d="M35 136 L33 186 L48 186 L49.5 140Z" fill="url(#shr5)"/>
+      <path d="M50.5 140 L52 186 L67 186 L65 136Z" fill="url(#shr5)"/>
+      <path d="M30 184 H49 V193 H28Z" fill="url(#shr5)"/><path d="M28 191 H49 V195 H28Z" fill="url(#shr5)"/>
+      <path d="M51 184 H70 L72 193 H51Z" fill="url(#shr5)"/><path d="M51 191 H72 V195 H51Z" fill="url(#shr5)"/>
+      <path d="M19 64 C9 72 8 90 11 104 L22 104 C23 92 25 80 26 70Z" fill="url(#shr5)"/>
+      <path d="M11 103 C9.5 114 11 124 14 131 L21 131 C21.5 122 22 112 22 103Z" fill="url(#shr5)"/>
+      <path d="M10.399999999999999 101 L22.6 101 L22.4 106 L10.600000000000001 106Z" fill="url(#shr5)"/>
+      <ellipse cx="17.5" cy="134" rx="5.4" ry="5.8" fill="url(#shr5)"/><path d="M81 64 C91 72 92 90 89 104 L78 104 C77 92 75 80 74 70Z" fill="url(#shr5)"/>
+      <path d="M89 103 C90.5 114 89 124 86 131 L79 131 C78.5 122 78 112 78 103Z" fill="url(#shr5)"/>
+      <path d="M89.6 101 L77.4 101 L77.6 106 L89.4 106Z" fill="url(#shr5)"/>
+      <ellipse cx="82.5" cy="134" rx="5.4" ry="5.8" fill="url(#shr5)"/>
+      <path d="M31 140 L28 102 C25 88 18 78 18 70 C19 61 33 57 50 57 C67 57 81 61 82 70 C82 78 75 88 72 102 L69 140Z" fill="url(#shr5)"/>
+      <path d="M31 132 H69 L69 141 H31Z" fill="url(#shr5)"/>
+      <path d="M36 60 C41 70 59 70 64 60 C60 54 40 54 36 60Z" fill="url(#shr5)"/>
+      <rect x="32" y="74" width="36" height="50" rx="8" fill="url(#shr5)"/>
+      <rect x="37" y="97" width="26" height="19" rx="5" fill="url(#shr5)"/>
+      <path d="M37 74 L35 62 M63 74 L65 62" stroke="#0b0d22" stroke-width="4.4"/>
       
-      <rect x="44" y="48" width="12" height="12" fill="url(#shr5)"/>
-      <ellipse cx="32.5" cy="40" rx="3.5" ry="6" fill="url(#shr5)"/><ellipse cx="67.5" cy="40" rx="3.5" ry="6" fill="url(#shr5)"/>
-      <path d="M32 36 C30 18 42 12 50 12 C60 12 70 18 68 36 C68 46 62 52 50 52 C38 52 32 46 32 36Z" fill="url(#shr5)"/>
-      <path d="M38 22 C44 16 56 16 62 22 M36 32 C42 28 48 28 52 30" stroke="none" stroke-width="1.6" fill="none"/>
+      <path d="M42.5 45 H57.5 L58.5 59 H41.5Z" fill="url(#shr5)"/>
+      <ellipse cx="33.5" cy="36" rx="3.4" ry="5.6" fill="url(#shr5)"/><ellipse cx="66.5" cy="36" rx="3.4" ry="5.6" fill="url(#shr5)"/>
+      <path d="M34.5 38 C35 46 39 50.5 45 51.5 L55 51.5 C61 50.5 65 46 65.5 38 C63 47 37 47 34.5 38Z" fill="url(#shr5)"/>
+      <path d="M34 34 C33 18 42 12 50 12 C58 12 67 18 66 34 C66 43 61 48 50 48 C39 48 34 43 34 34Z" fill="url(#shr5)"/>
+      
     </g>
   </svg>

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-    <defs><radialGradient id="moonlit" cx=".7" cy=".2" r=".9"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient>
+    <defs><radialGradient id="moonlitrp2" cx=".7" cy=".2" r=".9"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient><linearGradient id="hdrp2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15100d"/><stop offset=".55" stop-color="#1f1712"/><stop offset="1" stop-color="#4a382d"/></linearGradient>
     <filter id="v3d-rp2" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="h"/>
       <feDiffuseLighting in="h" surfaceScale="3" diffuseConstant="1" lighting-color="#fff3e2" result="d">
@@ -54,16 +54,23 @@
       <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
       <feComposite in="all" in2="SourceAlpha" operator="in"/>
     </filter></defs>
-    <circle cx="140" cy="40" r="90" fill="url(#moonlit)"/>
+    <circle cx="140" cy="40" r="90" fill="url(#moonlitrp2)"/>
     <g filter="url(#v3d-rp2)">
-    <path d="M20 200 C24 160 50 140 100 138 C150 140 176 160 180 200Z" fill="#2c2f38"/>
-    <path d="M62 146 C70 160 130 160 138 146 C130 134 70 134 62 146Z" fill="#23252d"/>
-    <path d="M58 156 L52 200 M142 156 L148 200" stroke="#15161b" stroke-width="12"/>
-    <rect x="88" y="112" width="24" height="28" fill="#d9b39a"/>
-    <path d="M128 74 C138 80 140 98 132 110 C128 118 120 122 114 122 L114 80Z" fill="#e6c0a6"/><path d="M128 96 q5 2 3 6" stroke="#b98b74" stroke-width="2" fill="none"/>
-    <ellipse cx="62" cy="88" rx="7" ry="12" fill="#e0b89e"/><ellipse cx="138" cy="88" rx="7" ry="12" fill="#e6c0a6"/>
-    <path d="M60 80 C56 40 80 28 100 28 C122 28 144 40 140 80 C140 104 126 118 100 118 C76 118 60 104 60 80Z" fill="#2a1d16"/>
-    <path d="M72 50 C84 38 116 38 128 50" stroke="#3e2b20" stroke-width="3" fill="none"/>
+    <path d="M6 200 C10 160 44 140 100 138 C156 140 190 160 194 200Z" fill="#2b2f3a"/>
+    <path d="M58 146 C68 162 132 162 142 146 C132 132 68 132 58 146Z" fill="#22252e"/>
+    <path d="M54 156 L46 200 M146 156 L154 200" stroke="#15161b" stroke-width="13"/>
+    <path d="M84 108 H116 L118 142 H82Z" fill="#c9977b"/>
+    <ellipse cx="64" cy="86" rx="7" ry="12" fill="#e0b597"/><ellipse cx="136" cy="86" rx="7" ry="12" fill="#e0b597"/>
+    <path d="M66 92 C68 108 80 118 96 120 L104 120 C120 118 132 108 134 92 C128 112 72 112 66 92Z" fill="#2a1e18"/>
+    <path d="M64 78 C62 44 82 30 100 30 C118 30 138 44 136 78 C136 98 124 110 100 110 C76 110 64 98 64 78Z" fill="url(#hdrp2)"/>
+    <path d="M74 104 C88 110 112 110 126 104" stroke="#33271f" stroke-width="2" fill="none"/>
+    <path d="M78 48 C90 40 110 40 122 48 M74 62 C88 56 112 56 126 62" stroke="#2c211b" stroke-width="2" fill="none" opacity=".8"/>
+    <path d="M58 76 C64 77 68 80 67 86 M142 76 C136 77 132 80 133 86" stroke="#121216" stroke-width="2.6" fill="none"/>
+    <path d="M133 66 C146 72 151 88 147 102 C144 112 137 118 130 120 C133 104 135 84 133 66Z" fill="#e0b597"/>
+      <path d="M131 100 C138 100 144 98 148 96 C147 110 140 120 128 122 C131 114 132 106 131 100Z" fill="#2a1e18"/>
+      <path d="M147 84 q5 3 2 8 q-2 1 -4 0" fill="#e0b597" stroke="#c9977b" stroke-width="1.2"/>
+      <path d="M135 76 L148 77.5 L147 88 C143 90 139 89 136 87Z" fill="rgba(159,215,255,.22)" stroke="#121216" stroke-width="2.4"/>
+      <path d="M136 79 L130 80" stroke="#121216" stroke-width="2.4"/>
     </g>
     <path d="M136 52 C142 62 142 74 138 82" stroke="#9fd7ff" stroke-width="2.4" fill="none" opacity=".6"/>
   </svg>
