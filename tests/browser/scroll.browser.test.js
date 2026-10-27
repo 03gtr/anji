@@ -49,15 +49,17 @@ beforeAll(async () => {
   base = server.resolvedUrls.local[0];
 }, 60000);
 
+// teardown gets the same headroom as setup: closing the browser took > 10 s
+// (vitest's default hook limit) under a 6× CPU slowdown
 afterAll(async () => {
   await browser?.close();
   await server?.close();
-});
+}, 60000);
 
 const contexts = [];
 afterEach(async () => {
   while (contexts.length) await contexts.pop().close().catch(() => {});
-});
+}, 60000);
 
 const WORLD = 'timer=1&scene=gameroom&flags=house-entered,intro-done,t.gameroom.enter,met-snooki,map-open';
 
@@ -66,8 +68,22 @@ async function open([w, h], query = '', { fill = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: w < 1000 });
   contexts.push(ctx);
   await ctx.addInitScript(() => localStorage.setItem('snooki-game:settings', JSON.stringify({ tips: false })));
+  // A passive observer of wheel events (it cannot cancel anything). It lets
+  // wheelToEnd() prove the wheel reached the list and was not prevented, and
+  // it makes delivery deterministic: under a 6× CPU slowdown, headless
+  // Chromium silently dropped a synthetic wheel in ~1 run of 8 when the page
+  // had no wheel listener at all (0 drops in 26 runs with one).
+  await ctx.addInitScript(() => {
+    window.__wheels = [];
+    addEventListener('wheel', (e) => window.__wheels.push({ target: e.target, prevented: e.defaultPrevented }), { passive: true });
+  });
   const page = await ctx.newPage();
   page.setDefaultTimeout(15000); // a stuck step fails here, with its location
+  // optional: simulate a slow CI runner (e.g. SCROLL_TEST_CPU_SLOWDOWN=4) when hunting flakes; off by default
+  if (Number(process.env.SCROLL_TEST_CPU_SLOWDOWN) > 1) {
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.SCROLL_TEST_CPU_SLOWDOWN) });
+  }
   page.setDefaultNavigationTimeout(30000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -91,21 +107,66 @@ const metrics = (page, sel) =>
   page.$eval(sel, (el) => ({ st: Math.round(el.scrollTop), max: el.scrollHeight - el.clientHeight, sh: el.scrollHeight, ch: el.clientHeight }));
 
 /** Wheel over the element's centre until it stops moving; returns the scrollTop trail. */
+/**
+ * After a wheel/key input, wait for the scroll it caused: poll scrollTop until
+ * it has moved away from `from` and then held still for a few polls (smooth
+ * scrolling animates — slowly on CI runners), or until `timeout` ms pass.
+ * Returns the settled value, or `from` if it never moved: callers' assertions
+ * (first wheel > 0, reaches the end, Home = 0…) are unchanged and still fail
+ * if the page does not scroll. A fixed 60 ms read flaked on GitHub's Linux
+ * Chrome (run 40472535862: "1365,768 first wheel moves: expected 0").
+ * Polls every 100 ms, not faster: under a 6× CPU slowdown, reading the page
+ * every 25 ms lost the first wheel ~1 run in 8; at 100 ms it never did.
+ */
+async function settledScroll(page, sel, from, timeout = 3000) {
+  const t0 = Date.now();
+  let last = from;
+  let still = 0;
+  while (Date.now() - t0 < timeout) {
+    await page.waitForTimeout(100);
+    const st = (await metrics(page, sel)).st;
+    if (st !== last) {
+      last = st;
+      still = 0;
+    } else if (st !== from && ++still >= 2) return st;
+  }
+  return last;
+}
+
 async function wheelToEnd(page, sel) {
   const r = await page.$eval(sel, (el) => {
     const b = el.getBoundingClientRect();
     return { x: b.left + b.width / 2, y: b.top + b.height / 2 };
   });
   await page.mouse.move(r.x, r.y);
+  await page.evaluate(() => { window.__wheels = []; });
   const trail = [(await metrics(page, sel)).st];
   for (let i = 0; i < 40; i++) {
+    const before = trail[trail.length - 1];
+    if (i > 0 && before >= (await metrics(page, sel)).max) break; // at the end: nothing left to wheel
     await page.mouse.wheel(0, 400);
-    await page.waitForTimeout(60);
-    const st = (await metrics(page, sel)).st;
+    const st = await settledScroll(page, sel, before, 2000);
     trail.push(st);
-    if (st === trail[trail.length - 2] && i > 2) break;
+    if (i === 0) {
+      // the first wheel reached this list (or something inside it) and nothing cancelled it
+      const first = await page.$eval(sel, (el) => {
+        const w = window.__wheels[0];
+        return w ? { inside: el.contains(w.target), prevented: w.prevented } : null;
+      });
+      expect(first, `${sel}: the first wheel reached the page`).not.toBeNull();
+      expect(first.inside, `${sel}: the first wheel landed on the list`).toBe(true);
+      expect(first.prevented, `${sel}: the first wheel was not cancelled`).toBe(false);
+    }
+    if (st === before) break; // this wheel moved nothing (within 2 s)
   }
   return trail;
+}
+
+/** Press a key on the focused scroller and return where it settles. */
+async function pressAndSettle(page, sel, key) {
+  const before = (await metrics(page, sel)).st;
+  await page.keyboard.press(key);
+  return settledScroll(page, sel, before);
 }
 
 /** Is the last matching item fully inside the scroller's box? */
@@ -144,12 +205,8 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         expect(trail[1], `${view} first wheel moves`).toBeGreaterThan(0);
         expect(trail[trail.length - 1], `${view} wheel`).toBe(m.max);
         // keyboard: focus is on the first action; Home / End move the page
-        await page.keyboard.press('Home');
-        await page.waitForTimeout(400);
-        expect((await metrics(page, sel)).st, `${view} Home`).toBe(0);
-        await page.keyboard.press('End');
-        await page.waitForTimeout(400);
-        expect((await metrics(page, sel)).st, `${view} End`).toBe(m.max);
+        expect(await pressAndSettle(page, sel, 'Home'), `${view} Home`).toBe(0);
+        expect(await pressAndSettle(page, sel, 'End'), `${view} End`).toBe(m.max);
       }
       // whether it overflows or not, the actions can be reached
       expect((await lastVisible(page, sel, '.title-actions .btn')).visible, `${view} actions`).toBe(true);
@@ -180,9 +237,7 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         ['Home', (st) => st === 0],
         ['ArrowDown', (st) => st > 0],
       ]) {
-        await page.keyboard.press(key);
-        await page.waitForTimeout(450);
-        const st = (await metrics(page, sel)).st;
+        const st = await pressAndSettle(page, sel, key);
         expect(check(st), `${view} ${key} → ${st}`).toBe(true);
       }
       // the world behind did not scroll
