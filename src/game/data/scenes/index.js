@@ -9,6 +9,7 @@ import { WORKSHOP, FINAL } from './act78.js';
 import { STUDY, PASSAGE } from './side-house.js';
 import { MEADOW } from './side-meadow.js';
 import { GAMEROOM } from './side-gameroom.js';
+import { ROADS, ROSE_CLINIC } from './sp1.js';
 
 export const SCENES = {
   [GARDEN.id]: GARDEN,
@@ -27,4 +28,7 @@ export const SCENES = {
   [PASSAGE.id]: PASSAGE,
   [MEADOW.id]: MEADOW,
   [GAMEROOM.id]: GAMEROOM,
+  // Story Pack 01 «الطرق اللي تتذكر»
+  [ROADS.id]: ROADS,
+  [ROSE_CLINIC.id]: ROSE_CLINIC,
 };

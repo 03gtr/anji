@@ -34,6 +34,7 @@ import { syncAchievements } from './progression/achievements.js';
 import { syncMissions } from './progression/missions.js';
 import { createTips } from './ui/tips.js';
 import { openDrawing } from './ui/drawing.js';
+import { askName } from './ui/name-picker.js';
 import { COLLECTIBLES } from './data/items.js';
 import { groupOf } from './core/game.js';
 import { h } from './ui/dom.js';
@@ -151,6 +152,7 @@ export function createGameApp(root, opts = {}) {
       openSettings: () => openSettings(app),
       openHelp: () => openHelp(app),
       drawing: (opts) => openDrawing(app, opts),
+      askName: (who) => askName(app, who),
       fade: (dir = 'out', ms = 350) =>
         new Promise((resolve) => {
           fader.classList.toggle('is-on', dir === 'out');

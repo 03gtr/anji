@@ -24,6 +24,9 @@ export const WORLDS = [
   { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 50, y: 62, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 6, y: 38, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
   { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, scene: 'final', spawn: 140, unlock: 'flag:act7-done', ready: true },
+  // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
+  { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 8, y: 92, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
+  { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 30, y: 92, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
 ];
 
 /** Paths drawn between locations (ids). */
@@ -32,6 +35,7 @@ export const ROUTES = [
   ['house', 'garage'], ['kitchen', 'academy'], ['academy', 'sanctuary'], ['house', 'observatory'], ['observatory', 'library'],
   ['observatory', 'lake'], ['lake', 'corridor'], ['library', 'workshop'], ['observatory', 'final'], ['workshop', 'final'],
   ['house', 'study'], ['sanctuary', 'meadow'], ['house', 'gameroom'],
+  ['garden', 'roads'], ['roads', 'roseclinic'],
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === id);

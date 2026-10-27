@@ -7,11 +7,15 @@ import { CINEMATICS } from '../data/cinematics.js';
 import { painted } from '../art/painted.js';
 import { anjiSprite } from '../characters/anji.js';
 import { CAST } from '../characters/cast.js';
+import { SP1_SCENES } from '../art/sp1-scenes.js';
 import { h, tx, ICONS } from './dom.js';
 
 const ROSE = (x, y, r, c = '#3f6fe0') => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="${c}"/><path d="M${-r * 0.5} 0 C${-r * 0.5} ${-r * 0.7} ${r * 0.5} ${-r * 0.7} ${r * 0.5} 0" stroke="#9fc0ff" stroke-width="${r * 0.18}" fill="none"/></g>`;
 
+let shotId = 0;
+
 function sceneSvg(name, game) {
+  if (SP1_SCENES[name]) return SP1_SCENES[name](game, `sp1c${++shotId}`);
   const cos = game.state.cosmetics;
   switch (name) {
     case 'awaken': {
@@ -55,6 +59,7 @@ export function playCinematic(app, id) {
           <button type="button" class="cine-skip">${ICONS.skip}<span>تخطي</span></button>
           <span class="cine-tap" aria-hidden="true">المسي للمتابعة</span>
         </div>`;
+      const cine = el.querySelector('.cine');
       const stage = el.querySelector('.cine-stage');
       const caption = el.querySelector('.cine-caption');
       let i = -1;
@@ -76,7 +81,9 @@ export function playCinematic(app, id) {
         if (i >= shots.length) return finish();
         const shot = shots[i];
         const art = painted(shot.art);
-        const frame = h(`<div class="cine-shot ${app.reduced() ? '' : 'drift'}"></div>`);
+        const frame = h(`<div class="cine-shot ${app.reduced() || shot.scene?.startsWith('roads-') || shot.quick ? '' : 'drift'}"></div>`);
+        // silent shots (the embrace): no "tap to continue" prompt; tap and «تخطي» still work
+        cine.classList.toggle('is-silent', Boolean(shot.silent));
         if (art) frame.append(h(`<img class="cine-art" src="${art}" alt="" draggable="false">`));
         else frame.innerHTML = sceneSvg(shot.scene, app.game);
         stage.replaceChildren(frame);
@@ -91,7 +98,8 @@ export function playCinematic(app, id) {
           next();
           return;
         }
-        timer = setTimeout(next, app.reduced() ? Math.max(1800, shot.ms ?? 3000) : shot.ms ?? 3000);
+        const ms = shot.ms ?? 3000;
+        timer = setTimeout(next, app.reduced() && !shot.quick ? Math.max(1800, ms) : ms);
       }
       scope.add(() => clearTimeout(timer));
       scope.on(el.querySelector('.cine'), 'click', (e) => {

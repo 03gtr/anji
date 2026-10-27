@@ -21,7 +21,10 @@ export function withSize(svg, height) {
 }
 
 /** Rasterisation height (px) per character kind. */
-export const RASTER_HEIGHT = { anji: 300, snooki: 170, ryan: 300, shadow: 300, needle: 220 };
+export const RASTER_HEIGHT = { anji: 300, snooki: 170, husky: 160, ryan: 300, shadow: 300, needle: 220 };
+
+/** Story Pack 01: the white husky — Snooki's build, icy-blue eyes, rose collar, a flower. */
+export const HUSKY_LOOK = { eye: '#7fd0ff', collar: 'rose', hat: 'blossom' };
 
 export function loadImage(src) {
   return new Promise((resolve, reject) => {
@@ -77,6 +80,21 @@ export function frameTable(kind, cos = {}) {
         wag: [0, 0.25, 0.5, 0.75].map((t) => snookiSprite({ ...o, pose: 'wag', t })),
         innocent: [snookiSprite({ ...o, pose: 'innocent', t: 0 }), snookiSprite({ ...o, pose: 'innocent', t: 0.5 })],
         stubborn: [snookiSprite({ ...o, pose: 'stubborn' })],
+        celebrate: [snookiSprite({ ...o, pose: 'celebrate', t: 0 }), snookiSprite({ ...o, pose: 'celebrate', t: 0.25 })],
+      };
+    }
+    case 'husky': {
+      const o = HUSKY_LOOK;
+      return {
+        idle: [snookiSprite({ ...o, pose: 'idle', t: 0 }), snookiSprite({ ...o, pose: 'idle', t: 0.25 })],
+        blink: [snookiSprite({ ...o, pose: 'idle', blink: true })],
+        walk: WALK.map((t) => snookiSprite({ ...o, pose: 'walk', t })),
+        run: WALK.map((t) => snookiSprite({ ...o, pose: 'run', t })),
+        sit: [snookiSprite({ ...o, pose: 'sit', t: 0 }), snookiSprite({ ...o, pose: 'sit', t: 0.25 })],
+        sniff: [snookiSprite({ ...o, pose: 'sniff', t: 0 }), snookiSprite({ ...o, pose: 'sniff', t: 0.5 })],
+        excited: [snookiSprite({ ...o, pose: 'excited', t: 0 }), snookiSprite({ ...o, pose: 'excited', t: 0.5 })],
+        wag: [0, 0.25, 0.5, 0.75].map((t) => snookiSprite({ ...o, pose: 'wag', t })),
+        bark: [snookiSprite({ ...o, pose: 'bark', t: 0 }), snookiSprite({ ...o, pose: 'bark', t: 0.25 })],
         celebrate: [snookiSprite({ ...o, pose: 'celebrate', t: 0 }), snookiSprite({ ...o, pose: 'celebrate', t: 0.25 })],
       };
     }

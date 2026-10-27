@@ -6,6 +6,7 @@
  * `goal` is the one-sentence objective shown above every puzzle.
  */
 import { PUZZLES_V3 } from './puzzles-v3.js';
+import { PUZZLES_SP1 } from './puzzles-sp1.js';
 
 export const PUZZLES = {
   // Clue: the fountain engraving "from darkness to full light".
@@ -404,4 +405,7 @@ export const PUZZLES = {
 
   // V3: games-room activities and pranks
   ...PUZZLES_V3,
+
+  // Story Pack 01 «الطرق اللي تتذكر»
+  ...PUZZLES_SP1,
 };

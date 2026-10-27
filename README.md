@@ -61,6 +61,10 @@ npm run art:export      # export every character image to docs/art/ (see docs/AR
 
 Dev shortcut for the games room: `/?scene=gameroom&flags=house-entered,intro-done`.
 
+**Story Pack 01 «الطرق اللي تتذكر»** (after the ending): two new places, five
+story chapters, a white husky she names herself, three puzzles and a silent
+cinematic. Design, storyboards and save notes: `docs/STORY_PACK_01.md`.
+
 ## What is in the game
 
 Eight acts, twelve explorable locations, a world map, and these activities:

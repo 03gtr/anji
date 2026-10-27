@@ -201,7 +201,11 @@ export function runProgram(stage, prog) {
   return { ok: false, trace, crash: false };
 }
 export const program = {
-  /** config: { stages: [{ grid: ['..B'], start: {x,y,dir}, max }] } */
+  /**
+   * config: { stages: [{ grid: ['..B'], start: {x,y,dir}, max }],
+   *           look?: { actor, goal, wall }, messages?: { crash, short, next } } — optional
+   *           wording/emoji for other characters than the robot (`next` may use {n} and {of}).
+   */
   init: () => ({ stage: 0, prog: [], runs: 0, mistakes: 0, trace: null }),
   add(config, state, cmd) {
     const stage = config.stages[state.stage];
@@ -221,15 +225,18 @@ export const program = {
       return {
         state: { ...state, runs, mistakes: state.mistakes + 1, trace: res.trace },
         outcome: 'wrong',
-        message: res.crash ? 'بوم! الروبوت دگ بالصندوق. شيلي الأمر الغلط وجرّبي.' : 'الروبوت وقف قبل العظمة. يحتاج أوامر أكثر (أو غير).',
+        message: res.crash
+          ? config.messages?.crash ?? 'بوم! الروبوت دگ بالصندوق. شيلي الأمر الغلط وجرّبي.'
+          : config.messages?.short ?? 'الروبوت وقف قبل العظمة. يحتاج أوامر أكثر (أو غير).',
       };
     }
     const next = state.stage + 1;
     if (next >= config.stages.length) return { state: { ...state, runs, trace: res.trace }, outcome: 'solved' };
+    const of = config.stages.length;
     return {
       state: { ...state, stage: next, prog: [], runs, trace: null },
       outcome: 'progress',
-      message: `هاو هاو! (بيب) — المستوى ${next + 1} من ${config.stages.length}.`,
+      message: config.messages?.next ? config.messages.next.replace('{n}', next + 1).replace('{of}', of) : `هاو هاو! (بيب) — المستوى ${next + 1} من ${of}.`,
     };
   },
 };

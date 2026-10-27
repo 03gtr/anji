@@ -18,6 +18,21 @@ export const CINEMATICS = {
     },
     { scene: 'roses', caption: 'والورد الأزرق… فتّح عيونه.', sfx: 'sparkle', ms: 3000 },
   ],
+  // Story Pack 01. The embrace is silent: no caption, no dialogue, no tap prompt (tap still
+  // advances and «تخطي» still leaves). Storyboards: docs/STORY_PACK_01.md.
+  'sp1-embrace': [
+    { scene: 'roads-wide', silent: true, ms: 3800 },
+    { scene: 'roads-stop', silent: true, ms: 3600 },
+    { scene: 'roads-near', silent: true, ms: 3400 },
+    { scene: 'roads-embrace', silent: true, sfx: 'sparkle', ms: 5200 },
+    { scene: 'roads-after', silent: true, ms: 3200 },
+  ],
+  // «من سطر صغير»: about three seconds, then back to the garden
+  'sp1-montage': [
+    { scene: 'code-lines', silent: true, quick: true, ms: 1000 },
+    { scene: 'code-shape', silent: true, quick: true, ms: 900 },
+    { scene: 'code-product', silent: true, quick: true, ms: 1100, caption: 'رسم توضيحي' },
+  ],
   credits: [
     { art: 'world-8-ending', scene: 'roses', caption: 'الحديقة السرّية: سنوكي والصانع المفقود', ms: 3600 },
     { art: 'hero-anji-snooki', scene: 'awaken', caption: 'بطولة: أنجي', ms: 3200 },

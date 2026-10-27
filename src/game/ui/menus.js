@@ -12,6 +12,7 @@ import { JOURNAL, COLLECTIBLES, ITEMS, GROUP_NAMES, worldCompletion } from '../d
 import { MINIGAMES } from '../minigames/registry.js';
 import { PUZZLES } from '../data/puzzles.js';
 import { check } from '../core/conditions.js';
+import { fillNames } from '../core/names.js';
 import { groupOf } from '../core/game.js';
 import { offlineText } from '../core/sw-client.js';
 import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
@@ -269,7 +270,7 @@ export function openJournal(app, tab = 'notes') {
           const entries = game.state.journal.filter((id) => JOURNAL[id]);
           const notes = game.state.collected.filter((id) => groupOf(id) === 'note');
           body.innerHTML = `
-            ${entries.length ? entries.map((id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(JOURNAL[id].text)}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
+            ${entries.length ? entries.map((id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(fillNames(JOURNAL[id].text, game))}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
             ${notes.length ? `<h3>رسائل ريان</h3>${notes.map((id) => `<article class="entry note"><span class="entry-icon">📜</span><div><h4>${esc(COLLECTIBLES[id]?.name || id)}</h4><p>${esc(COLLECTIBLES[id]?.text || '')}</p></div></article>`).join('')}` : ''}`;
           body.querySelectorAll('[data-open]').forEach((b) =>
             b.addEventListener('click', () => {
@@ -369,10 +370,10 @@ function renderMissions(game) {
       ${
         st.status === 'complete'
           ? `<p class="mission-reward">✅ خلصت · ${esc(m.rewardText)}</p>`
-          : `<p class="mission-summary">${esc(m.summary)}</p>
-           <p class="mission-next"><b>الخطوة الجاية:</b> ${esc(st.next.text)}</p>
+          : `<p class="mission-summary">${esc(fillNames(m.summary, game))}</p>
+           <p class="mission-next"><b>الخطوة الجاية:</b> ${esc(fillNames(st.next.text, game))}</p>
            <button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button>
-           <p class="mission-hint" hidden>${esc(st.next.hint || 'دوّري بالمكان المكتوب فوق.')}</p>
+           <p class="mission-hint" hidden>${esc(fillNames(st.next.hint, game) || 'دوّري بالمكان المكتوب فوق.')}</p>
            <p class="mission-reward muted small">الجايزة: ${esc(m.rewardText)}</p>`
       }
     </article>`;

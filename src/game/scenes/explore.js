@@ -8,6 +8,8 @@ import { h, esc, ICONS } from '../ui/dom.js';
 import { currentObjective } from '../data/chapters.js';
 import { openPause } from '../ui/menus.js';
 import { num } from '../ui/format.js';
+import { fillNames } from '../core/names.js';
+import { showContentNotice } from '../ui/content-notice.js';
 
 const ORD = ['', 'الفصل الأول', 'الفصل الثاني', 'الفصل الثالث', 'الفصل الرابع', 'الفصل الخامس', 'الفصل السادس', 'الفصل السابع', 'الفصل الثامن'];
 
@@ -50,8 +52,8 @@ export function createExplore(app, scene, { spawnX } = {}) {
 
   const renderObjective = () => {
     const o = currentObjective(game);
-    objective.querySelector('small').textContent = o.act ? `${ORD[o.act]} · ${o.title}` : '';
-    objective.querySelector('span').textContent = o.text;
+    objective.querySelector('small').textContent = o.act ? `${ORD[o.act]} · ${o.title}` : o.title || '';
+    objective.querySelector('span').textContent = fillNames(o.text, game);
     mapBtn.hidden = !game.flag('map-open');
   };
   const renderSound = () => {
@@ -147,9 +149,10 @@ export function createExplore(app, scene, { spawnX } = {}) {
       game.setLocation(scene.id, world.player.x);
       world.on('target', (it) => {
         if (it) app.tips?.show('interact');
+        const label = it ? fillNames(it.label, game) : '';
         interactBtn.disabled = !it;
-        interactBtn.querySelector('.pad-label').textContent = it ? it.label : 'فحص';
-        interactBtn.setAttribute('aria-label', it ? `فحص: ${it.label}` : 'لا شي قريب للفحص');
+        interactBtn.querySelector('.pad-label').textContent = it ? label : 'فحص';
+        interactBtn.setAttribute('aria-label', it ? `فحص: ${label}` : 'لا شي قريب للفحص');
         interactBtn.classList.toggle('is-ready', Boolean(it));
       });
       world.on('mode', (m) => {
@@ -160,6 +163,8 @@ export function createExplore(app, scene, { spawnX } = {}) {
       world.start();
       // contextual tips, one at a time: moving first, then glowing objects
       scope.timeout(() => app.tips?.show('move'), 1200);
+      // new story content she can reach now: one small, dismissible card per pack
+      scope.timeout(() => showContentNotice(app, scene.id, el), 1800);
       scope.interval(() => {
         if (!app.overlays.count && world.mode === 'play' && world.visibleGlows().length) app.tips?.show('glow');
       }, 4000);

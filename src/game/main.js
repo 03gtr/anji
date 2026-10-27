@@ -5,6 +5,7 @@ import './styles/game.css';
 import './styles/v2.css';
 import './styles/race3d.css';
 import './styles/v3.css';
+import './styles/sp1.css';
 import { createGameApp } from './app.js';
 
 if (import.meta.env.DEV && new URLSearchParams(location.search).has('timer')) globalThis.__timerLoop = true;

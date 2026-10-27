@@ -25,3 +25,10 @@ if (cast.CAST) section('Cast', Object.entries(cast.CAST).map(([k, c]) => [k, c.p
 if (cast.ryanView) section('Ryan views', cast.RYAN_VIEWS.map((v) => [v, cast.ryanView(v), v === 'turn' ? 120 : 90]));
 if (cast.MUNTHER_EXPRESSIONS) section('Uncle Munther', cast.MUNTHER_EXPRESSIONS.map((e) => [e, cast.CAST.munther.portrait({ expr: e }), 120]));
 if (cast.ryanSprite) section('Ryan', [['back', cast.ryanSprite({})], ['walk', cast.ryanSprite({ pose: 'walk', t: 0.25 })], ['shadow', cast.ryanSprite({ shadow: true })]]);
+
+// Story Pack 01: the white husky and the cinematic shots (?only=pack, ?zoom=2)
+import { HUSKY_LOOK } from '../src/game/characters/sprites.js';
+import { SP1_SCENES } from '../src/game/art/sp1-scenes.js';
+section('Pack husky', ['idle', 'walk', 'sit', 'excited', 'wag', 'celebrate'].map((p) => [p, snookiSprite({ ...HUSKY_LOOK, pose: p, t: 0.25 }), 130]));
+const cosmeticsOnly = { state: { cosmetics: {} } };
+section('Pack shots', Object.entries(SP1_SCENES).map(([k, draw], i) => [k, draw(cosmeticsOnly, `dev${i}`), 360]));

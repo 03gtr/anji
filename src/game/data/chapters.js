@@ -4,6 +4,8 @@
  * the actual progress.
  */
 import { check } from '../core/conditions.js';
+import { MISSIONS } from './missions.js';
+import { missionState } from '../progression/missions.js';
 
 export const ACTS = [
   {
@@ -119,6 +121,11 @@ export function currentObjective(game) {
   for (const act of ACTS) {
     const next = act.objectives.find((o) => !check(o.done, game));
     if (next) return { act: act.act, title: act.title, text: next.text };
+  }
+  // after the ending: the next step of an open story-pack chapter, if any
+  for (const m of MISSIONS.filter((x) => x.kind === 'story')) {
+    const st = missionState(m, game);
+    if (st.status === 'active') return { act: null, title: m.title, text: st.next.text };
   }
   return { act: null, title: '', text: 'استكشفي الحديقة على راحتچ ✨' };
 }
