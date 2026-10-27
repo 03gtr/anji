@@ -20,9 +20,10 @@ import { SCENES } from '../../src/game/data/scenes/index.js';
 import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { ACTS, currentObjective } from '../../src/game/data/chapters.js';
 import { CINEMATICS } from '../../src/game/data/cinematics.js';
+import { applyEffects } from '../../src/game/core/effects.js';
 import { solve, replay, runProgram, programSolution } from '../../src/game/puzzles/rules.js';
 import { frameTable } from '../../src/game/characters/sprites.js';
-import { nextGuidance } from '../../src/game/ui/guide.js';
+import { nextGuidance, showGuide } from '../../src/game/ui/guide.js';
 import { HUSKY_FLAG } from '../../src/game/core/names.js';
 import { memoryStorage } from '../helpers.js';
 
@@ -111,6 +112,82 @@ describe('the finale is earned', () => {
   });
 });
 
+describe('«الافتراض الغلط»: the revelation before the gate', () => {
+  const plan = SCENES.archives.interact.find((i) => i.id === 'gate-plan');
+  const caseFor = (g) => plan.cases.find((c) => c.if === undefined || check(c.if, g));
+  /** Runs a case the way the engine does; `solves` says which puzzles she solves. */
+  function play(actions, g, solves, said = []) {
+    for (const act of actions) {
+      if (act.say) said.push(act.say);
+      else if (act.fx) applyEffects(act.fx, g);
+      else if (act.puzzle) {
+        const ok = solves(act.puzzle);
+        if (ok) applyEffects(PUZZLES[act.puzzle].reward, g);
+        play(ok ? act.then || [] : act.else || [], g, solves, said);
+      } else if ('then' in act) play(check(act.if, g) ? act.then : act.else || [], g, solves, said);
+    }
+    return said;
+  }
+  const afterLetters = () => {
+    const g = throughAct(6, game());
+    g.setFlags(SP2_CORE.filter((f) => !['sp2-plan-studied', 'sp2-done'].includes(f)));
+    return g;
+  };
+
+  it('sits between the letters and the gate; the gate stays shut until it is solved', () => {
+    const g = afterLetters();
+    syncMissions(g);
+    expect(missionState(sp2('sp2-twist'), g).status).toBe('active');
+    expect(missionState(sp2('sp2-gate'), g).status).toBe('locked');
+    expect(check(worldById('workshop').unlock, g)).toBe(false);
+    expect(currentObjective(g).text).toBe(sp2('sp2-twist').steps[0].text);
+  });
+
+  it('three new puzzles, each solvable from its start', () => {
+    for (const id of ['sp2-coded', 'sp2-assumption', 'sp2-two-hands']) {
+      const p = PUZZLES[id];
+      expect(replay(p.type, p.config, solve(p.type, p.config)).outcome, id).toBe('solved');
+    }
+  });
+
+  it('played in one go: flip → decode → the wrong assumption → two hands → the plan lights', () => {
+    const g = afterLetters();
+    const said = play(caseFor(g).run, g, () => true);
+    expect(said).toEqual(['sp2.twist-flip', 'sp2.coded-done', 'sp2.assumption-done', 'sp2.two-hands-intro', 'sp2.two-hands-done', 'sp2.plan-lit', 'sp2.plan-open']);
+    expect(['sp2-twist-done', 'sp2-done'].every((f) => !!g.flag(f))).toBe(true);
+    expect(check(worldById('workshop').unlock, g)).toBe(true);
+    syncMissions(g);
+    expect(missionState(sp2('sp2-twist'), g).status).toBe('complete');
+    expect(missionState(sp2('sp2-gate'), g).status).toBe('complete');
+  });
+
+  it('closing a puzzle keeps her stage; the next visit resumes there', () => {
+    const g = afterLetters();
+    expect(play(caseFor(g).run, g, (id) => id === 'sp2-coded')).toEqual(['sp2.twist-flip', 'sp2.coded-done', 'sp2.twist-later']);
+    expect(!!g.flag('sp2-coded-done')).toBe(true);
+    expect(play(caseFor(g).run, g, () => false)).toEqual(['sp2.twist-later']); // straight back to the assumption
+    expect(!!g.flag('sp2-done')).toBe(false);
+    expect(play(caseFor(g).run, g, () => true).at(-1)).toBe('sp2.plan-open');
+  });
+
+  it('a gate opened before this update stays open; the revelation is a return visit there', () => {
+    const g = throughAct(6, game());
+    g.setFlags(SP2_CORE); // sp2-done, no twist flags
+    syncMissions(g);
+    expect(missionState(sp2('sp2-gate'), g).status).toBe('complete');
+    expect(missionState(sp2('sp2-twist'), g).status).toBe('active');
+    const said = play(caseFor(g).run, g, () => true);
+    expect(said).not.toContain('sp2.plan-lit'); // the opening is not replayed
+    expect(said.at(-1)).toBe('sp2.two-hands-done');
+    expect(caseFor(g).run).toEqual([{ say: 'sp2.plan-after' }]);
+  });
+
+  it('before the letters, the plan only shows its empty seals', () => {
+    const g = throughAct(6, game());
+    expect(caseFor(g).run).toEqual([{ say: 'sp2.plan-early' }]);
+  });
+});
+
 describe('hints help thinking, never give the answer away', () => {
   const answerOf = {
     'sp2-ledger': /المرصد/,
@@ -120,6 +197,8 @@ describe('hints help thinking, never give the answer away', () => {
     'sp2-trail': /البحيرة/,
     'sp2-final-rule': /١٥|15|٢٧|27/,
     'sp1-cipher': /وعد/,
+    'sp2-coded': /بيدين|يدين/,
+    'sp2-assumption': /يوم مهم|موعد مهم/,
   };
   for (const [id, answer] of Object.entries(answerOf)) {
     it(`${id}: no hint names the answer`, () => {
@@ -207,6 +286,20 @@ describe('one mission state: journal, map, HUD and guidance agree', () => {
     expect(away.entry.id).toBe('sp2-archives');
     expect(nextGuidance(g, 'house').elsewhere).toBe(false); // the house holds one of the marks
     expect(nextGuidance(game(), 'garden')?.elsewhere ?? false).toBe(false);
+  });
+
+  it('several ways on: the real choices, the current step first, never more than four', () => {
+    const g = throughAct(6, game());
+    g.setFlags(['sp2-entered', 'sp2-ledger-read']); // three marks, three places, any order
+    const { choices } = nextGuidance(g, 'garden');
+    expect(choices.length).toBeLessThanOrEqual(4);
+    const mine = choices.filter((c) => c.entry.id === 'sp2-archives');
+    expect(new Set(mine.map((c) => c.place))).toEqual(new Set(['house', 'academy', 'sanctuary']));
+    expect(choices.slice(0, mine.length)).toEqual(mine); // the current step's places come first
+    expect(choices.filter((c) => c.entry.id !== 'sp2-archives').every((c) => c.entry.status !== 'locked' && c.place)).toBe(true);
+    g.setFlag('sp2-clue-a'); // a found mark is no longer a choice
+    expect(nextGuidance(g, 'garden').choices.map((c) => c.place)).not.toContain('house');
+    expect(nextGuidance(g, 'academy').choices).toEqual([]); // the step is right here: no detours
   });
 
   it('the evidence notebook: found facts with their place, unfound only counted, deductions hidden until solved', () => {
@@ -413,6 +506,47 @@ describe('in the app: «التالي», a deliberate first hint, the evidence ta
     expect(root.querySelectorAll('.puzzle-hints li')).toHaveLength(1);
     $('.puzzle [data-act="close"]').click();
     await done;
+  });
+
+  it('the guide card shows each choice; a choice opens the map routed to that place', async () => {
+    const g = throughAct(6, app.game);
+    g.setFlags(['sp2-entered', 'sp2-ledger-read', 'notice:sp2']);
+    await app.toTitle();
+    const host = document.createElement('div');
+    root.append(host);
+    expect(showGuide(app, { finished: ['دفتر الأرشيف'], host, sceneId: 'garden' })).toBe(true);
+    const card = await until(() => host.querySelector('.guide-card'));
+    const buttons = [...card.querySelectorAll('[data-choice]')];
+    expect(buttons.length).toBeGreaterThan(1);
+    expect(card.querySelector('[data-next]')).toBeNull(); // the choices replace the single button
+    const academy = buttons.find((b) => /أكاديمية|الأكاديمية/.test(b.textContent));
+    expect(academy, buttons.map((b) => b.textContent).join(' | ')).toBeTruthy();
+    academy.click();
+    const go = await until(() => $('.map [data-go]'));
+    expect(go.dataset.go).toBe('academy');
+    expect(host.querySelector('.guide-card')).toBeNull();
+  });
+
+  it('a puzzle or menu opening later takes the card away (it never covers a panel)', async () => {
+    const g = throughAct(6, app.game);
+    g.setFlags(['sp2-entered', 'sp2-ledger-read', 'notice:sp2']);
+    await app.toTitle();
+    const host = document.createElement('div');
+    root.append(host);
+    showGuide(app, { host, sceneId: 'garden' });
+    await until(() => host.querySelector('.guide-card'));
+    const done = app.ui.dialogue([{ s: 'anji', t: 'سطر.' }]);
+    await until(() => $('.dlg-box'));
+    expect(host.querySelector('.guide-card')).toBeTruthy(); // a dialogue leaves it
+    app.overlays.closeAll();
+    await done;
+    showGuide(app, { host, sceneId: 'garden' });
+    await until(() => host.querySelector('.guide-card'));
+    const puzzle = app.ui.puzzle('sp2-coded');
+    await until(() => $('.panel.puzzle'));
+    expect(host.querySelector('.guide-card')).toBeNull();
+    $('.puzzle [data-act="close"]').click();
+    await puzzle;
   });
 
   it('the evidence tab lists found facts and offers the board when all are found', async () => {

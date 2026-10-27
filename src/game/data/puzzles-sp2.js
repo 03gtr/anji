@@ -267,4 +267,76 @@ export const PUZZLES_SP2 = {
     success: 'مسار الخبراء انحل! ✨ — ترتيب المفاتيح چان هو اللغز كله.',
     reward: ['flag:sp2-expert-done'],
   },
+  // Phase 03b — «الافتراض الغلط». (1) The coded line: heart = ي and moon = ن are known from
+  // the star cipher (Act V); the sun and the key glyphs come from the sentence's meaning.
+  'sp2-coded': {
+    type: 'cipher',
+    title: 'السطر المكتوب بالرموز',
+    goal: 'فكّي الكلمة الأخيرة من السطر.',
+    intro: 'ورا المخطط، بخط ريان: «البوابة ما تنفتح بموعد… تنفتح ـــــ.» والكلمة الناقصة مكتوبة برموز. رمزين تعرفينهم من شفرة النجوم؛ الباقي يطلع من معنى الجملة.',
+    config: {
+      word: ['ب', 'ي', 'د', 'ي', 'ن'],
+      glyphs: ['sym:sun', 'sym:heart', 'sym:key', 'sym:heart', 'sym:moon-crescent'],
+      key: [['sym:heart', 'ي'], ['sym:moon-crescent', 'ن']],
+      letters: ['ب', 'د', 'ت', 'ر', 'م', 'ل'],
+    },
+    hints: [
+      'حطي الرموز المعروفة أول. شوفي شكل الكلمة: ؟ي؟ين.',
+      'الجملة تقارن: مو «بموعد»… لكن بـ شنو؟ فكري بشي ينفتح بيه الباب.',
+      'الرمز الأول حرف صغير يجي بأول الكلمة بمعنى «بواسطة». بعدين اختاري الحرف اللي يكمّل كلمة تعرفينها.',
+    ],
+    wrong: ['الرموز ما تحركت. الكلمة لازم تكمّل معنى الجملة.'],
+    success: '«بيدين». ✨ — الرمزين المعروفين حطّوا شكل الكلمة، ومعنى الجملة كمّل الباقي.',
+    reward: ['flag:sp2-coded-done', 'journal:sp2-coded'],
+  },
+
+  // (2) Which conclusion from the letters does the line prove wrong? Facts were written; only
+  // one inference is contradicted ("not by an appointment").
+  'sp2-assumption': {
+    type: 'choice',
+    title: 'الافتراض الغلط',
+    goal: 'أي جملة من استنتاجاتچ يكذّبها السطر الجديد؟',
+    intro: 'السطر يگول: «البوابة ما تنفتح بموعد… تنفتح بيدين.» قارنيه بالجمل اللي صنّفتيها بالرسائل.',
+    config: {
+      question: 'وحدة بس طلعت غلط:',
+      answer: 'i-day',
+      options: [
+        { id: 'f-before', label: 'الوردة انزرعت قبل ما تنركب العدسة.', icon: 'rose', reply: 'هذا مكتوب بالرسائل، والسطر ما يحچي عنه.' },
+        { id: 'i-tomorrow', label: 'ريان چان يخطط لشي يخص الغد.', icon: 'heart', reply: 'السطر ما ينفي هذا… يمكن بعده صح.' },
+        { id: 'f-plan', label: 'رسم البوابة بدأ بعد ما انكتب الاسم بالنجوم.', icon: 'key', reply: 'مكتوب بالرسائل، والسطر ما يحچي عن الوقت.' },
+        { id: 'i-day', label: 'البوابة راح تنفتح بيوم مهم.', icon: 'sun' },
+      ],
+    },
+    hints: ['الجمل المكتوبة بالرسائل ما تغيّرت. دوّري بين الاستنتاجات.', 'السطر يذكر شي البوابة «ما» تنفتح بيه.', 'السطر يذكر كلمة وحدة بس عن البوابة نفسها. خذيها، ومرّي على كل استنتاج: منو يعتمد عليها؟'],
+    wrong: [],
+    success: 'هذا هو. ✨ — «يوم مهم» چان استنتاج، والسطر الجديد كذّبه: البوابة ما تنتظر يوم، تنتظر إيدين. لهذا نميّز المكتوب عن المستنتج.',
+    reward: ['flag:sp2-assumption-done', 'journal:sp2-assumption'],
+  },
+
+  // (3) «بيدين»: four locks, each needs what only one of them can do.
+  'sp2-two-hands': {
+    type: 'arrange',
+    title: 'بيدين',
+    goal: 'وزّعي الأقفال الأربعة: كل قفل على اللي يگدر يفتحه.',
+    intro: 'أربع أقفال حول المخطط. أنجي تقرى وتوصل للعالي؛ سنوكي يشم ويدخل الأماكن الضيقة. محد يگدر يسويها كلها وحده.',
+    config: {
+      slots: [
+        { id: 'high', label: 'قفل فوق الرف العالي', accepts: ['anji1', 'anji2'] },
+        { id: 'gap', label: 'فتحة واطية بقد كف صغير', accepts: ['snooki1', 'snooki2'] },
+        { id: 'words', label: 'قفل يفتح بكلمة لازم تنقرى', accepts: ['anji1', 'anji2'] },
+        { id: 'scent', label: 'مقبض يتعرف على ريحة البسكويت', accepts: ['snooki1', 'snooki2'] },
+      ],
+      pieces: [
+        { id: 'anji1', label: 'أنجي', icon: 'heart' },
+        { id: 'snooki1', label: 'سنوكي', icon: 'paw' },
+        { id: 'anji2', label: 'أنجي', icon: 'heart' },
+        { id: 'snooki2', label: 'سنوكي', icon: 'paw' },
+      ],
+      checkLabel: 'نفتحها سوا ✓',
+    },
+    hints: ['اقرئي كل قفل: شنو يحتاج؟ طول، قراية، حجم صغير، لو أنف؟', 'سنوكي ما يقرا (يگول يقرا، بس لا).', 'كل واحد منكم يفتح قفلين.'],
+    wrong: ['قفل واحد على الأقل ما انفتح. منو فعلاً يگدر يسويه؟'],
+    success: 'انفتحت الأقفال الأربعة! ✨ — «بيدين» ما چانت يدين وحدة. چانت أنجي وسنوكي سوا.',
+    reward: ['flag:sp2-twist-done'],
+  },
 };

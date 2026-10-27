@@ -17,6 +17,17 @@ const DOOR = 1300;
 const FLOOR = 1430;
 const MACHINE = 1600;
 
+// Phase 03b — «الافتراض الغلط»: the coded line → the false assumption → two hands.
+// Closing a puzzle keeps the stage; a fresh save goes straight on to the lit plan.
+const PLAN_LIT = [{ say: 'sp2.plan-lit' }, { shake: 0.25 }, { fx: ['flag:sp2-plan-studied', 'flag:sp2-done'] }, { say: 'sp2.plan-open' }];
+const LATER = [{ say: 'sp2.twist-later' }];
+const TWO_HANDS = [
+  { say: 'sp2.two-hands-intro' },
+  { puzzle: 'sp2-two-hands', then: [{ say: 'sp2.two-hands-done' }, { if: '!flag:sp2-done', then: PLAN_LIT }], else: LATER },
+];
+const ASSUMPTION = [{ puzzle: 'sp2-assumption', then: [{ say: 'sp2.assumption-done' }, ...TWO_HANDS], else: LATER }];
+const CODED = [{ puzzle: 'sp2-coded', then: [{ say: 'sp2.coded-done' }, ...ASSUMPTION], else: LATER }];
+
 // seals on the gate plan: three required (archive, maze, letters), two optional (machine, trail)
 const SEALS = [
   { flag: 'sp2-archives-done', icon: 'rose' },
@@ -183,12 +194,16 @@ export const ARCHIVES = {
       label: 'مخطط بوابة الغد',
       icon: '🗺️',
       cases: [
+        // Mission 6: the seals are lit and the locks opened «بيدين» → a crack of light, the workshop opens
+        { if: ['flag:sp2-twist-done', '!flag:sp2-done'], run: PLAN_LIT },
+        { if: 'flag:sp2-twist-done', run: [{ say: 'sp2.plan-after' }] },
+        // Phase 03b — «الافتراض الغلط», resumed at the stage she reached; a save that
+        // opened the gate before this update meets it here as a return visit
+        { if: 'flag:sp2-assumption-done', run: TWO_HANDS },
+        { if: 'flag:sp2-coded-done', run: ASSUMPTION },
+        { if: 'flag:sp2-twist-read', run: CODED },
+        { if: 'flag:sp2-letters-done', run: [{ say: 'sp2.twist-flip' }, { fx: ['flag:sp2-twist-read', 'journal:sp2-coded-line'] }, ...CODED] },
         { if: 'flag:sp2-done', run: [{ say: 'sp2.plan-after' }] },
-        {
-          // Mission 6: the required seals are lit → a crack of light, and the workshop opens
-          if: 'flag:sp2-letters-done',
-          run: [{ say: 'sp2.plan-lit' }, { shake: 0.25 }, { fx: ['flag:sp2-plan-studied', 'flag:sp2-done'] }, { say: 'sp2.plan-open' }],
-        },
         { run: [{ say: 'sp2.plan-early' }] },
       ],
     },

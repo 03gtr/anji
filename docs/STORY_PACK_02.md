@@ -127,7 +127,8 @@ Tested with constructed saves (mid-story, finished, side missions done):
 | Husky | met only after the ending | met **before** the ending: a white pup stands in front of the sanctuary post (archive clue 3) and moves once named; Story Pack 01 becomes a reunion for those players |
 | Journal | filters, numbers, statuses | + «الأدلة»: facts (with place) vs deductions, unfound only counted, a board to test the theory when all facts are found; finished entries only under «المكتملة»; open main before side |
 | Map | focus mode, route | + current objective highlighted by default, ★ story / ◆ side / ✓ done badges, legend, lock reasons, and an overlap-free layout on phone, small phone, landscape and desktop |
-| Guidance | toast | «الهدف التالي» card after a mission (one notice, not duplicated) → map focus |
+| Guidance | toast | «الهدف التالي» card after a mission (one notice, not duplicated) → map focus; when there are several ways on, the card lists the real choices (§15) |
+| Revelation | the letters lit the last seal directly | «الافتراض الغلط» between the letters and the gate: one earlier conclusion turns out wrong (§15) |
 | Dialogue | tap anywhere | explicit «التالي» (44 px), «تخطي» smaller and secondary |
 | Ryan | back view only (by design: "never shows his face") | **profile** when he stands or walks; back view kept for scripted back-turned moments (the embrace, waiting at the gate) |
 
@@ -136,6 +137,7 @@ Tested with constructed saves (mid-story, finished, side missions done):
 ```
 Act IV ─► Archives (house · academy · sanctuary[pup → name] · observatory)
        ─► Shifting Maze ─► (Act V) Missing Letters (observatory · library · lake)
+       ─► «الافتراض الغلط»: coded line ─► the wrong conclusion ─► «بيدين» (archives)
        ─► Gate of Tomorrow plan (seals) ─► Act VII (workshop)
        ─► «خريطة الغد»: map ─► 3 inscriptions (corridor · lake · observatory)
                           ─► rule puzzle ─► final route ─► Act VIII (the hidden garden, the finale)
@@ -143,7 +145,8 @@ optional: Sequence Machine · Expert Route · Husky's Trail (garden · meadow ·
 ```
 
 **Finale prerequisites (new saves):** Acts I–VII, Story Pack 02's archive chain
-(`sp2-done`), and «خريطة الغد» (`sp2-final-done`). Nothing optional is required.
+including «الافتراض الغلط» (`sp2-twist-done` → `sp2-done`), and «خريطة الغد»
+(`sp2-final-done`). Nothing optional is required.
 
 **Old saves:** in or past the workshop → no archive gate; in or past the hidden
 garden → no map gate; finished games keep `game-complete`, their ending, the
@@ -162,6 +165,9 @@ post-game packs, and their husky name. Nobody is moved back.
 | `sp2-final-route` | keys before doors, the gold key behind another door | 14 and 23 commands (budgets 16 and 25) |
 | `sp2-maze-expert` | two keys in the right order | 36 commands (budget 38) |
 | `sp2-trail` | water + moon + boat | the moonlit lake |
+| `sp2-coded` | two symbols known from Act V's star cipher (♥ = ي, ☾ = ن); the sentence's meaning gives the rest | «بيدين» |
+| `sp2-assumption` | the decoded line says the gate does not open by an appointed time | the wrong conclusion: «البوابة تنفتح بيوم مهم» |
+| `sp2-two-hands` | what each lock needs: height and reading → Anji; a small gap and a scent → Snooki | high + words → Anji; gap + scent → Snooki |
 
 All are verified by the solver from their start; budgets are within 2 of the
 shortest route; without keys every key level is unsolvable (tested).
@@ -213,24 +219,78 @@ Counting only stages that need exploration or reasoning:
 | Archives | 3 location trips, a 3-clue deduction, a return trip | 25–40 min |
 | Shifting Maze | 3 planning levels | 10–20 min |
 | Missing Letters | 3 trips, 2 puzzles | 20–30 min |
+| «الافتراض الغلط» | a cipher, re-reading the letters' conclusions, a two-hands arrangement | 10–20 min |
 | «خريطة الغد» | map reading, 3 return visits, 3-level rule puzzle, 2-level route | 30–50 min |
 | Optional (sequence, expert route, trail) | — | 30–50 min |
 
-**Total**: roughly **1.5–2.5 hours of new main-story play**, plus 0.5–1 hour of
+**Total**: roughly **1.75–2.75 hours of new main-story play**, plus 0.5–1 hour of
 optional play. This is an estimate, not a measurement, and it is short of
 "several hours": reaching that would need more chapters of this kind (see
 limitations).
 
 ## 14. Known limitations
 
-- **Length target not met:** about 1.5–2.5 h of new main play by estimate; "several
+- **Length target not met:** about 1.75–2.75 h of new main play by estimate; "several
   hours" needs further chapters. No playtest has measured it.
 - **No front view for Ryan:** the side-scrolling world never has him walk toward the
   camera, so there is no front walking view. He shows his profile; his face is
   never shown straight on.
 - **Pre-finale husky:** players who already finished the main story before this
   update will not see the sanctuary pup scene (their husky comes from Story Pack 01).
-- **Bundle size:** the main bundle grew from 528.6 kB to 603.9 kB (166.8 → 187.2 kB
+- **Bundle size:** the main bundle grew from 528.6 kB to 614.2 kB (166.8 → 188.9 kB
   gzipped) for Story Pack 02 and Phase 03 combined; no new files are precached.
 - **Browsers:** verified in headless Edge at 320×640, 390×844, 844×390,
   1280×720 and 1365×768. Not on a physical phone, Safari or Firefox.
+
+## 15. Phase 03b — closing the remaining gaps
+
+**«الافتراض الغلط» (new main mission, chapter 6, between the letters and the gate).**
+After the Missing Letters she turns the gate plan over and finds a line in Ryan's
+hand: «البوابة ما تنفتح بموعد… تنفتح ـــ», the last word written in symbols.
+
+1. She decodes it with the star cipher from Act V. Two symbols are known; the
+   sentence's meaning gives the rest: **«بيدين»** (`sp2-coded`).
+2. She compares it with what she concluded from the letters. One conclusion,
+   «تنفتح بيوم مهم», is contradicted by the line. She has to pick the one that
+   was wrong (`sp2-assumption`).
+3. She acts on it: four locks, each needing what only Anji or only Snooki can do
+   (`sp2-two-hands`). Then the plan lights and the workshop opens.
+
+Each stage resumes where she stopped. Closing a puzzle keeps the stage, and the
+next visit to the plan goes straight back to it. The evidence notebook lists the
+coded line and its decoded form as facts, and the wrong conclusion as the deduction.
+
+**Old saves:** a gate opened before this update stays open: «بوابة الغد» is
+grandfathered on `sp2-done`. For those saves the revelation is a return visit
+to the plan, playable without replaying the gate opening.
+
+**Display numbers:** the mission is appended to the mission list, never inserted,
+so existing journal numbers do not change.
+
+**Guidance with several ways on.** When the next step is elsewhere and there is
+more than one way on, the «الهدف التالي» card lists the actual choices: each open
+place of the current step first (★), then up to two other open missions (★ story /
+◆ side), four buttons at most. Each choice opens the map routed to that place. If
+the step is right here, no detours are offered. An act counts as one choice,
+because its places are the whole chapter. The card now also closes when a menu,
+puzzle or minigame opens over it. Before, it could stay on top of a panel and
+block its buttons; the visual review caught this.
+
+**Service worker: clean and updated installation (real browser).** The test used a
+separate, ephemeral Edge profile and a synthetic save. Two builds were served
+from the same origin: A, then B, identical except for the worker version.
+Results, all passing (16/16):
+
+- **Clean install:** one cache with all 36 files, and the page is controlled.
+- **Waiting update:** the new worker installs and waits. Both caches exist; there
+  is no reload, and the world keeps running on version A with the save untouched.
+- **Applying it:** settings show «أكو نسخة جديدة» with the update button, and
+  applying it reloads once. B then controls the page, only B's cache remains, and
+  the save is the same.
+- **Offline afterwards:** the title loads and the saved game continues.
+
+This test found a bug present since the first commit. Late `precache-progress`
+messages from the new worker switched the status from 'update' back to
+'installing', which hid the update button for the rest of that session. It is fixed
+in `core/sw-client.js`: a background install never changes the status, only the
+first install reports 'installing'. A unit test reproduces the bug (`tests/game/sw-client.test.js`).

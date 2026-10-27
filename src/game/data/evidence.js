@@ -30,6 +30,14 @@ export const EVIDENCE = [
     deduction: { id: 'sp2-letters', solved: 'flag:sp2-letters-done' },
   },
   {
+    mission: 'sp2-twist',
+    facts: [
+      { id: 'sp2-coded-line', place: 'archives' },
+      { id: 'sp2-coded', place: 'archives' },
+    ],
+    deduction: { id: 'sp2-assumption', solved: 'flag:sp2-assumption-done' },
+  },
+  {
     mission: 'sp2-final',
     facts: [
       { id: 'sp2-map-marks', place: 'workshop' },

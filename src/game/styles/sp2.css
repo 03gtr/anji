@@ -423,6 +423,12 @@
   line-height: 1.5;
 }
 
+.guide-card .guide-or {
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
 .guide-card .guide-done {
   font-weight: 700;
 }

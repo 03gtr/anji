@@ -124,7 +124,7 @@ export const MISSIONS_SP2 = [
     ],
     reward: ['journal:sp2-letters'],
     rewardText: 'الختم الثالث بالمخطط',
-    leadsTo: ['sp2-gate'],
+    leadsTo: ['sp2-twist'],
   },
   {
     id: 'sp2-gate',
@@ -135,8 +135,9 @@ export const MISSIONS_SP2 = [
     title: 'بوابة الغد',
     where: 'أرشيف الأسرار · المخطط',
     summary: 'على حايط الأرشيف مخطط بوابة اسمها «بوابة الغد»، بيه أختام فارغة. كل سر ينحل يضوي ختم.',
-    unlock: 'flag:sp2-letters-done',
-    locked: 'تنفتح لمن تخلصين الرسائل المفقودة.',
+    // grandfathered: a gate opened before Phase 03b stays open
+    unlock: { any: ['flag:sp2-twist-done', 'flag:sp2-done'] },
+    locked: 'تنفتح لمن ينكشف شنو اللي ينقص البوابة.',
     steps: [
       { done: 'flag:sp2-plan-studied', world: 'archives', text: 'افحصي مخطط بوابة الغد بعد ما ضوت أختامه.', hint: 'المخطط معلّق على الحايط بأول الأرشيف.' },
       { done: 'flag:sp2-done', world: 'archives', text: 'ضوّي الأختام الثلاثة.', hint: 'الأرشيف، المتاهة، والرسائل: كل وحدة ختم.' },
@@ -215,5 +216,28 @@ export const MISSIONS_SP2 = [
     reward: ['got:keepsake.archives.1'],
     rewardText: 'شارة المتاهة الذهبية',
     leadsTo: [],
+  },
+  // Phase 03b (appended, never inserted, so display numbers stay stable) — the revelation: a coded line, compared with the letters, proves one
+  // conclusion wrong; acting on the truth needs Anji and Snooki together
+  {
+    id: 'sp2-twist',
+    kind: 'story',
+    pack: PACK_SP2,
+    chapter: 6,
+    world: 'archives',
+    title: 'الافتراض الغلط',
+    where: 'أرشيف الأسرار · ورا المخطط',
+    summary: 'ورا مخطط البوابة سطر مكتوب بالرموز. إذا انقرى صح… يمكن واحد من استنتاجاتچ يطلع غلط.',
+    unlock: 'flag:sp2-letters-done',
+    locked: 'تنفتح لمن تخلصين الرسائل المفقودة.',
+    steps: [
+      { done: 'flag:sp2-twist-read', world: 'archives', text: 'اقلبي مخطط بوابة الغد.', hint: 'المخطط معلّق على الحايط بأول الأرشيف.' },
+      { done: 'flag:sp2-coded-done', world: 'archives', text: 'فكّي السطر المكتوب بالرموز.', hint: 'بعض الرموز تعرفينها من شفرة النجوم بالمرصد. الباقي يطلع من معنى الجملة.' },
+      { done: 'flag:sp2-assumption-done', world: 'archives', text: 'قارني السطر باستنتاجاتچ من الرسائل.', hint: 'الدفتر ← الأدلة يحفظ المكتوب والمستنتج. أي واحد ما يركب ويّا السطر الجديد؟' },
+      { done: 'flag:sp2-twist-done', world: 'archives', text: 'افتحي أقفال المخطط بالطريقة اللي يگولها السطر.', hint: 'كل قفل يحتاج شي يگدر يسويه واحد منكم بس.' },
+    ],
+    reward: ['journal:sp2-twist'],
+    rewardText: 'الطريقة الصحيحة لفتح الأختام',
+    leadsTo: ['sp2-gate'],
   },
 ];

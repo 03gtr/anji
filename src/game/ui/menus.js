@@ -496,11 +496,12 @@ export function mapPath(from, to) {
 }
 
 /**
- * @param {{ focus?: object }} [opts] — a journal entry (progression/journal-index.js) to
- *   locate: its places are highlighted, the route from here is drawn, and the panel
- *   says what to do there (or how it opens). Tapping a place still travels, as before.
+ * @param {{ focus?: object, place?: string }} [opts] — a journal entry (progression/journal-index.js) to
+ *   locate: its places are highlighted, the route from here is drawn (to `place` when
+ *   one of them was chosen), and the panel says what to do there (or how it opens).
+ *   Tapping a place still travels, as before.
  */
-export function openMap(app, { focus: asked } = {}) {
+export function openMap(app, { focus: asked, place } = {}) {
   const { game } = app;
   return app.overlays.open(
     (el, { close, scope }) => {
@@ -524,6 +525,7 @@ export function openMap(app, { focus: asked } = {}) {
       const hereWorld = WORLDS.find((w) => w.scene && w.scene === here);
       const open = (w) => check(w.unlock, game);
       const targets = (focus?.worlds || []).map(worldById).filter(Boolean);
+      if (place) targets.sort((a, b) => (b.id === place) - (a.id === place)); // a chosen place routes first
       const target = targets[0];
       const path = new Set(mapPath(hereWorld?.id, target?.id).map(([a, b]) => [a, b].sort().join('|')));
       const lines = ROUTES.map(([a, b]) => {
