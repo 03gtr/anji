@@ -36,7 +36,7 @@ const panel = (app, cls, label, build) =>
   app.overlays.open(
     (el, ctl) => {
       el.innerHTML = `<section class="panel ${cls}"><header class="panel-head"><h2 tabindex="-1">${esc(label)}</h2>
-        <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header><div class="panel-scroll hub-body"></div></section>`;
+        <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header><div tabindex="0" class="panel-scroll hub-body"></div></section>`;
       ctl.scope.on(el.querySelector('[data-close]'), 'click', () => ctl.close(null));
       build(el.querySelector('.hub-body'), ctl);
     },

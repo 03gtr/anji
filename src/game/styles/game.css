@@ -224,7 +224,10 @@ svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  /* flex-start, not flex-end: content that overflows a flex-end scroller spills
+     past its top edge, where it can never be scrolled to (short landscape
+     screens). The hero grows to fill spare space, so nothing moves when it fits. */
+  justify-content: flex-start;
   padding: calc(var(--safe-t) + 12px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 18px) calc(var(--safe-l) + 18px);
   overflow-y: auto;
   text-align: center;
@@ -634,6 +637,15 @@ svg {
 .panel {
   width: min(100%, 520px);
   max-height: 100%;
+  /* Without these, the panel's automatic minimum height is its whole content,
+     so the overlay's grid row grows past the screen, max-height (a % of that
+     row) never caps it, and `.game { overflow: hidden }` clips the rest with
+     nothing left to scroll. min-height: 0 lets the row stop at the screen;
+     overflow-y lets panels without a .panel-scroll (pause, map, confirm)
+     scroll as a whole. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   padding: 16px;
@@ -679,6 +691,8 @@ svg {
 }
 
 .panel-scroll {
+  /* a flex child may only shrink below its content (and so scroll) with min-height: 0 */
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   margin-top: 8px;

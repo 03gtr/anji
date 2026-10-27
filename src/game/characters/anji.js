@@ -174,7 +174,10 @@ export function anjiHead({ id, expr = 'neutral', bow = 'burgundy', sway = 0, bli
       <path d="M28 128 C26 134 28 140 33 144 M20 116 C17 122 18 128 21 132" stroke="#f0a868" stroke-width="1.1" fill="none" opacity=".55"/>
     </g>`;
   const crown = lit(id, `<path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hair${id})"/>`);
-  const face = `${lit(id, `<path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skin${id})"/>`)}
+  // the face is NOT run through the lighting filter: where a browser's
+  // feDiffuseLighting yields no light, only the 40 % ambient term survives and
+  // the skin turns dark grey. Its own radial gradient already gives it volume.
+  const face = `<path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skin${id})"/>
     <path d="M38 62 C40 74 48 83 60.5 84 C52 81 44 74 40 62Z" fill="${P.skinShade}" opacity=".45"/>
     <path d="M37.5 50 C46 44 66 42 78 50 L78 58 C66 52 48 52 37.5 58Z" fill="url(#fringeShadow${id})"/>
     ${E.puff ? `<ellipse cx="46" cy="70" rx="5.6" ry="4" fill="${P.skin}"/><ellipse cx="73" cy="70" rx="4.4" ry="3.4" fill="${P.skin}"/>` : ''}
@@ -361,7 +364,7 @@ export function anjiFront({ expr = 'smile', outfit = 'classic', bow = 'burgundy'
     ${lit(id, legs)}${lit(id, boots, 'gloss')}
     ${lit(id, armL)}${lit(id, body)}${lit(id, armR)}
     <rect x="46" y="78" width="8" height="10" fill="${P.skinShade}"/>
-    ${lit(id, face)}
+    ${face /* unlit on purpose, see anjiHead */}
     <ellipse cx="41" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="${E.blush}"/><ellipse cx="59" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="${E.blush}"/>
     ${eye(42.5, 58, 4.2, eyes, P)}${eye(57.5, 58, 4.2, eyes, P)}
     <path d="M38.5 ${49.5 + E.brows[0]} Q42.5 ${47.5 + E.brows[0]} 46.5 ${49 + E.brows[0]} M53.5 ${49 + E.brows[1]} Q57.5 ${47.5 + E.brows[1]} 61.5 ${49.5 + E.brows[1]}" stroke="${P.brow}" stroke-width="1.4" fill="none" stroke-linecap="round"/>

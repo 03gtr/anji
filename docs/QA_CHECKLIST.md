@@ -3,7 +3,19 @@
 Legend: ✅ verified automatically · 👀 verified by playing in a browser
 (mobile viewport 375×812 / 390×844) · ☐ to check by hand on a real phone.
 
-## Automated (`npm test`, 559 tests, 18 files — all passing at the V3 commit)
+## Automated (`npm test`, 574 tests, 21 files — all passing after the scrolling and face fixes)
+
+- ✅ Scrolling (P0 fix): `tests/game/scroll-input.test.js` (DOM) — arrows /
+  space / page keys keep their default on the title and under menus, the world
+  still captures them during play, held keys release when a menu opens, closing
+  a menu restores the controls, list menus have one focusable scroll region and
+  unchanged autofocus. `tests/browser/scroll.browser.test.js` (real Edge/Chrome)
+  — title, journal (to its last entry), games table, prank board, settings,
+  help and pause really scroll (scrollTop moves) by wheel, keys and a touch
+  drag at 320×640, 390×844, 844×390 and 1365×768; no global handler cancels
+  wheel/scroll keys; the world behind a menu never scrolls; race steering and
+  checkers taps still work; no horizontal page scroll. Reverting the CSS or
+  the input change makes these tests fail (checked).
 
 - ✅ Saves: save/load, backup recovery, corrupted save quarantine, migrations,
   future-version refusal, quota error, export/import round trip, wrong file.
@@ -108,6 +120,14 @@ Legend: ✅ verified automatically · 👀 verified by playing in a browser
   chunks load; zero errors.
 
 ## By hand on a real phone ☐
+
+- ☐ Scrolling: on a phone, open the journal (📖) with a long save and drag the
+  list up with a finger to the last entry; open Settings and Help from the
+  pause menu and do the same; turn the phone sideways on the title screen and
+  drag up to reach «ابدي المغامرة». On a laptop: mouse wheel / trackpad and
+  PageDown / End / Home on the same screens. Walking with ◀ ▶ and the arrow
+  keys must still work after closing each menu, and race steering must still
+  respond.
 
 - ☐ V3: play one full game of each table game on a phone, including a rematch
   and leaving mid-game; checkers undo; the daily table on two different days.

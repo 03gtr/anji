@@ -73,7 +73,7 @@ export function openSettings(app) {
       el.innerHTML = `<section class="panel settings">
         <header class="panel-head"><h2 tabindex="-1">الإعدادات</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
-        <div class="panel-scroll">
+        <div tabindex="0" class="panel-scroll">
           <h3>الصوت</h3>
           ${toggle('sound', 'تشغيل الصوت')}
           <label class="slider"><span>مستوى الصوت</span><input type="range" min="0" max="1" step="0.05" value="${settings.get().volume}" data-volume></label>
@@ -260,7 +260,7 @@ export function openJournal(app, tab = 'notes') {
         <header class="panel-head"><h2 tabindex="-1">دفتر أنجي</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
         <div class="tabs" role="tablist">${tabs.map(([id, label]) => `<button type="button" role="tab" data-tab="${id}">${label}</button>`).join('')}</div>
-        <div class="panel-scroll journal-body" role="tabpanel"></div></section>`;
+        <div tabindex="0" class="panel-scroll journal-body" role="tabpanel"></div></section>`;
       const body = el.querySelector('.journal-body');
 
       function render(which) {
@@ -398,7 +398,7 @@ export function openHelp(app) {
       el.innerHTML = `<section class="panel help">
         <header class="panel-head"><h2 tabindex="-1">المساعدة</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
-        <div class="panel-scroll">
+        <div tabindex="0" class="panel-scroll">
           ${HELP_SECTIONS.map(([title, lines]) => `<h3>${esc(title)}</h3><ul class="help-list">${lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`).join('')}
         </div></section>`;
       scope.on(el.querySelector('[data-close]'), 'click', () => close());

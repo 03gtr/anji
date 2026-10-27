@@ -91,7 +91,7 @@
       <path d="M45 87 L52.5 104 L60 87Z" fill="url(#plaidap28)"/>
       
       <rect x="51" y="80" width="10" height="9" fill="#eab9a3"/>
-      <g filter="url(#v3d-ap28)"><path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hairap28)"/></g><g filter="url(#v3d-ap28)"><path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skinap28)"/></g>
+      <g filter="url(#v3d-ap28)"><path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hairap28)"/></g><path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skinap28)"/>
     <path d="M38 62 C40 74 48 83 60.5 84 C52 81 44 74 40 62Z" fill="#eab9a3" opacity=".45"/>
     <path d="M37.5 50 C46 44 66 42 78 50 L78 58 C66 52 48 52 37.5 58Z" fill="url(#fringeShadowap28)"/>
     

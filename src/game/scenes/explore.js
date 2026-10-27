@@ -105,6 +105,8 @@ export function createExplore(app, scene, { spawnX } = {}) {
   const heavyOverlay = (kinds) => kinds.some((k) => k !== 'overlay-dialogue');
   scope.sub(
     bus.on('overlay', ({ kinds }) => {
+      // menus get the arrow keys / space back (for scrolling) while play is paused
+      input.setEnabled(!heavyOverlay(kinds));
       if (!world) return;
       if (heavyOverlay(kinds)) world.pause();
       else world.resume();
@@ -129,7 +131,8 @@ export function createExplore(app, scene, { spawnX } = {}) {
       renderObjective();
       renderSound();
       renderHints();
-      input.setEnabled(true);
+      // (an overlay still open from the scene change re-enables input when it closes)
+      input.setEnabled(!app.overlays.count);
       world = await createWorld(stage, scene, app, {
         spawnX,
         onProgress: (done, total) => {
@@ -163,7 +166,7 @@ export function createExplore(app, scene, { spawnX } = {}) {
     },
     exit() {
       world?.saveLocation();
-      input.releaseAll();
+      input.setEnabled(false); // releases everything too
     },
     get world() {
       return world;

@@ -89,7 +89,7 @@
        <path d="M31 136 H69 L70 143 C60 147 40 147 30 143Z" fill="url(#plaidaf10)"/>
        </g><g filter="url(#v3d-af10)"><path d="M70 92 C76 104 78 118 76 132 L70 132 C70 118 67 106 64 96Z" fill="#26232c"/><circle cx="73" cy="136" r="4.6" fill="#f7d6c4"/></g>
     <rect x="46" y="78" width="8" height="10" fill="#eab9a3"/>
-    <g filter="url(#v3d-af10)"><path d="M33 54 C33 36 67 36 67 54 C67 70 60 82 50 82 C40 82 33 70 33 54Z" fill="url(#skinaf10)"/></g>
+    <path d="M33 54 C33 36 67 36 67 54 C67 70 60 82 50 82 C40 82 33 70 33 54Z" fill="url(#skinaf10)"/>
     <ellipse cx="41" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="0.55"/><ellipse cx="59" cy="66" rx="4" ry="2.3" fill="#f19aa0" opacity="0.55"/>
     <ellipse cx="42.5" cy="58" rx="4.2" ry="5.124" fill="#fff"/>
         <ellipse cx="43" cy="58.4" rx="3.612" ry="4.6116" fill="#3d7a46"/>

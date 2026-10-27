@@ -60,7 +60,12 @@ export function createGameApp(root, opts = {}) {
   for (const id of Object.keys(COLLECTIBLES)) totals[groupOf(id)] = (totals[groupOf(id)] || 0) + 1;
   game.totalOf = (group) => totals[group] || 0;
   const audio = createAudio(settings);
-  const input = createInput({ target: globalThis.window });
+  const appScope = createScope(); // lives as long as the app (released by destroy)
+  const input = createInput({ target: globalThis.window, scope: appScope });
+  // world keys (arrows, space…) cancel the browser's default, so they stay off
+  // until the exploration scene is actually playable — otherwise they would
+  // block keyboard scrolling on the title screen and in menus
+  input.setEnabled(false);
   const offline = createOfflineStatus({ enabled: opts.swEnabled ?? false });
 
   root.innerHTML = '';
@@ -247,6 +252,7 @@ export function createGameApp(root, opts = {}) {
     clearInterval(tick);
     overlays.closeAll();
     current?.scope.dispose();
+    appScope.dispose(); // the window key listeners of `input`
     audio.stopBed();
     root.innerHTML = '';
   };

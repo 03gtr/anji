@@ -108,6 +108,22 @@ overlay and when the tab is hidden.
 - `tests/game/content.test.js` then checks every reference, condition, effect,
   speaker, expression, and that every collectible is reachable.
 
+## Scrolling model
+
+The document never scrolls: `.game` is a fixed full-screen shell with
+`overflow: hidden` (the world canvas and HUD need a fixed viewport). Every
+screen or panel that can be taller than the phone scrolls **inside its own
+container**: `.title-screen`, `.panel` (whole panel, for pause/map/confirm),
+`.panel-scroll` (the list inside settings/journal/help/games-room panels,
+keyboard-focusable), `.panel.puzzle`, and `.tt` (table games). Rules that keep
+this working: an overlay `.panel` needs `min-height: 0` + `overflow-y: auto`
+(else its grid row grows to the content and `max-height: 100%` caps nothing);
+a flex child that should scroll needs `min-height: 0`; a scroller must not use
+`justify-content: flex-end`/`center` (overflow past the start edge cannot be
+scrolled to). The world's key handler (`core/input.js`, which cancels arrows /
+space) is enabled only while the exploration scene is playable — off on the
+title, under menus/puzzles/minigames and after leaving the world.
+
 ## Saves
 
 `snooki-game:save` (+ `:backup`, and `:broken` if a corrupt save was quarantined),
