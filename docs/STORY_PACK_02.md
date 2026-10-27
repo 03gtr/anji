@@ -294,3 +294,16 @@ messages from the new worker switched the status from 'update' back to
 'installing', which hid the update button for the rest of that session. It is fixed
 in `core/sw-client.js`: a background install never changes the status, only the
 first install reports 'installing'. A unit test reproduces the bug (`tests/game/sw-client.test.js`).
+
+## 16. Phase 04 — «الحديقة العميقة»
+
+The finale now also needs the deep garden: 14 new places on a second map page and four
+cross-linked investigations, ending in `dg-done`. Saves that already entered the finale
+keep it. The design, the dependency graph, the puzzle validation, save behaviour and the
+updated length estimate are in [DEEP_GARDEN.md](DEEP_GARDEN.md); §13's estimate above
+covers Story Pack 02 alone.
+
+Phase 04 also removed the remaining automatic hints in this pack:
+- wrong-answer replies that pointed at the answer (the ledger, the letters order, the two hands) now only say it does not fit;
+- Snooki's «تلميح مجاني» line on the stitched map is gone;
+- the ledger's waiting list repeats only what the ledger says (no exact spots).

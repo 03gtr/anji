@@ -26,9 +26,10 @@ export const SP2 = {
   ],
   'sp2.ledger-wait': [
     { s: 'anji', e: 'thinking', t: 'بعد ناقصتني علامات:' },
-    { if: '!flag:sp2-clue-a', s: 'anji', e: 'thinking', t: '— وحدة بالبيت، قرب الدرج.' },
-    { if: '!flag:sp2-clue-b', s: 'anji', e: 'thinking', t: '— وحدة بالأكاديمية، ورا لوحة التحقيق.' },
-    { if: '!flag:sp2-clue-c', s: 'anji', e: 'thinking', t: '— وحدة بالمحمية، على عمود خشب.' },
+    // what the ledger itself says (where to look inside each place is hers to find)
+    { if: '!flag:sp2-clue-a', s: 'anji', e: 'thinking', t: '— وحدة بالبيت.' },
+    { if: '!flag:sp2-clue-b', s: 'anji', e: 'thinking', t: '— وحدة بالأكاديمية.' },
+    { if: '!flag:sp2-clue-c', s: 'anji', e: 'thinking', t: '— وحدة بالمحمية.' },
     { if: ['!flag:sp2-clue-c', '!flag:husky-name'], s: 'snooki', e: 'sniff', t: '…وأشم هناك شي أبيض وصغير وعنيد. مثلي. بس أصغر.' },
   ],
   'sp2.clue-a': [
@@ -179,7 +180,7 @@ export const SP2 = {
     { if: '!flag:sp2-insc-1', s: 'anji', e: 'thinking', t: '— القلب ❤' },
     { if: '!flag:sp2-insc-2', s: 'anji', e: 'thinking', t: '— القمر المدوّر 🌕' },
     { if: '!flag:sp2-insc-3', s: 'anji', e: 'thinking', t: '— النجمة ⭐' },
-    { s: 'snooki', e: 'sniff', t: 'تلميح مجاني: نفس الرسوم موجودة بخريطة الحديقة. بس لا تگولين لأحد إني ساعدت.' },
+    { s: 'snooki', e: 'sniff', t: 'آني أعرف وينهن. بس هذا امتحانچ. إذا تريدين مساعدة، اطلبيها من الدفتر.' },
   ],
   'sp2.insc-1': [
     { s: 'anji', e: 'surprised', t: 'نقش جديد بين الإطارات… ما چان هنا! أرقام: ١، ١، ٢، ٣، ٥ — وتحتها: ٢، ٢، ٤، ٦، ١٠.' },

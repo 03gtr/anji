@@ -11,6 +11,7 @@ import { MEADOW } from './side-meadow.js';
 import { GAMEROOM } from './side-gameroom.js';
 import { ROADS, ROSE_CLINIC } from './sp1.js';
 import { ARCHIVES, withExtras } from './sp2.js';
+import { DEEP_SCENES, withDeep } from './deep.js';
 
 const BASE = {
   [GARDEN.id]: GARDEN,
@@ -34,7 +35,10 @@ const BASE = {
   [ROSE_CLINIC.id]: ROSE_CLINIC,
   // Story Pack 02 «أرشيف الأسرار»
   [ARCHIVES.id]: ARCHIVES,
+  // Phase 04 «الحديقة العميقة»
+  ...Object.fromEntries(DEEP_SCENES.map((s) => [s.id, s])),
 };
 
-// Story Pack 02 adds clues, letter fragments and trail marks to existing locations
-export const SCENES = Object.fromEntries(Object.entries(BASE).map(([id, scene]) => [id, withExtras(scene)]));
+// Story Pack 02 adds clues, letter fragments and trail marks to existing locations; Phase 04
+// adds the deep garden's entrances and evidence
+export const SCENES = Object.fromEntries(Object.entries(BASE).map(([id, scene]) => [id, withDeep(withExtras(scene))]));

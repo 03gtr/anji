@@ -7,7 +7,7 @@ import { symbol } from './symbols.js';
 import { num } from './format.js';
 import { painted } from '../art/painted.js';
 import { ACTS } from '../data/chapters.js';
-import { WORLDS, ROUTES, worldById } from '../data/worlds.js';
+import { WORLDS, ROUTES, REGIONS, worldById, regionOf } from '../data/worlds.js';
 import { JOURNAL, COLLECTIBLES, ITEMS, GROUP_NAMES, worldCompletion } from '../data/items.js';
 import { MINIGAMES } from '../minigames/registry.js';
 import { PUZZLES } from '../data/puzzles.js';
@@ -312,6 +312,7 @@ export function openJournal(app, tab = 'notes') {
                 .map(
                   (v) => `<section class="evidence ${v.optional ? 'is-optional' : ''}" data-evidence="${esc(v.mission.id)}">
                   <header><span class="mission-no">${esc(displayNo(v.mission, num))}</span><h4>${esc(v.mission.title)}</h4>${v.optional ? '<span class="mission-kind kind-side">اختياري</span>' : ''}</header>
+                  ${v.question ? `<p class="ev-question">❔ ${esc(v.question)}</p>` : ''}
                   ${v.facts.length ? `<p class="ev-label">👁 مشاهدات</p>${v.facts.map((f) => `<div class="ev-fact"><b>${esc(f.title)}</b><span>${esc(fillNames(f.text, game))}</span>${f.place ? `<small>📍 ${esc(f.place)}</small>` : ''}</div>`).join('')}` : ''}
                   ${v.missing ? `<p class="ev-missing muted small">بعد ${num(v.missing)} ${v.missing === 1 ? 'دليل' : 'أدلة'} ما انلگت.</p>` : ''}
                   <p class="ev-label">💡 استنتاج</p>
@@ -528,12 +529,21 @@ export function openMap(app, { focus: asked, place } = {}) {
       if (place) targets.sort((a, b) => (b.id === place) - (a.id === place)); // a chosen place routes first
       const target = targets[0];
       const path = new Set(mapPath(hereWorld?.id, target?.id).map(([a, b]) => [a, b].sort().join('|')));
-      const lines = ROUTES.map(([a, b]) => {
-        const A = worldById(a);
-        const B = worldById(b);
-        const lit = open(A) && open(B);
-        return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="route ${lit ? 'is-open' : ''} ${path.has([a, b].sort().join('|')) ? 'is-path' : ''}"/>`;
-      }).join('');
+      // Phase 04: two pages. The page shown is the target's, else where she is; the tabs appear
+      // once the deep garden has an open place (before that it does not exist for her)
+      const deepOpen = WORLDS.some((w) => regionOf(w) === 'deep' && open(w));
+      let region = regionOf(target ?? hereWorld);
+      if (region === 'deep' && !deepOpen && !target) region = 'garden';
+      const unvisited = (w) => regionOf(w) === 'deep' && open(w) && !game.flag(`visited:${w.scene}`);
+      const lines = (r) =>
+        ROUTES.filter(([a, b]) => regionOf(worldById(a)) === r && regionOf(worldById(b)) === r)
+          .map(([a, b]) => {
+            const A = worldById(a);
+            const B = worldById(b);
+            const lit = open(A) && open(B);
+            return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="route ${lit ? 'is-open' : ''} ${path.has([a, b].sort().join('|')) ? 'is-path' : ''}"/>`;
+          })
+          .join('');
       const focusText = !focus
         ? ''
         : focus.status === 'complete'
@@ -555,22 +565,46 @@ export function openMap(app, { focus: asked, place } = {}) {
               </div>`
             : ''
         }
-        <div class="map-board">
-          <svg class="map-routes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
-          ${WORLDS.map((w) => {
-            const unlocked = open(w);
-            const playable = unlocked && w.ready;
-            const isTarget = targets.includes(w);
-            return `<button type="button" class="map-node ${w.x < 50 ? 'label-after' : 'label-before'} ${unlocked ? 'is-open' : 'is-locked'} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
-              style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${isTarget ? ' — مكان المهمة' : ''}">
-              <span class="map-icon">${unlocked ? symbol(w.icon) : ICONS.lock}</span>
-              ${unlocked && badge[w.id] ? `<span class="map-badge b-${badge[w.id]}" aria-hidden="true">${BADGE[badge[w.id]]}</span>` : ''}
-              <span class="map-name">${unlocked ? esc(w.name) : '؟؟؟'}</span></button>`;
-          }).join('')}
-        </div>
-        <p class="map-legend" aria-hidden="true"><span>★ القصة</span><span>◆ جانبية / لغز</span><span>✓ مكتملة</span><span>🔒 مقفول</span></p>
+        ${
+          deepOpen
+            ? `<div class="map-regions" role="group" aria-label="صفحات الخريطة">${REGIONS.map(
+                (r) => `<button type="button" data-region="${r.id}" aria-pressed="${r.id === region}">${esc(r.name)}${WORLDS.some((w) => regionOf(w) === r.id && unvisited(w)) ? '<span class="map-region-dot" aria-label="(بيها مكان جديد)"></span>' : ''}</button>`,
+              ).join('')}</div>`
+            : ''
+        }
+        <div class="map-board"></div>
+        <p class="map-legend" aria-hidden="true"><span>★ القصة</span><span>◆ جانبية / لغز</span><span>✓ مكتملة</span><span>🔒 مقفول</span><span class="map-legend-deep">● مكان ما زرتيه · ⤒ مدخل من الحديقة</span></p>
         <p class="map-info" aria-live="polite">${focus ? 'المكان المضوي هو وين المهمة. المسي أي مكان مفتوح حتى تسافرين.' : 'اختاري مكان.'}</p></section>`;
       const info = el.querySelector('.map-info');
+      const boardEl = el.querySelector('.map-board');
+      const drawBoard = () => {
+        boardEl.className = `map-board region-${region}`;
+        el.querySelector('.map-legend-deep').hidden = region !== 'deep';
+        boardEl.innerHTML = `<svg class="map-routes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines(region)}</svg>
+          ${WORLDS.filter((w) => regionOf(w) === region)
+            .map((w) => {
+              const unlocked = open(w);
+              const playable = unlocked && w.ready;
+              const isTarget = targets.includes(w);
+              const gate = w.from && worldById(w.from);
+              return `<button type="button" class="map-node ${w.x < 50 ? 'label-after' : 'label-before'} ${unlocked ? 'is-open' : 'is-locked'} ${w.optional ? 'is-optional' : ''} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
+                style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${w.optional ? ' (اختياري)' : ''}${gate ? ` — مدخلها من «${esc(gate.name)}»` : ''}${unvisited(w) ? ' — ما زرتيها بعد' : ''}${isTarget ? ' — مكان المهمة' : ''}">
+                <span class="map-icon">${unlocked ? symbol(w.icon) : ICONS.lock}</span>
+                ${unlocked && badge[w.id] ? `<span class="map-badge b-${badge[w.id]}" aria-hidden="true">${BADGE[badge[w.id]]}</span>` : ''}
+                ${unvisited(w) ? '<span class="map-new" aria-hidden="true"></span>' : ''}
+                <span class="map-name">${unlocked ? `${gate ? '⤒ ' : ''}${esc(w.short ?? w.name)}` : '؟؟؟'}</span></button>`;
+            })
+            .join('')}`;
+        boardEl.querySelectorAll('[data-world]').forEach((b) => scope.on(b, 'click', () => pick(worldById(b.dataset.world))));
+      };
+      el.querySelectorAll('[data-region]').forEach((b) =>
+        scope.on(b, 'click', () => {
+          region = b.dataset.region;
+          el.querySelectorAll('[data-region]').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.region === region)));
+          app.audio.play('page');
+          drawBoard();
+        }),
+      );
       scope.on(el.querySelector('[data-close]'), 'click', () => close());
       const go = el.querySelector('[data-go]');
       if (go) {
@@ -580,24 +614,22 @@ export function openMap(app, { focus: asked, place } = {}) {
           app.go(target.scene, { spawnX: target.spawn });
         });
       }
-      el.querySelectorAll('[data-world]').forEach((b) =>
-        scope.on(b, 'click', () => {
-          const w = worldById(b.dataset.world);
-          if (!open(w)) {
-            info.textContent = w.locked ? `🔒 مكان مقفول. ${w.locked}` : `مكان مقفول. ينفتح بالفصل ${ORD[w.act - 1]}.`;
-            app.audio.play('fail');
-            return;
-          }
-          if (!w.ready) {
-            info.textContent = `${w.name}: هذا المكان قيد البناء وراح ينضاف بتحديث جاي ✨`;
-            return;
-          }
-          app.audio.play('whoosh');
-          close();
-          if (w.game) app.ui.minigame(w.game);
-          else if (w.scene !== here) app.go(w.scene, { spawnX: w.spawn });
-        }),
-      );
+      function pick(w) {
+        if (!open(w)) {
+          info.textContent = w.locked ? `🔒 مكان مقفول. ${w.locked}` : `مكان مقفول. ينفتح بالفصل ${ORD[w.act - 1]}.`;
+          app.audio.play('fail');
+          return;
+        }
+        if (!w.ready) {
+          info.textContent = `${w.name}: هذا المكان قيد البناء وراح ينضاف بتحديث جاي ✨`;
+          return;
+        }
+        app.audio.play('whoosh');
+        close();
+        if (w.game) app.ui.minigame(w.game);
+        else if (w.scene !== here) app.go(w.scene, { spawnX: w.spawn });
+      }
+      drawBoard();
     },
     { className: 'overlay-panel', dismissible: true, label: 'الخريطة' },
   );

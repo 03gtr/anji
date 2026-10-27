@@ -38,7 +38,8 @@ function throughAct(n, g) {
       for (const a of atoms(o.done)) {
         const [kind, ...rest] = a.split(':');
         const id = rest.join(':');
-        if (kind === 'flag' && !/^(sp2-|workshop-entered|final-entered)/.test(id)) g.setFlag(id);
+        // pack content (Story Pack 02, and the Phase 04 deep garden `dg-`) is played by each test itself
+        if (kind === 'flag' && !/^(sp2-|dg-|workshop-entered|final-entered)/.test(id)) g.setFlag(id);
         else if (kind === 'record') g.recordResult(id, { completed: true });
         else if (kind === 'item') g.addItem(id);
       }
@@ -51,14 +52,19 @@ const SP2_CORE = ['sp2-entered', 'sp2-ledger-read', 'sp2-clue-a', 'sp2-clue-b', 
 const FINAL = ['sp2-final-read', 'sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3', 'sp2-final-rule', 'sp2-final-done'];
 
 describe('the finale is earned', () => {
-  it('Act VII alone no longer opens the hidden garden; «خريطة الغد» does', () => {
+  // Phase 04 moved the gate further on purpose (owner's spec: the deep garden comes before the
+  // finale), so «خريطة الغد» alone no longer opens it; the chain to `dg-done` is played through
+  // in tests/game/deep-garden.test.js, which checks the gate independently.
+  it('Act VII alone does not open the hidden garden, nor «خريطة الغد» alone; the deep garden does', () => {
     const g = throughAct(7, game());
     g.setFlags([...SP2_CORE, 'workshop-entered']); // an Act VII save has been in the workshop
     expect(check(worldById('final').unlock, g)).toBe(false);
     expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: sp2('sp2-final').steps[0].text });
     g.setFlags(FINAL);
+    expect(check(worldById('final').unlock, g)).toBe(false);
+    expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: mission('dg-night').steps[0].text });
+    g.setFlag('dg-done');
     expect(check(worldById('final').unlock, g)).toBe(true);
-    expect(currentObjective(g).act).toBe(8);
   });
 
   it('the mission opens step by step; the inscriptions only after Act VII and reading the map', () => {

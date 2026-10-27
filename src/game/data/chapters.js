@@ -101,8 +101,15 @@ export const ACTS = [
       { done: 'flag:wk-stage1', text: 'شغّلي قلب الماكينة.' },
       { done: 'flag:wk-stage2', text: 'شعّلي فوانيس الماكينة.' },
       { done: 'flag:act7-done', text: 'افتحي قفل الرحلة.' },
-      // Phase 03: the hidden garden opens only after «خريطة الغد» (`mission` shows its next step)
-      { done: SP2_FINAL_GATE, text: 'كمّلي «خريطة الغد» بالورشة.', mission: 'sp2-final' },
+      // Phase 03: the hidden garden opens only after «خريطة الغد» (`mission` shows its next step);
+      // Phase 04: then the deep garden's investigations. Each objective also counts as done for a
+      // save that already entered the finale, so an old save never finds Act VII reopened.
+      { done: { any: ['flag:sp2-final-done', 'flag:final-entered'] }, text: 'كمّلي «خريطة الغد» بالورشة.', mission: 'sp2-final' },
+      { done: { any: ['flag:dg-timeline', 'flag:final-entered'] }, text: 'اكشفي شنو صار ليلة اختفاء البذرة.', mission: 'dg-night' },
+      { done: { any: ['flag:dg-hypo', 'flag:final-entered'] }, text: 'لگي الفرضية اللي تصمد گدام كل الأدلة.', mission: 'dg-trails' },
+      { done: { any: ['flag:dg-mirror', 'flag:final-entered'] }, text: 'اقرئي شفرة المرصد.', mission: 'dg-stars' },
+      { done: { any: ['flag:dg-bridge', 'flag:final-entered'] }, text: 'اعبري طريق الجذور.', mission: 'dg-roots' },
+      { done: SP2_FINAL_GATE, text: 'صحّي البذرة الأخيرة وركّبي الصفحة الأخيرة.', mission: 'dg-seed' },
     ],
   },
   {

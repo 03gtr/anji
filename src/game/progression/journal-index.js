@@ -195,6 +195,7 @@ export function evidenceView(game, entries = journalEntries(game)) {
     return {
       mission: byId[ev.mission],
       optional: Boolean(ev.optional),
+      question: solved ? null : ev.question ?? null,
       facts: found.map((f) => ({ id: f.id, title: JOURNAL[f.id].title, text: JOURNAL[f.id].text, place: placeName(f.place) })),
       missing: ev.facts.length - found.length,
       deduction: {

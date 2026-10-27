@@ -119,6 +119,8 @@ export const ACT78 = {
   ],
   'a8.plant-intro': [
     { s: 'ryan', e: 'turn', t: 'الحديقة بعدها ناقصها وردة وحدة. ما زرعتها… لأن هاي الوردة ما تنزرع بإيد وحدة.' },
+    // Phase 04: she brought the seed the deep garden woke, and read the last page
+    { if: 'flag:dg-done', s: 'anji', e: 'smile', t: 'أعرف. البذرة صحت بالبيت الأخضر، والصفحة الأخيرة گالت: سنوكي يحفر، آني أحط البذرة، إنت تسقي… والضوء سوا.' },
     { s: 'snooki', e: 'happy', t: 'آني أحفر! الحفر تخصصي. اسألوا كل حديقة بالمنطقة.' },
     { s: 'anji', e: 'smile', t: 'يلا. نزرعها سوا.' },
   ],

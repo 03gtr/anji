@@ -20,6 +20,7 @@ import { createToasts } from './ui/toast.js';
 import { playDialogue } from './ui/dialogue-box.js';
 import { playCinematic } from './ui/cinematic.js';
 import { chapterCard, openJournal, openMap, openSettings, openHelp } from './ui/menus.js';
+import { worldOfScene, regionOf } from './data/worlds.js';
 import { openPuzzle } from './puzzles/host.js';
 import { openMinigame } from './minigames/host.js';
 import { createTitle } from './scenes/title.js';
@@ -197,6 +198,9 @@ export function createGameApp(root, opts = {}) {
       return;
     }
     await show((a) => createExplore(a, scene, { spawnX }), id);
+    // Phase 04: the deep garden's map marks places she has not been to yet (garden places
+    // keep no such mark: older saves never recorded visits, so they would all look new)
+    if (regionOf(worldOfScene(id)) === 'deep' && !game.flag(`visited:${id}`)) game.setFlag(`visited:${id}`);
   }
 
   function toTitle({ message } = {}) {

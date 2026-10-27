@@ -24,10 +24,13 @@ export const SP2_UNLOCK = 'flag:act4-done';
 /** The workshop opens when the archive seals are lit — or if she is already past that point. */
 export const SP2_GATE = { any: ['flag:sp2-done', 'flag:workshop-entered'] };
 /**
- * Phase 03 — the finale is earned: the hidden garden (Act VIII) also needs «خريطة الغد»,
- * unless she has already been there (any save that entered the finale keeps going).
+ * The finale is earned: the hidden garden (Act VIII) needs «خريطة الغد» (Phase 03) and,
+ * since Phase 04, the whole «الحديقة العميقة» chain ending in the last page (`dg-done`, which
+ * can only be reached through «خريطة الغد»), unless she has already been there: any save that
+ * entered the finale keeps going. No save ever had `dg-done` before Phase 04, and «خريطة الغد»
+ * never shipped to the live site, so no published progress is rolled back.
  */
-export const SP2_FINAL_GATE = { any: ['flag:sp2-final-done', 'flag:final-entered'] };
+export const SP2_FINAL_GATE = { any: ['flag:dg-done', 'flag:final-entered'] };
 /** She has met the husky: at the sanctuary before the ending, or in Story Pack 01 after it. */
 export const HUSKY_MET = { any: ['flag:sp2-husky-early', 'flag:sp1-husky-met'] };
 
@@ -195,8 +198,8 @@ export const MISSIONS_SP2 = [
       { done: 'flag:sp2-final-done', world: 'workshop', text: 'اعبري «الطريق الأخير» على الخريطة.', hint: 'نفس قواعد المتاهة المتغيرة: مفتاح قبل بابه، وخططي قبل ما تشغّلين.' },
     ],
     reward: ['journal:sp2-final'],
-    rewardText: 'الطريق للحديقة المخفية',
-    leadsTo: [],
+    rewardText: 'نص الطريق للحديقة المخفية',
+    leadsTo: ['dg-night'],
   },
   {
     id: 'sp2-expert',

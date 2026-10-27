@@ -52,7 +52,57 @@ export const EVIDENCE = [
     facts: [{ id: 'sp1-clues', place: 'roads' }],
     deduction: { id: 'sp1-promise', solved: 'flag:sp1-gift-open' },
   },
+  // Phase 04 «الحديقة العميقة»: `question` is the open question the investigation answers,
+  // shown while it is unsolved (the investigation overview); never part of the answer
+  {
+    mission: 'dg-night',
+    question: 'شنو صار بالورشة ليلة اختفاء البذرة، وبأي ترتيب؟',
+    facts: [
+      { id: 'dg-box', place: 'workshop' },
+      { id: 'dg-guestbook', place: 'workshop' },
+      { id: 'dg-clock-1', place: 'clockgarden' },
+      { id: 'dg-clock-2', place: 'clockgarden' },
+      { id: 'dg-clock-3', place: 'clockgarden' },
+      { id: 'dg-clock-4', place: 'clockgarden' },
+      { id: 'dg-letters', place: 'letterhall' },
+      { id: 'dg-bed', place: 'house' },
+      { id: 'dg-log', place: 'observatory' },
+    ],
+    deduction: { id: 'dg-timeline', solved: 'flag:dg-timeline' },
+  },
+  {
+    mission: 'dg-trails',
+    question: 'أي تفسير لاختفاء البذرة يصمد گدام كل الأدلة؟',
+    facts: [
+      { id: 'dg-trails', place: 'falsetrails' },
+      { id: 'dg-pot', place: 'conservatory' },
+    ],
+    deduction: { id: 'dg-hypo', solved: 'flag:dg-hypo' },
+  },
+  {
+    mission: 'dg-stars',
+    question: 'شنو كتب ريان بالنجوم؟',
+    facts: [
+      { id: 'dg-pattern', place: 'sealedroom' },
+      { id: 'dg-key', place: 'starchamber' },
+    ],
+    deduction: { id: 'dg-mirror', solved: 'flag:dg-mirror' },
+  },
+  {
+    mission: 'dg-seed',
+    question: 'شنو تحتاج البذرة حتى تصحى؟ وشلون تنزرع؟',
+    facts: [
+      { id: 'dg-note-water', place: 'roots' },
+      { id: 'dg-note-heat', place: 'hyporoom' },
+      { id: 'dg-strip-a', place: 'letterhall' },
+      { id: 'dg-strip-b', place: 'mirrorhouse' },
+      { id: 'dg-strip-c', place: 'bridge' },
+      { id: 'dg-strip-d', place: 'forgottengreen' },
+    ],
+    deduction: { id: 'dg-done', solved: 'flag:dg-done' },
+  },
   // optional discoveries
   { mission: 'sp2-trail', optional: true, facts: [], deduction: { id: 'sp2-trail', solved: 'flag:sp2-trail-done' } },
   { mission: 'sp2-sequence', optional: true, facts: [], deduction: { id: 'sp2-sequence', solved: 'flag:sp2-sequence-done' } },
+  { mission: 'dg-music', optional: true, facts: [{ id: 'dg-song', place: 'musicroom' }], deduction: { id: 'dg-song', solved: 'flag:dg-song' } },
 ];

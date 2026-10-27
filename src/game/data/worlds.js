@@ -1,4 +1,5 @@
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
+import { DEEP_OPEN } from './missions-deep.js';
 
 /**
  * World map: the locations of the garden, how they connect, and when
@@ -29,13 +30,40 @@ export const WORLDS = [
   { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 37, y: 55.5, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 12, y: 24.5, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
   // Phase 03: the finale is earned — Act VII and «خريطة الغد» (or she has already been there)
-  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تكتمل «خريطة الغد» بالورشة.' },
+  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تنزرع البذرة الأخيرة… وهي بعدها مفقودة.' },
   // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
   { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 12, y: 86.5, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
   // Story Pack 02 «أرشيف الأسرار» (main story, after Act IV)
   { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 87, y: 71, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
   { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
+  // Phase 04 «الحديقة العميقة»: the map's second page (`region: 'deep'`), its own 4 × 6 grid.
+  // `from` is the garden place each one is entered from (drawn as «من …» under its name).
+  ...[
+    // `short`: the label drawn on the map (two words at most, so it fits a 320 px phone);
+    // the full `name` is the accessible label and is used everywhere else
+    { id: 'clockgarden', name: 'حديقة الساعات الساكتة', short: 'حديقة الساعات', icon: 'sun', x: 12, y: 86.5, from: 'garden', unlock: DEEP_OPEN },
+    { id: 'letterhall', name: 'قاعة الرسائل', icon: 'note', x: 37, y: 86.5, from: 'house', unlock: DEEP_OPEN },
+    { id: 'falsetrails', name: 'حديقة الآثار الكاذبة', short: 'الآثار الكاذبة', icon: 'footprint', x: 62, y: 86.5, from: 'workshop', unlock: DEEP_OPEN },
+    { id: 'sealedroom', name: 'غرفة المرصد المختومة', short: 'الغرفة المختومة', icon: 'star', x: 87, y: 86.5, from: 'observatory', unlock: DEEP_OPEN },
+    { id: 'musicroom', name: 'غرفة الموسيقى المهجورة', short: 'غرفة الموسيقى', icon: 'crown', x: 12, y: 71, optional: true, unlock: 'flag:dg-timeline', locked: 'تنفتح لمن ترتبين الليلة الضائعة.' },
+    { id: 'hyporoom', name: 'غرفة الفرضيات الأربع', short: 'غرفة الفرضيات', icon: 'mark', x: 37, y: 71, unlock: 'flag:dg-trails', locked: 'تنفتح لمن تميّزين الأثر الحقيقي.' },
+    { id: 'starchamber', name: 'قاعة خريطة النجوم', short: 'قاعة النجوم', icon: 'moon-half', x: 87, y: 71, unlock: 'flag:dg-pattern', locked: 'تنفتح لمن تفهمين حيطان الغرفة المختومة.' },
+    { id: 'roots', name: 'سرداب الجذور', icon: 'leaf', x: 37, y: 55.5, from: 'conservatory', unlock: 'flag:dg-hypo', locked: 'تنفتح لمن تثبتين وين راحت البذرة.' },
+    { id: 'mirrorhouse', name: 'بيت المرايا', icon: 'moon-crescent', x: 87, y: 55.5, unlock: 'flag:dg-wheel', locked: 'تنفتح لمن يدور دولاب النجوم صح.' },
+    { id: 'hedgemaze', name: 'متاهة السياج الدوّارة', short: 'السياج الدوّار', icon: 'rose-white', x: 37, y: 40, unlock: 'flag:dg-roots-maze', locked: 'تنفتح لمن تعبرين سرداب الجذور.' },
+    { id: 'lighthouse', name: 'منارة الذكريات', icon: 'heart', x: 12, y: 24.5, optional: true, unlock: 'flag:dg-bridge', locked: 'تنفتح لمن تعبرين الجسر المخفي.' },
+    { id: 'bridge', name: 'الجسر المخفي', icon: 'drop', x: 37, y: 24.5, unlock: 'flag:dg-hedge', locked: 'تنفتح لمن تعبرين متاهة السياج.' },
+    { id: 'forgottengreen', name: 'البيت الأخضر المنسي', short: 'البيت الأخضر', icon: 'rose', x: 62, y: 24.5, unlock: 'flag:dg-bridge', locked: 'وراء الجسر المخفي.' },
+    { id: 'evidenceroom', name: 'غرفة الأدلة الأخيرة', short: 'غرفة الأدلة', icon: 'key', x: 62, y: 9, unlock: 'flag:dg-awake', locked: 'تنفتح لمن تصحى البذرة.' },
+  ].map((w) => ({ act: 7, scene: w.id, spawn: 140, ready: true, pack: 'sp2', region: 'deep', ...w, locked: w.locked ?? 'تنفتح لمن تكملين «خريطة الغد» وتلگين علبة البذرة فارغة.' })),
 ];
+
+/** Map pages: the garden, and (Phase 04) the deep garden under and behind it. */
+export const REGIONS = [
+  { id: 'garden', name: 'الحديقة' },
+  { id: 'deep', name: 'الحديقة العميقة' },
+];
+export const regionOf = (w) => w?.region ?? 'garden';
 
 /** Paths drawn between locations (ids). */
 export const ROUTES = [
@@ -45,6 +73,13 @@ export const ROUTES = [
   ['house', 'study'], ['sanctuary', 'meadow'], ['house', 'gameroom'],
   ['garden', 'roads'], ['roads', 'roseclinic'],
   ['house', 'archives'],
+  // Phase 04 — the deep garden (each line stays on its own page; entrances are the `from` places)
+  ['clockgarden', 'letterhall'], ['clockgarden', 'musicroom'], ['letterhall', 'hyporoom'], ['falsetrails', 'hyporoom'],
+  ['sealedroom', 'starchamber'], ['starchamber', 'mirrorhouse'], ['hyporoom', 'starchamber'],
+  ['hyporoom', 'roots'], ['roots', 'hedgemaze'], ['hedgemaze', 'bridge'], ['bridge', 'lighthouse'], ['bridge', 'forgottengreen'],
+  ['mirrorhouse', 'roots'], ['mirrorhouse', 'forgottengreen'], ['forgottengreen', 'evidenceroom'],
+  // entrances (between pages: not drawn, used for routing)
+  ['garden', 'clockgarden'], ['house', 'letterhall'], ['workshop', 'falsetrails'], ['observatory', 'sealedroom'], ['conservatory', 'roots'],
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === id);
