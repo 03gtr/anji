@@ -8,6 +8,7 @@
 import { createDialogue } from '../narrative/dialogue.js';
 import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
+import { fillNames } from '../core/names.js';
 import { portraitSvg, speakerName } from '../characters/portraits.js';
 import { h, esc, tx, ICONS } from './dom.js';
 
@@ -93,7 +94,7 @@ export function playDialogue(app, script, { id } = {}) {
         nameEl.hidden = !nameEl.textContent;
         choicesEl.replaceChildren();
         if (s.cue) audio.play(s.cue);
-        typeText(tx(s.text));
+        typeText(fillNames(tx(s.text), game));
       }
 
       function showChoice(s) {
@@ -101,7 +102,7 @@ export function playDialogue(app, script, { id } = {}) {
         finishTyping();
         root.classList.add('has-choices');
         s.options.forEach((label, i) => {
-          const b = h(`<button type="button" class="btn btn-choice">${esc(tx(label))}</button>`);
+          const b = h(`<button type="button" class="btn btn-choice">${esc(fillNames(tx(label), game))}</button>`);
           b.addEventListener('click', () => {
             audio.play('tap');
             root.classList.remove('has-choices');

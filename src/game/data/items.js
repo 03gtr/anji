@@ -98,9 +98,15 @@ export const COLLECTIBLES = {
   'petal.hedge.1': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.2': { name: 'بتلة المتاهة', world: 'maze' },
   'petal.hedge.3': { name: 'بتلة المتاهة', world: 'maze' },
+  // Story Pack 01 «الطرق اللي تتذكر» (post-game). Keepsakes are one-time story mementos.
+  'star.roads.1': { name: 'نجمة فوق شجرة الطريق', world: 'roads' },
+  'keepsake.roads.1': { name: 'ورقة من شجرة الطريق', world: 'roads', text: 'ورقة خضراء نزلت من الشجر اللي فوق الطريقين. محفوظة بين صفحات الدفتر.' },
+  'keepsake.roseclinic.1': { name: 'غلاف حلاوة', world: 'roseclinic', text: 'غلاف حلاوة مطوي على شكل وردة. أكيد مو سنوكي اللي طواه.' },
+  'keepsake.roseclinic.2': { name: 'الطابة الضايعة', world: 'roseclinic', text: 'طابة صغيرة عليها آثار سنون. صاحبتها البيضاء سمحتلي أحتفظ بيها. أحياناً.' },
+  'keepsake.roads.2': { name: 'بطاقة بلا توقيع', world: 'roads', text: 'بطاقة صغيرة بثلاث رموز: وردة، قمر، قلب. وتحتها كلمة وحدة: «وعد».' },
 };
 
-export const GROUP_NAMES = { star: 'نجوم', note: 'رسائل ريان', seed: 'بذور', petal: 'بتلات', scrap: 'قصاصات الوصفة' };
+export const GROUP_NAMES = { star: 'نجوم', note: 'رسائل ريان', seed: 'بذور', petal: 'بتلات', scrap: 'قصاصات الوصفة', keepsake: 'تذكارات' };
 
 /** Journal entries (story knowledge). */
 export const JOURNAL = {
@@ -167,6 +173,15 @@ export const JOURNAL = {
   'prank-expert': { title: 'مقلب: وضع الخبراء', icon: 'star', text: 'سنوكي گال اللغز يحتاج خبرة خارقة. چانت لمسة وحدة.' },
   'prank-revenge': { title: 'مقلب: جولة الثأر', icon: 'crown', text: 'ريان حضّر خطة، وسنوكي أكل نصها. لعبنا بالنص الباقي.' },
   'ending-growing': { title: 'حديقة بعدها تكبر', icon: 'rose', text: 'زرعنا وردة زرقاء سوا. بعد أكو أبواب ما انفتحت وأسرار ما انلگت — والحديقة، مثلنا، بعدها تكبر.' },
+  // Story Pack 01 «الطرق اللي تتذكر». Only the first meeting and the visits are real memories;
+  // every other line is fiction inspired by them.
+  'sp1-roads': { title: 'حيث يلتقي الطريقان', icon: 'leaf', text: 'مدخل قرية، وطريقين تحت شجر كثيف، وسيارتين وحدة جنب الثانية. ما انگالت ولا كلمة. وما چان لازم.' },
+  'sp1-visit': { title: 'ورد وحلويات', icon: 'rose', text: 'ورد وعلبة حلويات على المصطبة، وبلا موعد. وبعدين، طبعاً… هو. «چنت ماشي صدفة.» ماكو صدفة بهالدقة.' },
+  'sp1-husky': { title: 'صديقتنا البيضاء', icon: 'paw', text: 'هاسكي سيبيرية بيضاء، عيونها زرگ مثل الثلج. ريان جابها، وآني سمّيتها {husky}. سنوكي يگول هو «المدير»؛ هي ما سألته.' },
+  'sp1-clues': { title: 'الهدية اللي بلا توقيع', icon: 'key', text: 'صندوق صغير بقفل بثلاث رموز: 🌹 🌙 💙. الأدلة: نقش بشجرة الطريق، ورقة بأصيص العيادة، وورقة فوق غصن عالي.' },
+  'sp1-promise': { title: 'وعد', icon: 'heart', text: 'الوردة «و»، القمر «ع»، القلب «د». الصندوق انفتح على كلمة وحدة. سنوكي اعترف إنه حارس الهدية. (ما حرسها زين.)' },
+  'sp1-workshop': { title: 'من سطر صغير', icon: 'note', text: 'فكرة، رسمة، كود، تجربة، وبعدين توصل للناس. ريان يگول كل شي مفيد يبدي صغير — مثل iq-group.app اللي يشتغل عليه.' },
+  'sp1-tomorrow': { title: 'بوابة الغد', icon: 'rose', text: 'بآخر طريق الذكريات انفتح درب جديد، وبنهايته بوابة مسدودة اسمها «حديقة الغد». بعض الأشياء الحلوة تحتاج وقتها.' },
 };
 
 /** Cosmetic unlocks: id → { slot, value, name } */

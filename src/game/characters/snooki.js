@@ -56,6 +56,10 @@ function hatSvg(hat, x, y, scale = 1) {
       return g(`<circle r="7" fill="#3f6fe0"/><path d="M-4 -1 Q0 -6 4 -1 Q0 3 -4 -1Z" fill="#7aa2ff"/><path d="M-9 3 Q-14 0 -12 -4 M9 3 Q14 0 12 -4" stroke="#5f8f5a" stroke-width="2.4" fill="none"/>`);
     case 'jester':
       return g(`<path d="M-14 2 L-18 -14 L-4 -4 L0 -18 L4 -4 L18 -14 L14 2Z" fill="#6b4fa0"/><path d="M0 -18 L4 -4 L14 2 L-14 2 L-4 -4Z" fill="#e85d8c" opacity=".55"/><circle cx="-18" cy="-15" r="3" fill="#ffd977"/><circle cx="0" cy="-19" r="3" fill="#ffd977"/><circle cx="18" cy="-15" r="3" fill="#ffd977"/>`);
+    case 'blossom': // Story Pack 01: the white husky's flower, tucked behind the ear (not a Snooki hat)
+      return g(
+        `<g transform="rotate(-18)">${[0, 72, 144, 216, 288].map((a) => `<ellipse cy="-5" rx="3.6" ry="5.2" fill="#ffe3ec" stroke="#f19bb4" stroke-width=".8" transform="rotate(${a})"/>`).join('')}<circle r="2.6" fill="#ffd977"/></g>`,
+      );
     case 'goggles':
       return g(`<rect x="-16" y="-4" width="32" height="5" rx="2" fill="#3b2a5a"/><circle cx="-7" cy="-2" r="6" fill="#9fd7ff" stroke="#3b2a5a" stroke-width="2"/><circle cx="7" cy="-2" r="6" fill="#9fd7ff" stroke="#3b2a5a" stroke-width="2"/>`);
     default:
@@ -110,9 +114,10 @@ function pose(name, t) {
 
 /**
  * Side sprite facing right.
- * @param {{ pose?: string, t?: number, hat?: string, collar?: string, mouth?: 'happy'|'small'|'closed', blink?: boolean, size?: number }} o
+ * @param {{ pose?: string, t?: number, hat?: string, collar?: string, mouth?: 'happy'|'small'|'closed', blink?: boolean, size?: number, eye?: string }} o
+ *   `eye`: iris colour — Snooki's amber by default; the white husky of Story Pack 01 has icy blue.
  */
-export function snookiSprite({ pose: name = 'idle', t = 0, hat = 'none', collar = 'navy', mouth, blink = false, size } = {}) {
+export function snookiSprite({ pose: name = 'idle', t = 0, hat = 'none', collar = 'navy', mouth, blink = false, size, eye: iris = C.eye } = {}) {
   const id = `s${++uid}`;
   const p = pose(name, t);
   const [band, tag] = COLLARS[collar] || COLLARS.navy;
@@ -130,7 +135,7 @@ export function snookiSprite({ pose: name = 'idle', t = 0, hat = 'none', collar 
   const up = p.eyesUp ? -1.2 : 0;
   const eye = eyesClosed
     ? `<path d="M110 36 Q115 39 120 36" stroke="${C.rim}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
-    : `<path d="M109.5 36 Q115 30 121 35 Q115 40 109.5 36Z" fill="${C.eye}" stroke="${C.rim}" stroke-width="1.8" stroke-linejoin="round"/>
+    : `<path d="M109.5 36 Q115 30 121 35 Q115 40 109.5 36Z" fill="${iris}" stroke="${C.rim}" stroke-width="1.8" stroke-linejoin="round"/>
        <circle cx="115.6" cy="${35.4 + up}" r="2.4" fill="${C.rim}"/><circle cx="116.6" cy="${34.2 + up}" r="1" fill="#fff"/><circle cx="114" cy="${36.6 + up}" r=".5" fill="#fff" opacity=".7"/>`;
   const mouthSvg =
     mouthKind === 'bark'

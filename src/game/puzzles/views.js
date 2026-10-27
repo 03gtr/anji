@@ -271,14 +271,15 @@ export const VIEWS = {
       const trace = s.trace?.length ? s.trace : [stage.start];
       const animate = trace.length > 1 && !api.reduced?.();
       const first = animate ? trace[0] : trace[trace.length - 1];
+      const look = { actor: '🤖', goal: '🦴', wall: '📦', ...config.look };
       const cells = rows
-        .flatMap((row) => [...row].map((ch) => `<span class="pg-cell ${ch === '#' ? 'is-wall' : ''} ${ch === 'B' ? 'is-bone' : ''}">${ch === 'B' ? '🦴' : ch === '#' ? '📦' : ''}</span>`))
+        .flatMap((row) => [...row].map((ch) => `<span class="pg-cell ${ch === '#' ? 'is-wall' : ''} ${ch === 'B' ? 'is-bone' : ''}">${ch === 'B' ? look.goal : ch === '#' ? look.wall : ''}</span>`))
         .join('');
-      const robotEl = `<i class="pg-robot" aria-hidden="true" style="--x:${first.x};--y:${first.y};--r:${first.dir * 90}deg"><b>🤖</b></i>`;
+      const robotEl = `<i class="pg-robot" aria-hidden="true" style="--x:${first.x};--y:${first.y};--r:${first.dir * 90}deg"><b>${look.actor}</b></i>`;
       rerender(
         body,
         `<div class="pg-stage">المستوى ${s.stage + 1} من ${config.stages.length} · أقصى عدد أوامر: ${stage.max}</div>
-         <div class="pg-grid" style="--w:${rows[0].length};--h:${rows.length}" dir="ltr" aria-label="الشبكة: الروبوت 🤖 والعظمة 🦴">${cells}${robotEl}</div>
+         <div class="pg-grid" style="--w:${rows[0].length};--h:${rows.length}" dir="ltr" aria-label="${esc(config.look?.label ?? 'الشبكة: الروبوت 🤖 والعظمة 🦴')}">${cells}${robotEl}</div>
          <ol class="pg-prog" dir="rtl" aria-label="البرنامج">${s.prog.length ? s.prog.map((c, i) => `<li><button type="button" class="pg-cmd" data-k="x${i}" data-del="${i}" aria-label="شيلي ${cmdLabel[c]}">${cmdLabel[c]}</button></li>`).join('') : '<li class="muted small">البرنامج فارغ</li>'}</ol>
          ${hint ? `<p class="pg-solution">الحل: ${hint.map((c) => cmdLabel[c]).join(' ، ')}</p>` : ''}
          <div class="pg-pad">${['F', 'L', 'R'].map((c) => `<button type="button" class="btn btn-ghost" data-k="a${c}" data-add="${c}" ${s.prog.length >= stage.max ? 'disabled' : ''}>${cmdLabel[c]}</button>`).join('')}</div>

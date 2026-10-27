@@ -75,6 +75,24 @@ data/scenes/side-gameroom.js ──► ui/hub.js (games table, cork board, troph
 | `@private-sources` alias | `art/private-sources.js` in dev / `--mode private`, `art/private-none.js` in the public build and tests |
 | `scripts/audit-private.mjs` | fails `npm run build` if any private image byte, private file name or personal-memory text is in `dist/` |
 
+## Story Pack 01 additions (post-game)
+
+See `docs/STORY_PACK_01.md` for the storyboards, save model and finale hook.
+
+| Module | Responsibility |
+| --- | --- |
+| `data/missions-sp1.js` | the pack's missions (`kind: 'story'` chapters + optional side activities) and `PACKS` (one entry per content pack) |
+| `data/scenes/sp1.js`, `data/dialogue/sp1.js`, `data/puzzles-sp1.js` | «طريق الذكريات» and «عيادة الورد», their lines and three puzzles |
+| `art/sp1-scenes.js` | the embrace and code-montage shots (SVG drawn in code) |
+| `core/names.js` | `cleanName`, `huskyName`, `fillNames` — the `{husky}` placeholder in dialogue, prompts, journal, missions, puzzles |
+| `ui/name-picker.js` | the naming panel (scene action `{ askName: 'husky' }`); sets the string flag `husky-name` once |
+| `ui/content-notice.js` | the one-time "new places" card (`dueNotice`) |
+
+Small engine extensions: actor kind `husky`, `fx` actions may be `quiet`,
+cinematic shots may be `silent` (no tap prompt) or `quick` (kept short with reduced
+motion), the `program` puzzle accepts `look`/`messages`, and after the ending the HUD
+objective shows the active story chapter. No save schema change (`SAVE_VERSION` 3).
+
 ## Content flow
 
 ```

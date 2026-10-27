@@ -16,6 +16,7 @@ import { VIEWS } from './views.js';
 import { applyEffects } from '../core/effects.js';
 import { h, esc, tx, ICONS } from '../ui/dom.js';
 import { confirmBox } from '../ui/menus.js';
+import { fillNames } from '../core/names.js';
 
 export const SKIP_AFTER_MISTAKES = 3;
 
@@ -45,8 +46,8 @@ export function openPuzzle(app, def) {
             <h2 tabindex="-1">${esc(tx(def.title))}</h2>
             <button type="button" class="icon-btn" data-act="close" aria-label="رجوع">${ICONS.close}</button>
           </header>
-          ${def.goal ? `<p class="puzzle-goal"><b>الهدف:</b> ${esc(tx(def.goal))}</p>` : ''}
-          <p class="puzzle-intro">${esc(tx(def.intro))}</p>
+          ${def.goal ? `<p class="puzzle-goal"><b>الهدف:</b> ${esc(fillNames(tx(def.goal), app.game))}</p>` : ''}
+          <p class="puzzle-intro">${esc(fillNames(tx(def.intro), app.game))}</p>
           ${def.example ? `<div class="puzzle-example" aria-label="مثال">${def.example}</div>` : ''}
           <div class="puzzle-body"></div>
           <p class="puzzle-feedback" role="status" aria-live="polite"></p>
@@ -87,7 +88,7 @@ export function openPuzzle(app, def) {
         audio.play('success');
         audio.vibrate([20, 40, 20]);
         panel.classList.add('is-solved');
-        say(skipped ? def.skipText || 'تمام. القصة تكمل… واللغز ينتظرچ بالتحديات إذا تحبين ترجعين.' : def.success || 'انحلّت! ✨', 'good');
+        say(skipped ? def.skipText || 'تمام. القصة تكمل… واللغز ينتظرچ بالتحديات إذا تحبين ترجعين.' : fillNames(def.success, app.game) || 'انحلّت! ✨', 'good');
         const score = mistakes + hintsUsed * 2 + (showSolution ? 10 : 0);
         const r = game.recordResult(`puzzle:${def.id}`, { completed: true, score, lowerIsBetter: true });
         if (skipped) game.setFlag(`skipped:${def.id}`);

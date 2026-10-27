@@ -15,6 +15,7 @@ import { stepBody, followVelocity, approach } from './physics.js';
 import { frameTable, rasterize, RASTER_HEIGHT } from '../characters/sprites.js';
 import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
+import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
 
 /** Prompt text: the game's Arabic font; icons: the platform's colour-emoji font. */
@@ -24,6 +25,7 @@ export const PROMPT_ICON_FONT = '12px "Apple Color Emoji", "Segoe UI Emoji", "No
 export const KIND = {
   anji: { h: 112, w: 34, feet: 196 / 200, fps: 9 },
   snooki: { h: 64, w: 60, feet: 106 / 110, fps: 11 },
+  husky: { h: 58, w: 54, feet: 106 / 110, fps: 11 }, // Story Pack 01: a little smaller than Snooki
   // Ryan is tall and athletic: ~16 % taller than Anji (112)
   ryan: { h: 130, w: 40, feet: 195 / 200, fps: 8 },
   shadow: { h: 130, w: 40, feet: 195 / 200, fps: 8 }, // Ryan's silhouette: same build
@@ -207,7 +209,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (act.say) return app.ui.dialogue(act.say);
     if (act.fx) {
       const changes = applyEffects(act.fx, game);
-      app.ui.announce?.(changes);
+      if (!act.quiet) app.ui.announce?.(changes); // quiet: after a moment that should stay calm
       return;
     }
     if (act.puzzle) {
@@ -251,7 +253,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     }
     if (act.bubble) {
       const a = actors.get(act.bubble);
-      if (a) a.bubble = { text: act.text, until: t + (act.ms ?? 2600) / 1000 };
+      if (a) a.bubble = { text: fillNames(act.text, game), until: t + (act.ms ?? 2600) / 1000 };
       return;
     }
     if (act.spawn) {
@@ -304,6 +306,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (act.map) return app.ui.openMap();
     if (act.journal) return app.ui.openJournal(act.journal);
     if (act.drawing) return app.ui.drawing(act.drawing === true ? {} : act.drawing);
+    if (act.askName) return app.ui.askName(act.askName);
     if (act.free) return;
     throw new Error(`Unknown action ${JSON.stringify(act)}`);
   }
@@ -517,7 +520,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (playing && ambient?.length && idleTime > 7 && t - lastAmbient > 14) {
       lastAmbient = t;
       const line = ambient[Math.floor(Math.random() * ambient.length)];
-      snooki.bubble = { text: line.t, until: t + 3.6 };
+      snooki.bubble = { text: fillNames(line.t, game), until: t + 3.6 };
       if (line.cue) audio.play(line.cue);
     }
 
@@ -624,7 +627,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
    */
   function drawPrompt(it) {
     const bob = app.reduced() ? 0 : Math.sin(t * 4) * 1.5;
-    const label = it.label || '';
+    const label = fillNames(it.label || '', game);
     ctx.save();
     ctx.font = PROMPT_FONT;
     ctx.direction = 'rtl';

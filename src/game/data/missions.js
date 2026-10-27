@@ -15,8 +15,9 @@
  */
 import { PIECES } from '../minigames/garden-logic.js';
 import { check } from '../core/conditions.js';
+import { MISSIONS_SP1 } from './missions-sp1.js';
 
-export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة' };
+export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية' };
 
 const special = Object.entries(PIECES).filter(([, p]) => p.special);
 
@@ -206,6 +207,8 @@ export const MISSIONS = [
     rewardText: 'صفحة «حديقتي» بالدفتر',
     leadsTo: [],
   },
+  // Story Pack 01 «الطرق اللي تتذكر» (post-game story chapters + optional activities)
+  ...MISSIONS_SP1,
 ];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);

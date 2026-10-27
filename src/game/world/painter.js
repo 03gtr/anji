@@ -584,6 +584,91 @@ export const THEMES = {
     },
   }),
 
+  // Story Pack 01: the village entrance — two roads under dense, arching trees at golden hour
+  roads: {
+    sky: nightSky('#3a3a74', '#c27a86', '#ffcf8e'),
+    stars: 4,
+    moon: null,
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          ctx.fillStyle = '#8c6b86';
+          ctx.beginPath();
+          ctx.moveTo(u0 - 2, 214);
+          for (let u = u0 - 2; u <= u1 + 2; u += 10) ctx.lineTo(u, 176 + Math.sin(u * 0.005 + 2) * 14 + Math.sin(u * 0.019) * 5);
+          ctx.lineTo(u1 + 2, 216);
+          ctx.lineTo(u0 - 2, 216);
+          ctx.fill();
+          each(u0, u1, 46, 30, seed, (i, x, r) => P.tree(ctx, x, 214, 46 + r() * 34, r, { color: r() < 0.5 ? '#6f6a6e' : '#7a7468', trunk: '#5c4a52' }));
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.55,
+        draw(ctx, u0, u1, seed) {
+          // a dense wall of old trees along both roads
+          each(u0, u1, 58, 70, seed, (i, x, r) => {
+            const h = 150 + r() * 70;
+            ctx.fillStyle = '#3a2c2c';
+            ctx.fillRect(x - 5, GROUND - h * 0.55, 10, h * 0.55);
+            for (let k = 0; k < 6; k++) {
+              P.leafBlob(ctx, x + (r() - 0.5) * 70, GROUND - h * (0.62 + r() * 0.35), 26 + r() * 18, 20 + r() * 14, k % 2 ? '#3d5a3a' : '#4a6a40');
+            }
+          });
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          // verge, asphalt road with a dashed centre line, then the far verge
+          ctx.fillStyle = '#2b3a2a';
+          ctx.fillRect(u0 - 2, GROUND, u1 - u0 + 4, VIEW_H - GROUND);
+          ctx.fillStyle = '#4c6a3e';
+          ctx.fillRect(u0 - 2, GROUND, u1 - u0 + 4, 8);
+          each(u0, u1, 10, 6, seed, (i, x, r) => P.leafBlob(ctx, x, GROUND + 2, 6, 3 + r() * 2, r() < 0.5 ? '#4c6a3e' : '#5d7d48'));
+          ctx.fillStyle = '#4a4650';
+          ctx.fillRect(u0 - 2, GROUND + 9, u1 - u0 + 4, 30);
+          ctx.fillStyle = '#e9dcc0';
+          for (let u = Math.floor(u0 / 60) * 60; u < u1 + 60; u += 60) ctx.fillRect(u, GROUND + 23, 30, 2.4);
+          // late sun through the leaves: warm dapples on the road
+          each(u0, u1, 46, 20, seed + 4, (i, x, r) => {
+            ctx.fillStyle = `rgba(255,214,150,${0.12 + r() * 0.16})`;
+            ctx.beginPath();
+            ctx.ellipse(x, GROUND + 14 + r() * 20, 8 + r() * 12, 2.5 + r() * 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          ctx.fillStyle = '#3e5a36';
+          ctx.fillRect(u0 - 2, GROUND + 39, u1 - u0 + 4, VIEW_H - GROUND - 39);
+        },
+      },
+      {
+        name: 'front',
+        f: 1.2,
+        draw(ctx, u0, u1, seed) {
+          // the canopy arching over both roads, with soft light shafts
+          each(u0, u1, 34, 40, seed + 8, (i, x, r) => {
+            for (let k = 0; k < 3; k++) P.leafBlob(ctx, x + (r() - 0.5) * 40, -60 + r() * 70 + k * 16, 30 + r() * 16, 18 + r() * 10, ['#24361f', '#2f4626', '#3a5530'][k]);
+          });
+          each(u0, u1, 150, 60, seed + 9, (i, x, r) => {
+            if (r() < 0.6) return;
+            const w = 18 + r() * 22;
+            ctx.fillStyle = 'rgba(255,226,170,0.09)';
+            ctx.beginPath();
+            ctx.moveTo(x, 20);
+            ctx.lineTo(x + w, 20);
+            ctx.lineTo(x + w * 2.6 + 40, GROUND + 30);
+            ctx.lineTo(x + w * 1.6 + 40, GROUND + 30);
+            ctx.closePath();
+            ctx.fill();
+          });
+        },
+      },
+    ],
+  },
+
   // V2: the meadow behind the sanctuary — dusk, wildflowers
   meadow: {
     sky: nightSky('#283070', '#8a5fa0', '#f0a882'),
