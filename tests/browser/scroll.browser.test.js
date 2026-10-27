@@ -74,6 +74,10 @@ async function open([w, h], query = '', { fill = false } = {}) {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await page.goto(`${base}?${query}`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__game && (document.querySelector('.title-screen') || document.querySelector('.play.is-ready')), null, { timeout: 20000 });
+  // measure only after the web font has loaded: the swap changes text heights,
+  // and with a small overflow (22 px on a 320×640 title) that flips results
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(150);
   if (fill) {
     // a string, so the test runner does not rewrite the browser-side import()
     await page.evaluate(`import('/src/game/data/items.js').then((m) => { for (const k of Object.keys(m.JOURNAL)) window.__game.game.addJournal(k); })`);
@@ -325,6 +329,41 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
     expect(errors).toEqual([]);
     await ctx.close();
   }, 60000);
+
+  it('mobile framing: Anji is big enough on a portrait phone; landscape buttons stay on screen; the right title art per orientation', async () => {
+    // portrait phone: her drawn figure ≥ 25 % of the play area (the old framing gave ~20 %)
+    const p = await open([390, 844], WORLD);
+    const share = await p.page.evaluate(() => {
+      const w = window.__game.screen.world;
+      const c = document.querySelector('.stage canvas');
+      const k = c.clientWidth / w.viewW;
+      return { share: (112 * 0.67 * k) / c.clientHeight, ratio: c.width / c.height - c.clientWidth / c.clientHeight };
+    });
+    expect(share.share).toBeGreaterThanOrEqual(0.25);
+    expect(Math.abs(share.ratio)).toBeLessThan(0.01); // backing store has the same aspect: no stretching
+    // landscape phone: every touch button fully inside the screen, labels hidden (they used to hang off the bottom)
+    const l = await open([844, 390], WORLD);
+    const pads = await l.page.$$eval('.pad-btn', (bs) => bs.map((b) => {
+      const r = b.getBoundingClientRect();
+      return { inside: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth, h: Math.round(r.height) };
+    }));
+    expect(pads.length).toBe(4);
+    for (const pad of pads) expect(pad.inside).toBe(true);
+    expect(await l.page.$$eval('.controls .pad-label', (ls) => ls.every((x) => getComputedStyle(x).display === 'none'))).toBe(true);
+    // title art: tall composition on portrait phones, wide elsewhere
+    const tp = await open([390, 844]);
+    expect(await tp.page.$eval('.title-art-tall', (s) => getComputedStyle(s).display)).toBe('block');
+    expect(await tp.page.$eval('.title-art-wide', (s) => getComputedStyle(s).display)).toBe('none');
+    const tl = await open([1365, 768]);
+    expect(await tl.page.$eval('.title-art-wide', (s) => getComputedStyle(s).display)).toBe('block');
+    // the cast stands bottom-left, clear of the title column on wide screens
+    const overlap = await tl.page.evaluate(() => {
+      const a = document.querySelector('.title-cast').getBoundingClientRect();
+      const b = document.querySelector('.title-copy').getBoundingClientRect();
+      return a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
+    });
+    expect(overlap).toBe(false);
+  }, 90000);
 
   it('no horizontal page scroll in portrait and landscape (title, world, a menu)', async () => {
     for (const view of VIEWS) {

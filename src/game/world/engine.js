@@ -10,17 +10,23 @@
 import { GROUND, VIEW_H } from './props.js';
 import * as P from './props.js';
 import { createPainter } from './painter.js';
+import { frameCamera, followTop, MIN_TOP } from './camera.js';
 import { stepBody, followVelocity, approach } from './physics.js';
 import { frameTable, rasterize, RASTER_HEIGHT } from '../characters/sprites.js';
 import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
 
-const KIND = {
+/** Prompt text: the game's Arabic font; icons: the platform's colour-emoji font. */
+export const PROMPT_FONT = '700 10px "Baloo Bhaijaan 2", sans-serif';
+export const PROMPT_ICON_FONT = '12px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+
+export const KIND = {
   anji: { h: 112, w: 34, feet: 196 / 200, fps: 9 },
   snooki: { h: 64, w: 60, feet: 106 / 110, fps: 11 },
-  ryan: { h: 114, w: 34, feet: 195 / 200, fps: 8 },
-  shadow: { h: 114, w: 34, feet: 195 / 200, fps: 8 },
+  // Ryan is tall and athletic: ~16 % taller than Anji (112)
+  ryan: { h: 130, w: 40, feet: 195 / 200, fps: 8 },
+  shadow: { h: 130, w: 40, feet: 195 / 200, fps: 8 }, // Ryan's silhouette: same build
   needle: { h: 78, w: 40, feet: 166 / 170, fps: 8 },
 };
 
@@ -107,7 +113,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   // ── state ──
   const width = scene.width;
   let viewW = 400;
-  let topY = 0;
+  let viewH = VIEW_H;
+  let baseTop = 0; // camera top when she stands on the ground
+  let topY = 0; // camera top this frame (rises when she climbs)
   let pixelScale = 1;
   let camX = Math.max(0, player.x - 180);
   let camTarget = null; // scripted camera
@@ -134,14 +142,13 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const cssW = Math.max(1, r.width);
     const cssH = Math.max(1, r.height);
     const dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
-    // fit the 300-unit-tall scene; on narrow portrait phones zoom in so the
-    // characters are big enough (≥ 220 units of width), and let the sky fill
-    // the remaining height above
-    // (V2: 220 units in portrait — bigger characters, less empty sky above)
-    const k = Math.min(cssH / VIEW_H, cssW / (cssW < cssH ? 220 : 360));
-    viewW = cssW / k;
-    topY = VIEW_H - cssH / k;
-    pixelScale = k * dpr;
+    // cinematic band instead of the whole 300-unit scene (see camera.js)
+    const f = frameCamera(cssW, cssH);
+    viewW = f.viewW;
+    viewH = f.viewH;
+    baseTop = f.baseTop;
+    topY = followTop(baseTop, viewH, player.y - player.h * 0.62);
+    pixelScale = f.k * dpr;
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
     canvas.style.width = `${cssW}px`;
@@ -519,6 +526,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (camTarget) focus = camTarget.actor ? actors.get(camTarget.actor)?.x ?? focus : camTarget.x;
     const target = Math.max(0, Math.min(Math.max(0, width - viewW), focus - viewW / 2));
     camX += (target - camX) * Math.min(1, dt * (camTarget ? 3 : 5));
+    // follow her upward when she climbs (her visible head ≈ 62 % of the sprite box)
+    const wantTop = followTop(baseTop, viewH, player.y - player.h * 0.62);
+    topY += (wantTop - topY) * Math.min(1, dt * 4);
     shake = Math.max(0, shake - dt);
 
     if (playing && Math.abs(player.vx) < 2) saveLocation();
@@ -603,27 +613,64 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         P.sparkle(ctx, it.x + 10, y, 5 + tw * 3, 0.5 + tw * 0.5);
       }
     }
-    if (interactTarget && mode === 'play') {
-      const it = interactTarget;
-      const y = (it.y ?? GROUND) - (it.h || 90) - 14 + Math.sin(t * 5) * 3;
-      ctx.save();
-      ctx.fillStyle = 'rgba(255,247,236,.95)';
-      ctx.beginPath();
-      ctx.arc(it.x, y, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#c9437a';
-      ctx.font = '700 12px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(it.icon || '✋', it.x, y + 1);
-      ctx.restore();
+    if (interactTarget && mode === 'play') drawPrompt(interactTarget);
+  }
+
+  /**
+   * "You can examine this": a labelled pill above the object (icon + its
+   * Arabic name) pointing down at it. It used to be a bare 10-unit white disc
+   * with a 12 px emoji in a non-emoji font, which read as a debug marker
+   * floating over her head. Kept inside the visible frame.
+   */
+  function drawPrompt(it) {
+    const bob = app.reduced() ? 0 : Math.sin(t * 4) * 1.5;
+    const label = it.label || '';
+    ctx.save();
+    ctx.font = PROMPT_FONT;
+    ctx.direction = 'rtl';
+    const lw = label ? Math.min(110, ctx.measureText(label).width) : 0;
+    const w = 22 + (label ? lw + 8 : 0);
+    const h = 20;
+    const objTop = (it.y ?? GROUND) - (it.h || 90);
+    const y = Math.max(topY + 6, Math.min(objTop - h - 8, GROUND - 120)) + bob;
+    const x = Math.max(camX + w / 2 + 6, Math.min(camX + viewW - w / 2 - 6, it.x));
+    ctx.shadowColor = 'rgba(8,10,30,.45)';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = 'rgba(255,247,236,.97)';
+    ctx.beginPath();
+    ctx.roundRect?.(x - w / 2, y, w, h, h / 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    // pointer to the object
+    const px = Math.max(x - w / 2 + 8, Math.min(x + w / 2 - 8, it.x));
+    ctx.beginPath();
+    ctx.moveTo(px - 4, y + h - 0.5);
+    ctx.lineTo(px, y + h + 5);
+    ctx.lineTo(px + 4, y + h - 0.5);
+    ctx.fill();
+    ctx.strokeStyle = '#e9b949';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.roundRect?.(x - w / 2, y, w, h, h / 2);
+    ctx.stroke();
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.font = PROMPT_ICON_FONT;
+    const iconX = x + w / 2 - 11;
+    ctx.fillText(it.icon || '✋', iconX, y + h / 2 + 0.5);
+    if (label) {
+      ctx.font = PROMPT_FONT;
+      ctx.fillStyle = '#2b2340';
+      ctx.textAlign = 'right';
+      ctx.fillText(label, iconX - 10, y + h / 2 + 1, 110);
     }
+    ctx.restore();
   }
 
   function render() {
     ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, -topY * pixelScale);
     const theme = painter.theme;
-    painter.drawBack(ctx, camX, viewW, pixelScale, topY);
+    painter.drawBack(ctx, camX, viewW, pixelScale, topY, Math.min(baseTop, MIN_TOP), baseTop);
     ctx.save();
     const sx = shake > 0 ? Math.sin(t * 60) * 3 * shake : 0;
     ctx.translate(-camX + sx, 0);
@@ -670,6 +717,12 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     },
     get viewW() {
       return viewW;
+    },
+    get viewH() {
+      return viewH;
+    },
+    get topY() {
+      return topY;
     },
     get reduced() {
       return app.reduced();

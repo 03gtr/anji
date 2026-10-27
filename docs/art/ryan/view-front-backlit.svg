@@ -56,12 +56,14 @@
     </filter><radialGradient id="halorv4" cx=".5" cy=".3" r=".6"><stop offset="0" stop-color="#9fd7ff" stop-opacity=".55"/><stop offset="1" stop-color="#9fd7ff" stop-opacity="0"/></radialGradient></defs>
     <ellipse cx="50" cy="70" rx="48" ry="70" fill="url(#halorv4)"/>
     <g filter="url(#v3d-rv4)">
-      <path d="M36 138 L34 188 L48 188 L49 140Z M51 140 L52 188 L66 188 L64 138Z" fill="#1f2a40"/>
-      <path d="M24 70 C26 62 36 58 50 58 C64 58 74 62 76 70 L78 142 L22 142Z" fill="#1b1d24"/>
-      <path d="M22 72 L14 126 L22 128 L28 84Z M78 72 L86 126 L78 128 L72 84Z" fill="#16171d"/>
-      <path d="M32 72 L36 64 M68 72 L64 64" stroke="#0c0d12" stroke-width="5"/>
-      <rect x="44" y="48" width="12" height="12" fill="#2a2228"/>
-      <path d="M32 36 C30 18 42 12 50 12 C60 12 70 18 68 36 C68 46 62 52 50 52 C38 52 32 46 32 36Z" fill="#17120f"/>
+      <path d="M35 136 L33 188 L48 188 L49.5 140Z M50.5 140 L52 188 L67 188 L65 136Z" fill="#1f2a40"/>
+      <path d="M31 140 L28 102 C25 88 18 78 18 70 C19 61 33 57 50 57 C67 57 81 61 82 70 C82 78 75 88 72 102 L69 140Z" fill="#1b1d24"/>
+      <path d="M19 66 C9 74 8 92 11 104 L13 131 L21 131 L23 104 C25 92 26 80 26 70Z M81 66 C91 74 92 92 89 104 L87 131 L79 131 L77 104 C75 92 74 80 74 70Z" fill="#16171d"/>
+      <path d="M32 72 L36 63 M68 72 L64 63" stroke="#0c0d12" stroke-width="5"/>
+      <path d="M42.5 45 H57.5 L58.5 59 H41.5Z" fill="#2a2228"/>
+      <path d="M34 34 C33 18 42 12 50 12 C58 12 67 18 66 34 C66 46 60 53 50 53 C40 53 34 46 34 34Z" fill="#17120f"/>
+      <path d="M36 38 C37 48 42 53 50 54 C58 53 63 48 64 38 C58 46 42 46 36 38Z" fill="#0f0b09"/>
     </g>
-    <path d="M32 36 C30 18 42 12 50 12 C60 12 70 18 68 36 M24 70 C26 62 36 58 50 58 C64 58 74 62 76 70" stroke="#9fd7ff" stroke-width="1.4" fill="none" opacity=".8"/>
+    <path d="M38 31 h9 M53 31 h9" stroke="#9fd7ff" stroke-width="1.6" opacity=".85"/>
+    <path d="M34 34 C33 18 42 12 50 12 C58 12 67 18 66 34 M18 70 C19 61 33 57 50 57 C67 57 81 61 82 70" stroke="#9fd7ff" stroke-width="1.4" fill="none" opacity=".8"/>
   </svg>

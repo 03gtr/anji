@@ -682,8 +682,13 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
     return canvas;
   }
 
-  /** Sky from topY (≤ 0 on tall portrait screens) down to the ground. */
-  function drawSky(ctx, viewW, topY = 0) {
+  /**
+   * Sky from topY down to the ground. The cached sky image covers skyTop…VIEW_H
+   * (the highest the camera can rise), so a camera that follows her upward
+   * never re-renders it; the moon is placed where it shows when she stands on
+   * the ground (restTop).
+   */
+  function drawSky(ctx, viewW, topY = 0, skyTop = Math.min(0, topY), restTop = topY) {
     if (!theme.sky) {
       if (topY < 0) {
         // tall portrait screens: the room's wall simply continues upward
@@ -697,31 +702,32 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
       }
       return;
     }
-    const skyH = VIEW_H - topY;
-    const key = `${Math.round(viewW)}:${Math.round(topY)}:${scale}`;
+    const top = Math.min(skyTop, topY);
+    const skyH = VIEW_H - top;
+    const key = `${Math.round(viewW)}:${Math.round(top)}:${Math.round(restTop)}:${scale}`;
     if (key !== skyKey) {
       skyKey = key;
       sky = makeCanvas(Math.ceil(viewW * scale), Math.ceil(skyH * scale));
       const c = sky.getContext('2d');
-      c.setTransform(scale, 0, 0, scale, 0, -topY * scale);
-      const g = c.createLinearGradient(0, topY, 0, GROUND);
+      c.setTransform(scale, 0, 0, scale, 0, -top * scale);
+      const g = c.createLinearGradient(0, top, 0, GROUND);
       g.addColorStop(0, theme.sky.top);
       g.addColorStop(0.6, theme.sky.mid);
       g.addColorStop(1, theme.sky.bottom);
       c.fillStyle = g;
-      c.fillRect(0, topY, viewW, skyH);
+      c.fillRect(0, top, viewW, skyH);
       const r = rng(seed + 11);
       const starCount = Math.round((theme.stars || 0) * (skyH / VIEW_H));
       for (let i = 0; i < starCount; i++) {
         c.fillStyle = `rgba(255,246,208,${0.35 + r() * 0.6})`;
         c.beginPath();
-        c.arc(r() * viewW, topY + r() * (GROUND * 0.7 - topY), r() < 0.15 ? 1.4 : 0.8, 0, Math.PI * 2);
+        c.arc(r() * viewW, top + r() * (GROUND * 0.7 - top), r() < 0.15 ? 1.4 : 0.8, 0, Math.PI * 2);
         c.fill();
       }
       if (theme.moon) {
         const [mx, my, mr] = theme.moon;
         const x = mx * viewW;
-        const y = Math.max(topY + 40, my * VIEW_H);
+        const y = Math.max(restTop + 30, my * VIEW_H);
         const glow = c.createRadialGradient(x, y, mr * 0.5, x, y, mr * 4);
         glow.addColorStop(0, 'rgba(255,244,214,.45)');
         glow.addColorStop(1, 'rgba(255,244,214,0)');
@@ -736,7 +742,7 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
         c.fill();
       }
     }
-    ctx.drawImage(sky, 0, topY, viewW, skyH);
+    ctx.drawImage(sky, 0, top, viewW, skyH);
   }
 
   function drawLayer(ctx, layer, li, camX, viewW) {
@@ -751,13 +757,13 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
   return {
     theme,
     /** Background: sky + every layer with f ≤ 1. */
-    drawBack(ctx, camX, viewW, pixelScale, topY = 0) {
+    drawBack(ctx, camX, viewW, pixelScale, topY = 0, skyTop = Math.min(0, topY), restTop = topY) {
       if (pixelScale !== scale) {
         scale = pixelScale;
         cache.clear();
         skyKey = '';
       }
-      drawSky(ctx, viewW, topY);
+      drawSky(ctx, viewW, topY, skyTop, restTop);
       theme.layers.forEach((layer, li) => {
         if (layer.f <= 1) drawLayer(ctx, layer, li, camX, viewW);
       });

@@ -308,12 +308,12 @@ export function anjiSprite({ pose = 'idle', t = 0, expr, outfit = 'classic', bow
 }
 
 /** Head-and-shoulders dialogue portrait (viewBox 200×200, facing right). */
-export function anjiPortrait({ expr = 'neutral', outfit = 'classic', bow = 'burgundy' } = {}) {
+export function anjiPortrait({ expr = 'neutral', outfit = 'classic', bow = 'burgundy', handOnCheek = expr === 'thinking' } = {}) {
   const id = `ap${++uid}`;
   const o = OUTFITS[outfit] || OUTFITS.classic;
   // her hand resting on her cheek, as in the reference art
   const hand =
-    expr === 'thinking'
+    handOnCheek
       ? `<path d="M56 200 C60 176 66 160 72 150 C78 142 90 146 90 156 C88 170 84 186 84 200Z" fill="${o.jacket}"/>
          <path d="M64 158 h22 v8 h-22Z" fill="${shirtFill(id, o)}"/>
          <ellipse cx="80" cy="138" rx="11" ry="14" fill="${ANJI_PALETTE.skin}"/>

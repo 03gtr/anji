@@ -3,7 +3,15 @@
 Legend: ✅ verified automatically · 👀 verified by playing in a browser
 (mobile viewport 375×812 / 390×844) · ☐ to check by hand on a real phone.
 
-## Automated (`npm test`, 574 tests, 21 files — all passing after the scrolling and face fixes)
+## Automated (`npm test`, 586 tests, 22 files — all passing after the cinematic-visuals fixes)
+
+- ✅ Visuals: `tests/game/visuals.test.js` — camera framing keeps Anji ≥ 25 % of
+  the play area on every screen (it was ~20 % on portrait phones), one uniform
+  scale (no stretching), the camera rises so the highest star stays reachable;
+  prompt fonts; Ryan taller than Anji with his face hidden; title art resolves
+  its own gradients, never stretches, has no raster or private reference. The
+  browser suite also checks Anji’s on-screen size on a 390×844 phone, landscape
+  buttons fully on screen, and the right title composition per orientation.
 
 - ✅ Scrolling (P0 fix): `tests/game/scroll-input.test.js` (DOM) — arrows /
   space / page keys keep their default on the title and under menus, the world

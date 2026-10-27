@@ -233,31 +233,191 @@ svg {
   text-align: center;
 }
 
-.title-sky i {
+/* Cinematic title: a fixed art layer (the garden, art/title-scene.js) under
+   the scrolling content. Portrait phones get the tall composition (gate high
+   and right, the cast bottom-left, text below); everything wider gets the
+   wide one (cast left, gate centre, title right). */
+.title-root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #070a2a;
+}
+
+.title-art-layer,
+.title-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.title-art {
+  display: block;
+}
+
+.title-art-tall {
+  display: none;
+}
+
+.title-flies i {
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: 2px;
-  height: 2px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #fff6d0;
-  animation: twinkle 3s ease-in-out infinite;
+  background: #ffe3a3;
+  box-shadow: 0 0 10px 3px rgba(255, 214, 140, 0.55);
+  animation: firefly 7s ease-in-out infinite;
   animation-delay: var(--d);
 }
 
-@keyframes twinkle {
+@keyframes firefly {
   50% {
-    opacity: 0.2;
+    transform: translate(12px, -18px);
+    opacity: 0.25;
   }
+}
+
+.title-root .title-screen {
+  z-index: 1;
 }
 
 .title-hero {
   position: relative;
-  width: min(100%, 520px);
+  width: 100%;
   flex: 1 1 auto;
-  min-height: 160px;
-  display: grid;
-  place-items: center;
+  min-height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  direction: ltr; /* the cast stands bottom-left, as in the reference */
+}
+
+.title-cast {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  /* warm lantern rim on one side, moonlight on the other */
+  filter: drop-shadow(-6px 0 14px rgba(255, 196, 110, 0.35)) drop-shadow(6px -4px 16px rgba(120, 180, 255, 0.3));
+}
+
+.cast-anji {
+  width: min(44vw, 200px);
+  aspect-ratio: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.cast-snooki {
+  width: min(33vw, 150px);
+  aspect-ratio: 1;
+  margin-inline-start: -14%;
+}
+
+.cast-anji svg,
+.cast-snooki svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* the busts end in a straight line: let them dissolve into the dark garden */
+.cast-anji,
+.cast-snooki {
+  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 98%);
+  mask-image: linear-gradient(180deg, #000 78%, transparent 98%);
+}
+
+/* roses in front of them hide the portraits' straight bottom edge */
+.title-roses {
+  position: absolute;
+  z-index: 2;
+  left: -10%;
+  right: -16%;
+  bottom: -4px;
+  aspect-ratio: 800 / 96;
+  /* fade out at both ends and at the bottom, where the leaves meet the box edge */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 86%, transparent), linear-gradient(180deg, #000 55%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 86%, transparent), linear-gradient(180deg, #000 55%, transparent);
+  mask-composite: intersect;
+}
+
+.title-roses svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.title-root .title-copy {
+  padding: 18px 16px 0;
+  border-radius: 28px;
+  background: radial-gradient(closest-side, rgba(5, 6, 26, 0.78), rgba(5, 6, 26, 0.45) 70%, rgba(5, 6, 26, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-flies i {
+    animation: none;
+  }
+}
+
+@media (max-aspect-ratio: 4/5) {
+  .title-art-wide {
+    display: none;
+  }
+  .title-art-tall {
+    display: block;
+  }
+}
+
+/* wide screens (landscape phones, tablets, desktop): cast left, title right */
+@media (min-aspect-ratio: 4/5) {
+  .title-root .title-screen {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    direction: ltr;
+    gap: 2vw;
+  }
+  .title-root .title-hero {
+    flex: 1 1 50%;
+    min-height: 0;
+  }
+  .title-root .title-copy {
+    direction: rtl;
+    flex: 0 1 440px;
+    align-self: center;
+    margin-block: auto;
+  }
+  .cast-anji {
+    width: min(54vh, 26vw, 360px);
+  }
+  .cast-snooki {
+    width: min(40vh, 19vw, 266px);
+  }
+}
+
+/* landscape phones: a compact title column, so it stays clear of the gate */
+@media (min-aspect-ratio: 4/5) and (max-height: 520px) {
+  .title-root .title-copy {
+    flex-basis: 330px;
+    padding-top: 6px;
+  }
+  .title-root .title-logo {
+    font-size: clamp(30px, 10vh, 44px);
+  }
+  .title-root .title-ar {
+    font-size: 16px;
+  }
+  .title-root .title-sub {
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .title-root .btn-big {
+    padding-block: 10px;
+  }
 }
 
 .title-hero.is-painted img {
@@ -268,22 +428,6 @@ svg {
   box-shadow: var(--shadow), 0 0 0 1px rgba(159, 215, 255, 0.25);
   -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent);
   mask-image: linear-gradient(180deg, #000 70%, transparent);
-}
-
-.title-duo {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0;
-}
-
-.duo-anji {
-  width: min(52vw, 230px);
-}
-
-.duo-snooki {
-  width: min(42vw, 180px);
-  margin-inline-start: -30px;
 }
 
 .title-copy {
@@ -600,7 +744,22 @@ svg {
     padding-bottom: calc(var(--safe-b) + 18px);
   }
   .pad-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 19px;
     background: rgba(13, 16, 56, 0.55);
+  }
+  .pad-interact {
+    width: 64px;
+  }
+  .pad-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+  /* the labels hung below the buttons, past the bottom edge of a ~390px-tall
+     screen; the in-world prompt now names the object instead */
+  .controls .pad-label {
+    display: none;
   }
 }
 
