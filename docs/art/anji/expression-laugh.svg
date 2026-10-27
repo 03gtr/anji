@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <defs>
+    
+    <filter id="v3d-ap22" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="3" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="3" specularConstant="0.12" specularExponent="30" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="3" specularConstant="0.32" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="fur-ap22" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3.4" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="2.4" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="2.4" specularConstant="0.12" specularExponent="16" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="2.4" specularConstant="0.5" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="gloss-ap22" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="2.2" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="2.2" specularConstant="0.45" specularExponent="34" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="2.2" specularConstant="0.25" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter><radialGradient id="ao-ap22"><stop offset="0" stop-color="#0a0c24" stop-opacity=".45"/><stop offset="1" stop-color="#0a0c24" stop-opacity="0"/></radialGradient>
+    <linearGradient id="hairap22" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7e351b"/>
+      <stop offset=".5" stop-color="#9c4a26"/>
+      <stop offset="1" stop-color="#b9632f"/>
+    </linearGradient>
+    <radialGradient id="skinap22" cx=".4" cy=".35" r=".75">
+      <stop offset="0" stop-color="#fbdccb"/>
+      <stop offset=".65" stop-color="#f2c8b2"/>
+      <stop offset="1" stop-color="#dfa58c"/>
+    </radialGradient>
+    <linearGradient id="fringeShadowap22" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a3a20" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#7a3a20" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="plaidap22" width="7" height="7" patternUnits="userSpaceOnUse">
+      <rect width="7" height="7" fill="#1d1a22"/>
+      <rect y="2.5" width="7" height="2" fill="#c3313d"/>
+      <rect x="2.5" width="2" height="7" fill="#ece6e8" opacity=".75"/>
+      <rect x="2.5" y="2.5" width="2" height="2" fill="#f2d6d8"/>
+    </pattern>
+    <pattern id="knitap22" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#26232c"/>
+      <path d="M0 3 L1.5 0 L3 3 L4.5 0 L6 3" stroke="#17151b" stroke-width=".8" fill="none"/>
+    </pattern>
+  </defs>
+    <g transform="translate(-14 -20) scale(2.12)">
+      <g transform="rotate(0 48 40)">
+      <g filter="url(#v3d-ap22)"><path d="M54 22 C30 16 16 38 20 60 C22 74 14 84 18 98 C21 110 12 118 18 130 C22 140 30 138 34 146 C40 138 36 128 42 122 C44 114 40 104 46 98 C50 92 48 88 52 84 Z" fill="url(#hairap22)"/></g>
+      <path d="M22 66 C20 80 26 90 21 104 C18 116 24 124 22 132 M30 84 C28 98 34 108 30 122 M36 70 C34 84 40 96 36 110" stroke="#6e2f18" stroke-width="1.3" fill="none" opacity=".45"/>
+      <path d="M26 56 C22 70 28 82 24 96 C22 106 26 114 25 122 M33 62 C30 74 34 86 31 98" stroke="#d98b4f" stroke-width="1.7" fill="none" opacity=".7"/>
+      <path d="M28 128 C26 134 28 140 33 144 M20 116 C17 122 18 128 21 132" stroke="#f0a868" stroke-width="1.1" fill="none" opacity=".55"/>
+    </g>
+      <g filter="url(#v3d-ap22)"><path d="M26 104 C30 90 42 86 51 86 L62 86 C72 86 84 92 88 104 L92 120 L22 120Z" fill="#26232c"/></g>
+      <path d="M45 87 L52.5 104 L60 87Z" fill="url(#plaidap22)"/>
+      
+      <rect x="51" y="80" width="10" height="9" fill="#eab9a3"/>
+      <g filter="url(#v3d-ap22)"><path d="M24 50 C22 26 42 14 58 16 C76 18 86 32 84 50 C82 58 78 62 76 64 L36 66 C30 62 25 58 24 50Z" fill="url(#hairap22)"/></g><path d="M37 56 C36 38 76 34 78.5 54 C79.5 70 71 83 60.5 84 C48 84.5 38 73 37 56Z" fill="url(#skinap22)"/>
+    <path d="M38 62 C40 74 48 83 60.5 84 C52 81 44 74 40 62Z" fill="#eab9a3" opacity=".45"/>
+    <path d="M37.5 50 C46 44 66 42 78 50 L78 58 C66 52 48 52 37.5 58Z" fill="url(#fringeShadowap22)"/>
+    
+    <ellipse cx="48" cy="68.5" rx="4.6" ry="2.6" fill="#f19aa0" opacity="0.7"/>
+    <ellipse cx="72" cy="68.5" rx="3.6" ry="2.3" fill="#f19aa0" opacity="0.7"/>
+    <path d="M45.099999999999994 60.8 Q50.8 54.8 56.5 60.8" stroke="#2b1710" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M63.7 60.8 Q68.8 54.8 73.89999999999999 60.8" stroke="#2b1710" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M46.2 48.6 Q50.8 46 55.4 47.8" stroke="#7a3a20" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M64.8 47.8 Q68.8 45.6 72.6 48" stroke="#7a3a20" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M63.5 63.5 Q65.6 66.6 63.2 67.6" stroke="#d49a86" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M64.6 57 Q65.4 61 64.2 63" stroke="#fff3ea" stroke-width=".9" fill="none" opacity=".7"/>
+    <path d="M53.5 71 Q60.5 71.5 67.5 70.5 Q66 81 60 81 Q54.5 81 53.5 71Z" fill="#7a1622"/><path d="M54.5 71.3 Q60.5 72.6 66.6 71 L66 73.4 Q60.5 74.5 55 73.6Z" fill="#fff"/><ellipse cx="60.5" cy="78.6" rx="3.6" ry="1.8" fill="#e46a7a"/>
+    <path d="M58 73.2 Q60.5 72.7 62.4 73.1" stroke="#fff" stroke-width=".7" fill="none" opacity=".45"/><g filter="url(#v3d-ap22)"><path d="M33 52 C34 30 58 20 76 28 C83 32 86 42 84 52 C80 44 74 40 70 42 C68 36 62 33 57 36 C52 41 46 44 40 54 C38 50 35 50 33 52Z" fill="url(#hairap22)"/></g>
+    <path d="M50 30 C58 26 68 27 75 31" stroke="#ffd2a0" stroke-width="1" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="M45 33 C55 28 66 28 74 33" stroke="#d98b4f" stroke-width="1.8" fill="none" opacity=".75" stroke-linecap="round"/>
+    <path d="M40 40 C46 36 52 35 57 36" stroke="#d98b4f" stroke-width="1.2" fill="none" opacity=".6" stroke-linecap="round"/>
+    <path d="M79 42 C86 56 80 74 86 92 C88 100 84 108 88 116 C80 112 76 102 77 92 C78 80 74 66 76 54Z" fill="url(#hairap22)"/>
+    <path d="M81 58 C83 70 80 82 84 94" stroke="#d98b4f" stroke-width="1.3" fill="none" opacity=".6"/><g transform="translate(29 34) rotate(-14)" filter="url(#gloss-ap22)">
+      <path d="M0 0 C-10 -12 -20 -4 -14 5 C-10 10 -4 6 0 2Z" fill="#8e1c2e"/>
+      <path d="M0 0 C8 -13 19 -6 14 4 C10 10 4 6 0 2Z" fill="#8e1c2e"/>
+      <path d="M-11 -2 C-8 -4 -5 -2 -2 0 M11 -3 C8 -4 5 -2 2 0" stroke="#651224" stroke-width="1.2" fill="none"/>
+      <path d="M-1 3 L-7 18 L-3 16 L-1 21 L2 4Z M2 3 L7 17 L3 15.5 L1 19Z" fill="#651224"/>
+      <ellipse cx="0" cy="1.5" rx="3.6" ry="3.2" fill="#651224"/>
+    </g>
+    </g>
+    
+  </svg>

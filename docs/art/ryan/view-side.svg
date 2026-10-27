@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
+      <defs>
+    <filter id="v3d-rv3" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="3" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="3" specularConstant="0.12" specularExponent="30" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="3" specularConstant="0.32" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="fur-rv3" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3.4" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="2.4" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="2.4" specularConstant="0.12" specularExponent="16" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="2.4" specularConstant="0.5" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="gloss-rv3" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="h"/>
+      <feDiffuseLighting in="h" surfaceScale="2.2" diffuseConstant="1" lighting-color="#fff3e2" result="d">
+        <feDistantLight azimuth="225" elevation="52"/>
+      </feDiffuseLighting>
+      <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="0.68" k2="0.4" k3="0" k4="0" result="lit"/>
+      <feSpecularLighting in="h" surfaceScale="2.2" specularConstant="0.45" specularExponent="34" lighting-color="#ffffff" result="s">
+        <feDistantLight azimuth="225" elevation="60"/>
+      </feSpecularLighting>
+      <feComposite in="s" in2="SourceAlpha" operator="in" result="s2"/>
+      <feSpecularLighting in="h" surfaceScale="2.2" specularConstant="0.25" specularExponent="6" lighting-color="#9fd7ff" result="r">
+        <feDistantLight azimuth="330" elevation="18"/>
+      </feSpecularLighting>
+      <feComposite in="r" in2="SourceAlpha" operator="in" result="r2"/>
+      <feComposite in="lit" in2="s2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="ls"/>
+      <feComposite in="ls" in2="r2" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="all"/>
+      <feComposite in="all" in2="SourceAlpha" operator="in"/>
+    </filter></defs>
+      <g filter="url(#v3d-rv3)">
+        <path d="M42 138 L40 188 L54 188 L55 140Z" fill="#2c3e5c"/><path d="M38 186 H58 L60 195 H36Z" fill="#1c1d24"/>
+        <path d="M34 72 C34 62 44 58 54 58 C62 58 68 64 68 74 L70 142 L34 142Z" fill="#23252d"/>
+        <path d="M22 76 C14 80 14 118 22 128 L34 126 L34 76Z" fill="#111216"/>
+        <path d="M60 78 L66 126 L60 128 L54 82Z" fill="#1d1f26"/>
+        <rect x="48" y="48" width="10" height="12" fill="#3a3038"/>
+        <path d="M40 34 C40 16 52 10 60 12 C70 14 74 24 72 36 C72 46 66 52 56 52 C46 52 40 46 40 34Z" fill="#1d1612"/>
+        <path d="M70 30 C74 34 75 40 72 44" stroke="#9fd7ff" stroke-width="1.6" fill="none"/>
+      </g>
+      <path d="M68 74 L70 142 M72 36 C72 46 66 52 60 52" stroke="#9fd7ff" stroke-width="1.2" fill="none" opacity=".7"/>
+    </svg>

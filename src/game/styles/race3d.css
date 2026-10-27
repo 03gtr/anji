@@ -1,0 +1,235 @@
+/* ═══ V2: third-person race ═══════════════════════════════════ */
+.race3d {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #05071f;
+  touch-action: none;
+}
+
+.race-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.race-hud {
+  position: absolute;
+  inset: 8px 12px auto 12px;
+  display: grid;
+  gap: 6px;
+  pointer-events: none;
+  direction: ltr;
+}
+
+.rh-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(13, 16, 56, 0.7);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.rh-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--sapphire), var(--cyan));
+}
+
+.rh-cp {
+  position: absolute;
+  top: -3px;
+  left: calc(var(--p) * 100%);
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+
+.rh-me,
+.rh-rival {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--p, 0) * 100%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: var(--cream);
+  box-shadow: 0 0 0 2px var(--sapphire);
+}
+
+.rh-rival {
+  background: #3a3d48;
+  box-shadow: 0 0 0 2px #9aa3b8;
+}
+
+.rh-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--cream);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.rh-speed b {
+  font-size: 22px;
+  color: var(--cyan);
+}
+
+.rh-meter {
+  position: relative;
+  width: min(46%, 180px);
+  height: 14px;
+  border-radius: 99px;
+  background: rgba(13, 16, 56, 0.7);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.rh-meter i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #6fd3ff, #ffe28a);
+  transition: width 0.2s;
+}
+
+.rh-meter span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+}
+
+.race-nav {
+  position: absolute;
+  top: 78px;
+  inset-inline: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  margin-inline: auto;
+  padding: 6px 12px 6px 6px;
+  border-radius: 18px;
+  color: var(--ink);
+  background: rgba(255, 247, 236, 0.95);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+
+.race-nav p {
+  margin: 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.race-nav-face {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--cyan);
+}
+
+.race-nav-face svg {
+  width: 100%;
+  height: 100%;
+}
+
+.race-ready {
+  position: absolute;
+  inset: auto 12px calc(var(--safe-b) + 120px) 12px;
+  max-width: 440px;
+  margin: 0 auto;
+  display: grid;
+  gap: 8px;
+  text-align: center;
+  z-index: 2;
+}
+
+.race-ready[hidden] {
+  display: none;
+}
+
+.race-ready-line {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.race3d .race-count {
+  top: 34%;
+  font-size: 72px;
+}
+
+.race3d .race-pad {
+  align-items: flex-end;
+}
+
+.race3d .race-pad .pad-btn {
+  width: 78px;
+  height: 78px;
+  border: 0;
+  color: var(--cream);
+  background: rgba(13, 16, 56, 0.55);
+  box-shadow: inset 0 0 0 2px rgba(159, 215, 255, 0.4);
+}
+
+.race3d .race-pad .pad-btn.is-down {
+  background: rgba(47, 95, 208, 0.75);
+}
+
+.race3d .race-boost {
+  font-size: 30px;
+}
+
+.race3d .race-boost:disabled {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+}
+
+.race3d .race-boost.is-ready {
+  background: linear-gradient(180deg, #ffe7a0, var(--gold));
+  color: var(--ink);
+  box-shadow: 0 0 24px rgba(255, 217, 119, 0.7);
+  animation: solution-pulse 1s ease-in-out infinite;
+}
+
+.reduce-motion .race3d .race-boost.is-ready {
+  animation: none;
+}
+
+/* landscape: steering together on the left, boost on the right, car free in the middle */
+@media (orientation: landscape) {
+  .race3d .race-pad {
+    gap: 12px;
+  }
+  .race3d .race-steer[data-steer='-1'] {
+    order: 1;
+  }
+  .race3d .race-steer[data-steer='1'] {
+    order: 2;
+  }
+  .race3d .race-boost {
+    order: 3;
+    margin-left: auto;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .race-ready {
+    inset: 60px auto auto 50%;
+    translate: -50% 0;
+    width: min(92vw, 440px);
+  }
+  .race-nav {
+    top: 66px;
+  }
+}

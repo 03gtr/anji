@@ -1,0 +1,736 @@
+/* ═══ V2: tips, help, missions, puzzle help ladder, new puzzle types ═══ */
+
+/* small buttons still keep a 44px touch target */
+.btn-small {
+  min-height: 44px;
+  padding: 6px 16px;
+  font-size: 15px;
+}
+
+/* ─── Contextual tips ───────────────────────────────────── */
+.tips {
+  position: absolute;
+  inset: auto 0 calc(var(--safe-b) + 150px) 0;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  padding: 0 12px;
+  pointer-events: none;
+}
+
+.tips[data-place='top'] {
+  inset: calc(var(--safe-t) + 60px) 0 auto 0;
+}
+
+.tip {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  align-items: center;
+  width: min(100%, 440px);
+  padding: 12px 14px;
+  border-radius: 18px;
+  color: var(--ink);
+  background: var(--cream);
+  box-shadow: var(--shadow), 0 0 0 2px var(--gold);
+  pointer-events: auto;
+  animation: toast-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.tip.out {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.tip-icon {
+  grid-row: span 2;
+  font-size: 28px;
+}
+
+.tip p {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+.tip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tip .btn-ghost {
+  color: var(--ink-soft);
+  background: rgba(36, 31, 58, 0.06);
+  box-shadow: inset 0 0 0 1.5px rgba(36, 31, 58, 0.2);
+}
+
+.game[data-screen='title'] .tips {
+  display: none;
+}
+
+/* ─── Help ──────────────────────────────────────────────── */
+.help-list {
+  margin: 0;
+  padding-inline-start: 20px;
+  line-height: 1.7;
+}
+
+.help-list li + li {
+  margin-top: 4px;
+}
+
+/* ─── Missions (journal) ────────────────────────────────── */
+.mission {
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(159, 215, 255, 0.07);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.mission.is-done {
+  opacity: 0.8;
+}
+
+.mission header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.mission h4 {
+  flex: 1;
+  margin: 0;
+  font-size: 17px;
+  color: var(--gold);
+}
+
+.mission p {
+  margin: 6px 0 0;
+  line-height: 1.55;
+}
+
+.mission .btn-small {
+  margin-top: 8px;
+}
+
+.mission-kind {
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--cyan);
+}
+
+.mission-kind.kind-arcade {
+  background: #ffb36b;
+}
+
+.mission-kind.kind-challenge {
+  background: var(--rose-soft);
+}
+
+.mission-kind.kind-collect {
+  background: #b9e3a4;
+}
+
+.mission-steps {
+  font-weight: 700;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.mission-where {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.mission-next {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(47, 95, 208, 0.25);
+}
+
+.mission-hint {
+  padding: 8px 10px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #fff3c4;
+}
+
+/* ─── Puzzle shell ──────────────────────────────────────── */
+.panel.puzzle {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.puzzle-goal {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.puzzle-example {
+  margin: 0 0 10px;
+}
+
+.puzzle-hints li.is-solution {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.panel-foot {
+  flex-wrap: wrap;
+}
+
+.is-solution {
+  outline: 3px dashed var(--gold);
+  outline-offset: 2px;
+  animation: solution-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes solution-pulse {
+  50% {
+    outline-color: rgba(255, 217, 119, 0.35);
+  }
+}
+
+.reduce-motion .is-solution {
+  animation: none;
+}
+
+.dial.is-right .dial-face {
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+
+.dial-answer {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 32px;
+  border-radius: 8px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.dial-answer svg {
+  width: 26px;
+  height: 26px;
+}
+
+.cipher-answer {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.seq-item.is-solution,
+.choice-item.is-solution,
+.ded-card.is-solution {
+  box-shadow: inset 0 0 0 2px var(--gold), 0 0 18px rgba(255, 217, 119, 0.45);
+}
+
+/* ─── Candles ───────────────────────────────────────────── */
+.candle-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  padding: 14px 10px 10px;
+  border-radius: 14px;
+  background: rgba(12, 15, 51, 0.8);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 14px;
+}
+
+.ce-row {
+  display: inline-flex;
+  gap: 8px;
+  padding-top: 12px;
+}
+
+.ce-row i {
+  position: relative;
+  width: 14px;
+  height: 26px;
+  border-radius: 4px 4px 3px 3px;
+  background: #4a4c6c;
+}
+
+.ce-row i.on {
+  background: #f3e3c3;
+}
+
+.ce-row i.on::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: -13px;
+  width: 8px;
+  height: 11px;
+  border-radius: 50% 50% 40% 40%;
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold);
+}
+
+.ce-arrow {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.candle-stage {
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.candle-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(44px, 72px));
+  justify-content: center;
+  gap: 10px;
+}
+
+.candle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: 96px;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 16px;
+  background: #0c0f33;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.candle-grid.grid .candle {
+  min-height: 78px;
+}
+
+.candle-body {
+  width: 22px;
+  height: 40px;
+  border-radius: 6px 6px 4px 4px;
+  background: #4a4c6c;
+  transition: background 0.2s;
+}
+
+.candle-flame {
+  width: 14px;
+  height: 20px;
+  border-radius: 50% 50% 40% 40%;
+  background: transparent;
+  box-shadow: inset 0 0 0 2px rgba(159, 215, 255, 0.25);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.candle.is-on {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 217, 119, 0.28), #0c0f33 70%);
+}
+
+.candle.is-on .candle-body {
+  background: #f3e3c3;
+}
+
+.candle.is-on .candle-flame {
+  background: var(--gold);
+  box-shadow: 0 0 16px var(--gold), 0 -4px 10px #ff9a3c;
+}
+
+.candle-rule {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* ─── Code (Ryan's laptop) ──────────────────────────────── */
+.code-window {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #0b1020;
+  box-shadow: inset 0 0 0 1.5px rgba(159, 215, 255, 0.25);
+  text-align: left;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #151b33;
+  font: 12px/1.4 ui-monospace, Consolas, monospace;
+  color: #8fa3d9;
+}
+
+.code-bar i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e85d8c;
+}
+
+.code-bar i:nth-child(2) {
+  background: #ffd977;
+}
+
+.code-bar i:nth-child(3) {
+  background: #7fd38a;
+}
+
+.code-lines {
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+  font: 14px/1.9 ui-monospace, Consolas, 'Baloo Bhaijaan 2', monospace;
+}
+
+.code-line {
+  display: flex;
+  gap: 10px;
+  padding: 0 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.code-n {
+  flex: none;
+  width: 18px;
+  text-align: right;
+  color: #4d5b88;
+}
+
+.code-line code {
+  font: inherit;
+  color: #d7e2ff;
+  unicode-bidi: plaintext; /* an Arabic comment reads right-to-left, code left-to-right */
+}
+
+.code-slot {
+  min-height: 36px;
+  margin: 2px 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+  color: #1b1440;
+  background: #9fd7ff;
+  box-shadow: 0 3px 0 #5b8fc4;
+}
+
+.code-slot.is-right {
+  background: #9ee6a8;
+  box-shadow: 0 3px 0 #4f9a5c;
+}
+
+.code-help {
+  margin: 8px 0;
+  font-size: 14px;
+  opacity: 0.85;
+  text-align: center;
+}
+
+/* ─── Connect the stars ─────────────────────────────────── */
+.cn-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.cn-card {
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #f3e3c3;
+  font-size: 15px;
+}
+
+.cn-svg {
+  width: min(100%, 340px);
+  aspect-ratio: 1;
+  touch-action: manipulation;
+}
+
+.cn-sky {
+  fill: #0c1233;
+}
+
+.cn-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.cn-dot {
+  fill: #ffe28a;
+  filter: drop-shadow(0 0 2px #ffe28a);
+}
+
+.cn-star.is-sel .cn-dot {
+  fill: #fff;
+}
+
+.cn-star:focus-visible {
+  outline: none;
+}
+
+.cn-star:focus-visible .cn-hit {
+  stroke: var(--gold);
+  stroke-width: 1;
+}
+
+.cn-edge {
+  stroke: #9fd7ff;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.cn-target {
+  stroke: rgba(255, 217, 119, 0.45);
+  stroke-width: 2.4;
+  stroke-dasharray: 2 2;
+}
+
+.cn-count {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ─── Program (Robo-Snooki) ─────────────────────────────── */
+.pg-stage {
+  text-align: center;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+.pg-grid {
+  --cell: min(calc((100vw - 80px) / var(--w)), 58px);
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--w), var(--cell));
+  grid-auto-rows: var(--cell);
+  width: max-content;
+  margin: 10px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0c0f33;
+}
+
+.pg-cell {
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--cell) * 0.5);
+  box-shadow: inset 0 0 0 1px rgba(159, 215, 255, 0.12);
+}
+
+.pg-cell.is-bone {
+  background: rgba(255, 217, 119, 0.15);
+}
+
+.pg-cell.is-wall {
+  background: #2a2236;
+}
+
+.pg-robot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  font-style: normal;
+  font-size: calc(var(--cell) * 0.55);
+  transform: translate(calc(var(--x) * var(--cell)), calc(var(--y) * var(--cell)));
+  transition: transform 0.24s ease;
+}
+
+.pg-robot b {
+  font-weight: 400;
+}
+
+.pg-robot::after {
+  content: '➤';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 12px;
+  color: var(--gold);
+  rotate: var(--r);
+}
+
+.pg-robot.is-bump b {
+  display: inline-block;
+  animation: shake 0.3s ease;
+}
+
+.reduce-motion .pg-robot {
+  transition: none;
+}
+
+.pg-prog {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 56px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 12px;
+  background: rgba(159, 215, 255, 0.06);
+}
+
+.pg-cmd {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--cyan);
+}
+
+.pg-pad,
+.pg-run {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pg-pad .btn {
+  flex: 1 1 90px;
+  padding-inline: 10px;
+}
+
+.pg-solution {
+  margin: 6px 0 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* ─── Touch targets ≥ 44px ──────────────────────────────── */
+.tabs button,
+.seg button {
+  min-height: 44px;
+}
+
+/* generic card surface (race ready panel, stylist brief…) */
+.card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow), inset 0 0 0 1px var(--line);
+}
+
+.dress-brief h3 {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-size: 17px;
+}
+
+.dress-brief p {
+  margin: 0;
+}
+
+/* ─── The drawing (finale) ──────────────────────────────── */
+.overlay-drawing {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: radial-gradient(circle at 50% 40%, rgba(47, 95, 208, 0.25), rgba(5, 7, 31, 0.92) 70%);
+}
+
+.drawing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 420px);
+}
+
+.drawing-hint {
+  min-height: 1.5em;
+  margin: 0;
+  text-align: center;
+  color: var(--cream);
+}
+
+.drawing-paper {
+  --l: 33%;
+  --r: 11%;
+  --o: 0;
+  position: relative;
+  width: min(78vw, 330px, 52dvh);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: none;
+  filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.5));
+}
+
+.drawing-paper img,
+.drawing-ph {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  clip-path: inset(0 var(--r) 0 var(--l));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.drawing-ph svg {
+  display: block;
+  width: 100%;
+}
+
+.drawing-fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  opacity: calc(1 - var(--o));
+  pointer-events: none;
+}
+
+.drawing-fold.left {
+  left: var(--l);
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent);
+}
+
+.drawing-fold.right {
+  right: var(--r);
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.28), transparent);
+}
+
+.drawing-paper:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 6px;
+}
+
+.drawing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* multi-line notes (terminal output, letters) keep their line breaks */
+.dlg-text {
+  white-space: pre-line;
+}
