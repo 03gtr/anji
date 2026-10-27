@@ -176,10 +176,13 @@ export const connect = {
 
 /* ── program: arrange commands so a little robot reaches the bone ── */
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // east, south, west, north (screen)
+/** Keys and doors (Story Pack 02): a lowercase letter is a key, the same letter in uppercase its door. */
+const KEY_CHARS = 'kq';
 export function runProgram(stage, prog) {
   const rows = stage.grid;
   let { x, y, dir } = stage.start;
-  const trace = [{ x, y, dir }];
+  let keys = '';
+  const trace = [{ x, y, dir, keys }];
   const at = (cx, cy) => rows[cy]?.[cx] ?? '#';
   if (at(x, y) === 'B') return { ok: true, trace, crash: false };
   for (const c of prog) {
@@ -188,14 +191,17 @@ export function runProgram(stage, prog) {
     else if (c === 'F') {
       const nx = x + DIRS[dir][0];
       const ny = y + DIRS[dir][1];
-      if (at(nx, ny) === '#') {
-        trace.push({ x, y, dir, bump: true });
-        return { ok: false, trace, crash: true };
+      const cell = at(nx, ny);
+      const door = KEY_CHARS.includes(cell.toLowerCase()) && cell !== cell.toLowerCase();
+      if (cell === '#' || (door && !keys.includes(cell.toLowerCase()))) {
+        trace.push({ x, y, dir, keys, bump: true });
+        return { ok: false, trace, crash: true, door };
       }
       x = nx;
       y = ny;
+      if (KEY_CHARS.includes(cell) && !keys.includes(cell)) keys = [...keys, cell].sort().join('');
     }
-    trace.push({ x, y, dir });
+    trace.push({ x, y, dir, keys });
     if (at(x, y) === 'B') return { ok: true, trace, crash: false };
   }
   return { ok: false, trace, crash: false };
@@ -225,7 +231,9 @@ export const program = {
       return {
         state: { ...state, runs, mistakes: state.mistakes + 1, trace: res.trace },
         outcome: 'wrong',
-        message: res.crash
+        message: res.door
+          ? config.messages?.door ?? 'الباب مقفول. يحتاج مفتاحه — دوّري عليه بالشبكة.'
+          : res.crash
           ? config.messages?.crash ?? 'بوم! الروبوت دگ بالصندوق. شيلي الأمر الغلط وجرّبي.'
           : config.messages?.short ?? 'الروبوت وقف قبل العظمة. يحتاج أوامر أكثر (أو غير).',
       };
@@ -321,7 +329,29 @@ export const deduction = {
   },
 };
 
-export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction };
+/* ── series (Story Pack 02): learn a hidden rule from examples, then complete a new row ──
+ * config: { stages: [{ examples: [[…]], question: [… , null], options: [...], answer, rule }] }
+ * Tokens are numbers or 'sym:<name>'. Each stage has exactly one option that follows the
+ * rule shown by its examples; `rule` explains it once the stage is solved. */
+export const series = {
+  init: () => ({ stage: 0, mistakes: 0, tried: [] }),
+  pick(config, state, value) {
+    const stage = config.stages[state.stage];
+    if (!stage || !stage.options.some((o) => String(o) === String(value)) || state.tried.includes(String(value))) return { state, outcome: 'noop' };
+    if (String(value) !== String(stage.answer)) {
+      return { state: { ...state, mistakes: state.mistakes + 1, tried: [...state.tried, String(value)] }, outcome: 'wrong' };
+    }
+    const next = state.stage + 1;
+    if (next >= config.stages.length) return { state, outcome: 'solved' };
+    return {
+      state: { ...state, stage: next, tried: [] },
+      outcome: 'progress',
+      message: `✓ ${stage.rule} — المستوى ${next + 1} من ${config.stages.length}.`,
+    };
+  },
+};
+
+export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series };
 
 /** Next hint to show (hints are revealed one by one, never skipped). */
 export function nextHint(hints, used) {
@@ -350,9 +380,9 @@ function lightsSolution(on, flip) {
   return best;
 }
 
-/** Shortest command list for one program stage (BFS over x, y, dir). */
+/** Shortest command list for one program stage (BFS over x, y, dir and the keys she holds). */
 export function programSolution(stage) {
-  const key = (s) => `${s.x},${s.y},${s.dir}`;
+  const key = (s) => `${s.x},${s.y},${s.dir},${s.keys || ''}`;
   const queue = [[stage.start, []]];
   const seen = new Set([key(stage.start)]);
   while (queue.length) {
@@ -366,7 +396,7 @@ export function programSolution(stage) {
       const end = res.trace[res.trace.length - 1];
       if (seen.has(key(end))) continue;
       seen.add(key(end));
-      queue.push([{ x: end.x, y: end.y, dir: end.dir }, p]);
+      queue.push([{ x: end.x, y: end.y, dir: end.dir, keys: end.keys }, p]);
     }
   }
   return null;
@@ -469,6 +499,7 @@ const SOLVE = {
     }
     return [...moves, ['submit']];
   },
+  series: (c, s) => c.stages.slice(s.stage).map((st) => ['pick', st.answer]),
   deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.slice(0, c.need || 2).map((e) => ['toggleEvidence', e]), ['submit']],
 };
 

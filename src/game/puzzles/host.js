@@ -36,6 +36,11 @@ export function openPuzzle(app, def) {
   return app.overlays.open(
     (el, { close, scope }) => {
       let state = rules.init(def.config);
+      // multi-stage puzzles resume at the stage she reached (a number flag: no save-schema change)
+      const stageFlag = `pstage:${def.id}`;
+      const resumable = Array.isArray(def.config?.stages) && 'stage' in state && !game.record(`puzzle:${def.id}`)?.completed;
+      const savedStage = resumable ? game.flag(stageFlag) : null;
+      if (Number.isInteger(savedStage) && savedStage > 0 && savedStage < def.config.stages.length) state = { ...state, stage: savedStage };
       let hintsUsed = 0;
       let solved = false;
       let showSolution = Boolean(def.guided); // guided: the next step simply glows
@@ -92,6 +97,7 @@ export function openPuzzle(app, def) {
         const score = mistakes + hintsUsed * 2 + (showSolution ? 10 : 0);
         const r = game.recordResult(`puzzle:${def.id}`, { completed: true, score, lowerIsBetter: true });
         if (skipped) game.setFlag(`skipped:${def.id}`);
+        if (resumable) game.setFlag(stageFlag, false);
         const changes = r.firstClear ? applyEffects(def.reward, game) : [];
         app.ui.announce?.(changes);
         const done = h('<button type="button" class="btn btn-primary btn-big" data-autofocus>كمّلي ✨</button>');
@@ -115,7 +121,9 @@ export function openPuzzle(app, def) {
         act(action, ...args) {
           if (solved) return 'noop';
           const res = rules[action](def.config, state, ...args);
+          const stageBefore = state.stage;
           state = res.state;
+          if (resumable && res.outcome === 'progress' && state.stage !== stageBefore) game.setFlag(stageFlag, state.stage);
           if (res.outcome === 'wrong') {
             mistakes += 1;
             audio.play('fail');
@@ -175,6 +183,7 @@ export function openPuzzle(app, def) {
 
       updateButtons();
       view.render(body, api);
+      if (state.stage > 0 && resumable) say(`رجعتي للمستوى ${state.stage + 1} — اللي حلّيتيه محفوظ.`, 'good');
       el.querySelector('h2').focus({ preventScroll: true });
       app.tips?.show('hint');
     },

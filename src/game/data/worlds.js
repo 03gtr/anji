@@ -1,3 +1,5 @@
+import { SP2_GATE } from './missions-sp2.js';
+
 /**
  * World map: the fifteen locations of the garden, how they connect, and when
  * each opens. `scene` is the exploration scene to travel to; `ready` says
@@ -18,7 +20,8 @@ export const WORLDS = [
   { id: 'library', name: 'المكتبة السرّية', icon: 'note', x: 80, y: 32, act: 5, scene: 'library', spawn: 140, unlock: 'flag:library-open', ready: true },
   { id: 'lake', name: 'البحيرة القمرية', icon: 'moon-full', x: 40, y: 22, act: 6, scene: 'lake', spawn: 140, unlock: 'flag:act5-done', ready: true },
   { id: 'corridor', name: 'ممر الذكريات', icon: 'heart', x: 22, y: 24, act: 6, scene: 'corridor', spawn: 140, unlock: 'flag:act5-done', ready: true },
-  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, scene: 'workshop', spawn: 140, unlock: 'flag:act6-done', ready: true },
+  // Story Pack 02: Act VII also needs the archive seals (or that she is already past them)
+  { id: 'workshop', name: 'ورشة الأشياء المفقودة', icon: 'dumbbell', x: 90, y: 14, act: 7, scene: 'workshop', spawn: 140, unlock: ['flag:act6-done', SP2_GATE], ready: true },
   // V2 side locations
   { id: 'study', name: 'مكتب ريان', icon: 'note', x: 70, y: 42, act: 2, scene: 'study', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 50, y: 62, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
@@ -26,6 +29,8 @@ export const WORLDS = [
   { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 52, y: 8, act: 8, scene: 'final', spawn: 140, unlock: 'flag:act7-done', ready: true },
   // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
   { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 8, y: 92, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
+  // Story Pack 02 «أرشيف الأسرار» (main story, after Act IV)
+  { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 74, y: 84, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
   { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 30, y: 92, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
 ];
 
@@ -36,6 +41,7 @@ export const ROUTES = [
   ['observatory', 'lake'], ['lake', 'corridor'], ['library', 'workshop'], ['observatory', 'final'], ['workshop', 'final'],
   ['house', 'study'], ['sanctuary', 'meadow'], ['house', 'gameroom'],
   ['garden', 'roads'], ['roads', 'roseclinic'],
+  ['house', 'archives'],
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === id);

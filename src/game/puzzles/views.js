@@ -8,6 +8,7 @@
  */
 import { symbol } from '../ui/symbols.js';
 import { esc, tx } from '../ui/dom.js';
+import { num } from '../ui/format.js';
 import { solve, flipCandles, programSolution } from './rules.js';
 
 function rerender(body, html, wire) {
@@ -272,13 +273,22 @@ export const VIEWS = {
       const animate = trace.length > 1 && !api.reduced?.();
       const first = animate ? trace[0] : trace[trace.length - 1];
       const look = { actor: '🤖', goal: '🦴', wall: '📦', ...config.look };
+      // keys (k, q) and their doors (K, Q): a key already picked up on the shown run is drawn as taken
+      const held = trace[trace.length - 1]?.keys || '';
+      const cellOf = (ch) => {
+        if (ch === 'B') return look.goal;
+        if (ch === '#') return look.wall;
+        if (ch === 'k' || ch === 'q') return held.includes(ch) && !animate ? '' : ch === 'k' ? '🗝️' : '🔑';
+        if (ch === 'K' || ch === 'Q') return '🚪';
+        return '';
+      };
       const cells = rows
-        .flatMap((row) => [...row].map((ch) => `<span class="pg-cell ${ch === '#' ? 'is-wall' : ''} ${ch === 'B' ? 'is-bone' : ''}">${ch === 'B' ? look.goal : ch === '#' ? look.wall : ''}</span>`))
+        .flatMap((row) => [...row].map((ch) => `<span class="pg-cell ${ch === '#' ? 'is-wall' : ''} ${ch === 'B' ? 'is-bone' : ''} ${'KQ'.includes(ch) ? `is-door door-${ch.toLowerCase()}` : ''} ${'kq'.includes(ch) ? `is-key key-${ch}` : ''}">${cellOf(ch)}</span>`))
         .join('');
       const robotEl = `<i class="pg-robot" aria-hidden="true" style="--x:${first.x};--y:${first.y};--r:${first.dir * 90}deg"><b>${look.actor}</b></i>`;
       rerender(
         body,
-        `<div class="pg-stage">المستوى ${s.stage + 1} من ${config.stages.length} · أقصى عدد أوامر: ${stage.max}</div>
+        `<div class="pg-stage">المستوى ${num(s.stage + 1)} من ${num(config.stages.length)} · الأوامر: ${num(s.prog.length)} من ${num(stage.max)}</div>
          <div class="pg-grid" style="--w:${rows[0].length};--h:${rows.length}" dir="ltr" aria-label="${esc(config.look?.label ?? 'الشبكة: الروبوت 🤖 والعظمة 🦴')}">${cells}${robotEl}</div>
          <ol class="pg-prog" dir="rtl" aria-label="البرنامج">${s.prog.length ? s.prog.map((c, i) => `<li><button type="button" class="pg-cmd" data-k="x${i}" data-del="${i}" aria-label="شيلي ${cmdLabel[c]}">${cmdLabel[c]}</button></li>`).join('') : '<li class="muted small">البرنامج فارغ</li>'}</ol>
          ${hint ? `<p class="pg-solution">الحل: ${hint.map((c) => cmdLabel[c]).join(' ، ')}</p>` : ''}
@@ -434,7 +444,7 @@ export const VIEWS = {
       const solEv = sol ? new Set(sol.evidence.slice(0, config.need || 2)) : new Set();
       rerender(
         body,
-        `<h3 class="ded-h">مَن؟</h3>
+        `<h3 class="ded-h">${esc(tx(config.labels?.who || 'مَن؟'))}</h3>
          <div class="ded-grid">
           ${config.suspects
             .map(
@@ -452,7 +462,7 @@ export const VIEWS = {
             )
             .join('')}
          </div>
-         <button type="button" class="btn btn-primary" data-k="submit" data-submit>أعلني الحل 🔎</button>`,
+         <button type="button" class="btn btn-primary" data-k="submit" data-submit>${esc(tx(config.labels?.submit || 'أعلني الحل 🔎'))}</button>`,
         () => {
           body.querySelectorAll('[data-suspect]').forEach((b) => b.addEventListener('click', () => api.act('pickSuspect', b.dataset.suspect)));
           body.querySelectorAll('[data-evidence]').forEach((b) => b.addEventListener('click', () => api.act('toggleEvidence', b.dataset.evidence)));
@@ -460,6 +470,31 @@ export const VIEWS = {
             if (api.act('submit') === 'noop') api.say(`اختاري مشتبه بيه و${config.need || 2} أدلة.`, 'bad');
           });
         },
+      );
+    },
+  },
+
+  // Story Pack 02: the examples show a hidden rule; pick what comes next
+  series: {
+    solution: true,
+    render(body, api) {
+      const { config } = api.def;
+      const s = api.state;
+      const stage = config.stages[s.stage];
+      const token = (v) => (v == null ? '<span class="sr-q">؟</span>' : String(v).startsWith('sym:') ? symbol(String(v).slice(4)) : `<span class="sr-n">${esc(num(v))}</span>`);
+      const row = (list, cls = '') => `<div class="sr-row ${cls}" dir="rtl">${list.map((v) => `<span class="sr-cell">${token(v)}</span>`).join('<span class="sr-arrow" aria-hidden="true">←</span>')}</div>`;
+      const right = api.showSolution ? String(stage.answer) : null;
+      rerender(
+        body,
+        `<div class="pg-stage">المستوى ${num(s.stage + 1)} من ${num(config.stages.length)}</div>
+         <p class="sr-label">أمثلة شغّلتها الآلة:</p>
+         ${stage.examples.map((ex) => row(ex)).join('')}
+         <p class="sr-label">وهذا السطر وقف بنصه:</p>
+         ${row(stage.question, 'is-question')}
+         <div class="choice-grid sr-options">${stage.options
+           .map((o) => `<button type="button" class="choice-item ${s.tried.includes(String(o)) ? 'is-wrong' : ''} ${right === String(o) ? 'is-solution' : ''}" data-k="o${o}" data-v="${esc(String(o))}" ${s.tried.includes(String(o)) ? 'disabled' : ''}>${token(o)}</button>`)
+           .join('')}</div>`,
+        () => body.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => api.act('pick', b.dataset.v))),
       );
     },
   },

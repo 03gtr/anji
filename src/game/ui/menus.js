@@ -17,8 +17,7 @@ import { groupOf } from '../core/game.js';
 import { offlineText } from '../core/sw-client.js';
 import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
 import { ACHIEVEMENTS } from '../progression/achievements.js';
-import { MISSIONS, KIND_NAMES } from '../data/missions.js';
-import { missionState } from '../progression/missions.js';
+import { journalEntries, filterEntries, displayNo, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -267,10 +266,14 @@ export function openJournal(app, tab = 'notes') {
       function render(which) {
         el.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === which)));
         if (which === 'notes') {
-          const entries = game.state.journal.filter((id) => JOURNAL[id]);
+          const all = game.state.journal.filter((id) => JOURNAL[id]);
+          const entries = all.filter((id) => JOURNAL[id].group !== 'clues');
+          const clues = all.filter((id) => JOURNAL[id].group === 'clues');
           const notes = game.state.collected.filter((id) => groupOf(id) === 'note');
+          const entry = (id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(fillNames(JOURNAL[id].text, game))}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`;
           body.innerHTML = `
-            ${entries.length ? entries.map((id) => `<article class="entry"><span class="entry-icon">${symbol(JOURNAL[id].icon)}</span><div><h4>${esc(JOURNAL[id].title)}</h4><p>${esc(fillNames(JOURNAL[id].text, game))}</p>${JOURNAL[id].open ? `<button type="button" class="btn btn-ghost btn-small" data-open="${esc(JOURNAL[id].open)}">${esc(JOURNAL[id].openLabel || 'افتحي')}</button>` : ''}</div></article>`).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
+            ${entries.length ? entries.map(entry).join('') : '<p class="muted">الدفتر فارغ. الحديقة مليانة أسرار بعد.</p>'}
+            ${clues.length ? `<h3 class="clue-head">🔎 دفتر الأدلة</h3>${clues.map(entry).join('')}` : ''}
             ${notes.length ? `<h3>رسائل ريان</h3>${notes.map((id) => `<article class="entry note"><span class="entry-icon">📜</span><div><h4>${esc(COLLECTIBLES[id]?.name || id)}</h4><p>${esc(COLLECTIBLES[id]?.text || '')}</p></div></article>`).join('')}` : ''}`;
           body.querySelectorAll('[data-open]').forEach((b) =>
             b.addEventListener('click', () => {
@@ -278,12 +281,27 @@ export function openJournal(app, tab = 'notes') {
             }),
           );
         } else if (which === 'missions') {
-          body.innerHTML = renderMissions(game);
+          const entries = journalEntries(game);
+          body.innerHTML = renderMissions(game, entries, missionFilter);
+          body.querySelectorAll('[data-filter]').forEach((b) =>
+            b.addEventListener('click', () => {
+              missionFilter = b.dataset.filter;
+              render('missions');
+              body.querySelector(`[data-filter="${missionFilter}"]`)?.focus({ preventScroll: true });
+            }),
+          );
           body.querySelectorAll('[data-mhint]').forEach((b) =>
             b.addEventListener('click', () => {
               const p = b.nextElementSibling;
               p.hidden = !p.hidden;
               b.setAttribute('aria-expanded', String(!p.hidden));
+            }),
+          );
+          body.querySelectorAll('[data-mapfocus]').forEach((b) =>
+            b.addEventListener('click', () => {
+              const e = entries.find((x) => x.id === b.dataset.mapfocus);
+              close();
+              app.ui.openMap({ focus: e });
             }),
           );
         } else if (which === 'collection') {
@@ -358,28 +376,44 @@ export function openJournal(app, tab = 'notes') {
 }
 
 /* ── missions (journal tab) ───────────────────────────────── */
-function renderMissions(game) {
-  const states = MISSIONS.map((m) => ({ m, st: missionState(m, game) }));
-  const active = states.filter((x) => x.st.status === 'active');
-  const done = states.filter((x) => x.st.status === 'complete');
-  const locked = states.length - active.length - done.length;
-  const card = ({ m, st }) => `<article class="mission ${st.status === 'complete' ? 'is-done' : ''}" data-mission="${m.id}">
-      <header><span class="mission-kind kind-${m.kind}">${esc(KIND_NAMES[m.kind])}</span><h4>${esc(m.title)}</h4>
-        <span class="mission-steps" aria-label="الخطوات">${num(st.step)}/${num(m.steps.length)}</span></header>
-      <p class="mission-where">📍 ${esc(m.where)}</p>
-      ${
-        st.status === 'complete'
-          ? `<p class="mission-reward">✅ خلصت · ${esc(m.rewardText)}</p>`
-          : `<p class="mission-summary">${esc(fillNames(m.summary, game))}</p>
-           <p class="mission-next"><b>الخطوة الجاية:</b> ${esc(fillNames(st.next.text, game))}</p>
-           <button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button>
-           <p class="mission-hint" hidden>${esc(fillNames(st.next.hint, game) || 'دوّري بالمكان المكتوب فوق.')}</p>
-           <p class="mission-reward muted small">الجايزة: ${esc(m.rewardText)}</p>`
-      }
-    </article>`;
-  return `${active.length ? active.map(card).join('') : '<p class="muted">ماكو مهمات مفتوحة هسه. كمّلي القصة… المهمات الجانبية تنفتح بالطريق.</p>'}
-    ${done.length ? `<h3>مهمات خلصت (${num(done.length)})</h3>${done.map(card).join('')}` : ''}
-    ${locked ? `<p class="muted small">بعد ${num(locked)} مهمات مخفية بالحديقة.</p>` : ''}`;
+let missionFilter = 'all'; // remembered while the game is open
+
+const STATUS_ICON = { locked: '🔒', available: '✨', active: '▶', complete: '✅' };
+
+export function renderMissions(game, entries = journalEntries(game), filter = 'all') {
+  const shown = filterEntries(entries, filter);
+  const chips = FILTERS.map(([id, label]) => {
+    const n = filterEntries(entries, id).length;
+    return `<button type="button" class="chip ${id === filter ? 'is-on' : ''}" data-filter="${id}" aria-pressed="${id === filter}">${esc(label)} <small>${num(n)}</small></button>`;
+  }).join('');
+  const card = (e) => {
+    const title = e.hidden ? 'مهمة مخفية' : e.title;
+    const text = fillNames(e.next, game);
+    const body =
+      e.status === 'complete'
+        ? `<p class="mission-reward">✅ خلصت${e.reward ? ` · ${esc(e.reward)}` : ''}</p>`
+        : e.status === 'locked'
+          ? `<p class="mission-locked">🔒 ${esc(e.locked)}</p>`
+          : `${e.summary ? `<p class="mission-summary">${esc(fillNames(e.summary, game))}</p>` : ''}
+             <p class="mission-next"><b>${e.status === 'available' ? 'للبدء:' : 'الخطوة الجاية:'}</b> ${esc(text)}</p>
+             ${e.hint ? `<button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button><p class="mission-hint" hidden>${esc(fillNames(e.hint, game))}</p>` : ''}
+             ${e.reward ? `<p class="mission-reward muted small">الجايزة: ${esc(e.reward)}</p>` : ''}`;
+    return `<article class="mission status-${e.status} cat-${e.category} ${e.isCurrent ? 'is-current' : ''}" data-mission="${esc(e.id)}" ${e.isCurrent ? 'aria-current="step"' : ''}>
+        <header>
+          <span class="mission-no">${esc(displayNo(e, num))}</span>
+          <h4>${esc(title)}</h4>
+          <span class="mission-status st-${e.status}">${STATUS_ICON[e.status]} ${STATUS_NAMES[e.status]}</span>
+        </header>
+        <p class="mission-meta"><span class="mission-kind kind-${e.category}">${esc(e.kindLabel)}</span>
+          ${e.hidden ? '' : `<span class="mission-where">📍 ${esc(e.where)}</span>`}
+          ${e.status === 'active' ? `<span class="mission-steps" aria-label="الخطوات">${num(e.steps.done)}/${num(e.steps.total)}</span>` : ''}</p>
+        ${e.isCurrent ? '<p class="mission-now">◀ النشطة الآن</p>' : ''}
+        ${body}
+        ${e.worlds.length && !e.hidden ? `<button type="button" class="btn btn-ghost btn-small" data-mapfocus="${esc(e.id)}">🗺️ على الخريطة</button>` : ''}
+      </article>`;
+  };
+  return `<div class="chips" role="group" aria-label="تصفية المهمات">${chips}</div>
+    ${shown.length ? shown.map(card).join('') : '<p class="muted">ماكو شي هنا بعد. كمّلي القصة… المهمات تنفتح بالطريق.</p>'}`;
 }
 
 /* ── help ─────────────────────────────────────────────────── */
@@ -409,35 +443,93 @@ export function openHelp(app) {
 }
 
 /* ── world map ────────────────────────────────────────────── */
-export function openMap(app) {
+/** Shortest chain of map routes between two locations (ids), or [] (pure). */
+export function mapPath(from, to) {
+  if (!from || !to || from === to) return [];
+  const prev = { [from]: null };
+  const queue = [from];
+  while (queue.length) {
+    const cur = queue.shift();
+    if (cur === to) break;
+    for (const [a, b] of ROUTES) {
+      const nxt = a === cur ? b : b === cur ? a : null;
+      if (nxt && !(nxt in prev)) {
+        prev[nxt] = cur;
+        queue.push(nxt);
+      }
+    }
+  }
+  if (!(to in prev)) return [];
+  const edges = [];
+  for (let n = to; prev[n] != null; n = prev[n]) edges.push([prev[n], n]);
+  return edges.reverse();
+}
+
+/**
+ * @param {{ focus?: object }} [opts] — a journal entry (progression/journal-index.js) to
+ *   locate: its places are highlighted, the route from here is drawn, and the panel
+ *   says what to do there (or how it opens). Tapping a place still travels, as before.
+ */
+export function openMap(app, { focus } = {}) {
   const { game } = app;
   return app.overlays.open(
     (el, { close, scope }) => {
       const here = game.state.location.scene;
+      const hereWorld = WORLDS.find((w) => w.scene && w.scene === here);
       const open = (w) => check(w.unlock, game);
+      const targets = (focus?.worlds || []).map(worldById).filter(Boolean);
+      const target = targets[0];
+      const path = new Set(mapPath(hereWorld?.id, target?.id).map(([a, b]) => [a, b].sort().join('|')));
       const lines = ROUTES.map(([a, b]) => {
         const A = worldById(a);
         const B = worldById(b);
         const lit = open(A) && open(B);
-        return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="route ${lit ? 'is-open' : ''}"/>`;
+        return `<line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" class="route ${lit ? 'is-open' : ''} ${path.has([a, b].sort().join('|')) ? 'is-path' : ''}"/>`;
       }).join('');
-      el.innerHTML = `<section class="panel map">
+      const focusText = !focus
+        ? ''
+        : focus.status === 'complete'
+          ? '✅ خلصت.'
+          : focus.status === 'locked'
+            ? `🔒 ${focus.locked}`
+            : `${focus.status === 'available' ? 'للبدء:' : 'الخطوة الجاية:'} ${fillNames(focus.next, game) ?? ''}`;
+      const canGo = target && open(target) && target.ready && target.scene && target.scene !== here;
+      el.innerHTML = `<section class="panel map ${focus ? 'has-focus' : ''}">
         <header class="panel-head"><h2 tabindex="-1">خريطة الحديقة</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
+        ${
+          focus
+            ? `<div class="map-focus st-${focus.status}" role="status">
+                <p class="map-focus-title"><span class="mission-no">${esc(displayNo(focus, num))}</span> ${esc(focus.hidden ? 'مهمة مخفية' : focus.title)}</p>
+                <p class="map-focus-text">${esc(focusText)}</p>
+                ${target && !open(target) ? `<p class="map-focus-text muted">«${esc(target.name)}» بعده مقفول بالخريطة.</p>` : ''}
+                ${canGo ? `<button type="button" class="btn btn-primary btn-small" data-go="${target.id}">🧭 روحي لـ«${esc(target.name)}»</button>` : ''}
+              </div>`
+            : ''
+        }
         <div class="map-board">
           <svg class="map-routes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${lines}</svg>
           ${WORLDS.map((w) => {
             const unlocked = open(w);
             const playable = unlocked && w.ready;
-            return `<button type="button" class="map-node ${unlocked ? 'is-open' : 'is-locked'} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''}"
-              style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}">
+            const isTarget = targets.includes(w);
+            return `<button type="button" class="map-node ${unlocked ? 'is-open' : 'is-locked'} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
+              style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${isTarget ? ' — مكان المهمة' : ''}">
               <span class="map-icon">${unlocked ? symbol(w.icon) : ICONS.lock}</span>
               <span class="map-name">${unlocked ? esc(w.name) : '؟؟؟'}</span></button>`;
           }).join('')}
         </div>
-        <p class="map-info" aria-live="polite">اختاري مكان.</p></section>`;
+        <p class="map-info" aria-live="polite">${focus ? 'المكان المضوي هو وين المهمة. المسي أي مكان مفتوح حتى تسافرين.' : 'اختاري مكان.'}</p></section>`;
       const info = el.querySelector('.map-info');
       scope.on(el.querySelector('[data-close]'), 'click', () => close());
+      const go = el.querySelector('[data-go]');
+      if (go) {
+        scope.on(go, 'click', () => {
+          app.audio.play('whoosh');
+          close();
+          app.go(target.scene, { spawnX: target.spawn });
+        });
+      }
       el.querySelectorAll('[data-world]').forEach((b) =>
         scope.on(b, 'click', () => {
           const w = worldById(b.dataset.world);

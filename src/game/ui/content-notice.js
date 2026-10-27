@@ -9,7 +9,10 @@
 import { check } from '../core/conditions.js';
 import { SCENES } from '../data/scenes/index.js';
 import { WORLDS } from '../data/worlds.js';
-import { PACKS } from '../data/missions-sp1.js';
+import { PACKS as PACKS_SP1 } from '../data/missions-sp1.js';
+import { PACKS_SP2 } from '../data/missions-sp2.js';
+
+const PACKS = [...PACKS_SP2, ...PACKS_SP1];
 import { h, esc } from './dom.js';
 
 export const noticeFlag = (pack) => `notice:${pack.id}`;

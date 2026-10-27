@@ -106,6 +106,15 @@ async function open([w, h], query = '', { fill = false } = {}) {
 const metrics = (page, sel) =>
   page.$eval(sel, (el) => ({ st: Math.round(el.scrollTop), max: el.scrollHeight - el.clientHeight, sh: el.scrollHeight, ch: el.clientHeight }));
 
+/**
+ * "Scrolled to the end": within 1 px of scrollHeight − clientHeight. Those two are
+ * whole numbers but the box can be fractional, so the true end can sit just under
+ * the computed one: a long journal at 390×844 has a 720.297 px tall box, its real
+ * end is ≈7826.7, the wheel stops on whole pixels at 7826, an instant jump rounds
+ * to 7827. Anything more than 1 px short still fails.
+ */
+const atEnd = (st, max) => st >= max - 1 && st <= max;
+
 /** Wheel over the element's centre until it stops moving; returns the scrollTop trail. */
 /**
  * After a wheel/key input, wait for the scroll it caused: poll scrollTop until
@@ -203,10 +212,11 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         overflowed++;
         const trail = await wheelToEnd(page, sel);
         expect(trail[1], `${view} first wheel moves`).toBeGreaterThan(0);
-        expect(trail[trail.length - 1], `${view} wheel`).toBe(m.max);
+        expect(atEnd(trail[trail.length - 1], m.max), `${view} wheel → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
         // keyboard: focus is on the first action; Home / End move the page
         expect(await pressAndSettle(page, sel, 'Home'), `${view} Home`).toBe(0);
-        expect(await pressAndSettle(page, sel, 'End'), `${view} End`).toBe(m.max);
+        const end = await pressAndSettle(page, sel, 'End');
+        expect(atEnd(end, m.max), `${view} End → ${end} of ${m.max}`).toBe(true);
       }
       // whether it overflows or not, the actions can be reached
       expect((await lastVisible(page, sel, '.title-actions .btn')).visible, `${view} actions`).toBe(true);
@@ -226,14 +236,14 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
       expect(m.max, `${view} journal overflows`).toBeGreaterThan(200);
       const trail = await wheelToEnd(page, sel);
       expect(trail[1], `${view} first wheel moves`).toBeGreaterThan(0);
-      expect(trail[trail.length - 1], `${view} wheel reaches end`).toBe(m.max);
+      expect(atEnd(trail[trail.length - 1], m.max), `${view} wheel reaches end → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
       expect((await lastVisible(page, sel, ':scope > *')).visible, `${view} last entry`).toBe(true);
       // keyboard on the focused list region
       await page.focus(sel);
       for (const [key, check] of [
         ['Home', (st) => st === 0],
         ['PageDown', (st) => st > 0],
-        ['End', (st) => st === m.max],
+        ['End', (st) => atEnd(st, m.max)],
         ['Home', (st) => st === 0],
         ['ArrowDown', (st) => st > 0],
       ]) {
@@ -274,7 +284,7 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         const m = await metrics(page, sel);
         if (m.max > 0) {
           const trail = await wheelToEnd(page, sel);
-          expect(trail[trail.length - 1], `${view} ${name}`).toBe(m.max);
+          expect(atEnd(trail[trail.length - 1], m.max), `${view} ${name} → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
         }
         // overflowing or not, every item can be brought into view
         expect((await lastVisible(page, sel, item)).visible, `${view} ${name} last item`).toBe(true);

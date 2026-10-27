@@ -1,0 +1,259 @@
+/* ═══ Story Pack 02 «أرشيف الأسرار» + the mission list / map overhaul ═══ */
+
+/* ─── Mission filters ─────────────────────────────────── */
+.chips {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 4px 0 8px;
+  background: var(--panel);
+}
+
+.chip {
+  min-height: 40px;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 99px;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  background: rgba(159, 215, 255, 0.1);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.chip small {
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.chip.is-on {
+  color: var(--ink);
+  background: var(--gold);
+  box-shadow: none;
+}
+
+/* ─── Mission cards: number, status, current marker ────── */
+.mission-no {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cyan);
+  background: rgba(159, 215, 255, 0.12);
+  white-space: nowrap;
+}
+
+.mission-status {
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mission-status.st-active {
+  color: var(--gold);
+}
+
+.mission-status.st-available {
+  color: var(--cyan);
+}
+
+.mission-status.st-locked {
+  opacity: 0.65;
+}
+
+.mission-status.st-complete {
+  color: #b9e3a4;
+}
+
+.mission-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.mission-kind.kind-main {
+  background: var(--gold);
+}
+
+.mission-kind.kind-side {
+  background: var(--cyan);
+}
+
+.mission-kind.kind-puzzle {
+  background: #d9c6ff;
+}
+
+.mission.cat-main {
+  box-shadow: inset 0 0 0 1.5px rgba(255, 217, 119, 0.35);
+}
+
+.mission.status-locked {
+  opacity: 0.72;
+}
+
+.mission.status-locked h4 {
+  color: inherit;
+}
+
+.mission.status-complete {
+  opacity: 0.8;
+}
+
+.mission.is-current {
+  background: rgba(255, 217, 119, 0.1);
+  box-shadow: inset 0 0 0 2px var(--gold), 0 0 0 3px rgba(255, 217, 119, 0.15);
+}
+
+.mission-now {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--gold);
+}
+
+.mission-locked {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.clue-head {
+  margin-top: 18px;
+}
+
+/* ─── Map: the focused mission ────────────────────────── */
+.map-focus {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 217, 119, 0.1);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 217, 119, 0.4);
+}
+
+.map-focus p {
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.map-focus-title {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.map-focus.st-locked {
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.route.is-path {
+  stroke: var(--rose-soft);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+}
+
+.map-node.is-target .map-icon {
+  background: #3a2a5a;
+  box-shadow: inset 0 0 0 3px var(--rose-soft), 0 0 0 4px rgba(247, 182, 203, 0.35);
+  animation: target-pulse 1.8s ease-in-out infinite;
+}
+
+.map-node.is-target-done .map-icon {
+  box-shadow: inset 0 0 0 3px #b9e3a4, 0 0 0 4px rgba(185, 227, 164, 0.3);
+}
+
+.map-node.is-target .map-name {
+  color: var(--ink);
+  background: var(--rose-soft);
+  font-weight: 700;
+}
+
+/* keep the focused place above its neighbours so its name is never covered */
+.map-node.is-target {
+  z-index: 2;
+}
+
+@keyframes target-pulse {
+  50% {
+    scale: 1.12;
+  }
+}
+
+/* ─── Puzzles: the sequence machine, keys and doors ───── */
+.sr-label {
+  margin: 10px 0 4px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.sr-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 6px;
+}
+
+.sr-cell {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 19px;
+  font-weight: 700;
+  background: rgba(159, 215, 255, 0.1);
+}
+
+.sr-cell svg {
+  width: 30px;
+  height: 30px;
+}
+
+.sr-row.is-question .sr-cell {
+  background: rgba(255, 217, 119, 0.14);
+}
+
+.sr-q {
+  color: var(--gold);
+}
+
+.sr-arrow {
+  opacity: 0.45;
+  font-size: 13px;
+}
+
+.sr-options .choice-item svg {
+  width: 32px;
+  height: 32px;
+}
+
+.pg-cell.is-door {
+  background: rgba(176, 120, 64, 0.35);
+}
+
+.pg-cell.door-q {
+  background: rgba(64, 120, 200, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-node.is-target .map-icon {
+    animation: none;
+  }
+}
+
+.reduce-motion .map-node.is-target .map-icon {
+  animation: none;
+}

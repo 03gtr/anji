@@ -10,8 +10,9 @@ import { STUDY, PASSAGE } from './side-house.js';
 import { MEADOW } from './side-meadow.js';
 import { GAMEROOM } from './side-gameroom.js';
 import { ROADS, ROSE_CLINIC } from './sp1.js';
+import { ARCHIVES, withExtras } from './sp2.js';
 
-export const SCENES = {
+const BASE = {
   [GARDEN.id]: GARDEN,
   [CONSERVATORY.id]: CONSERVATORY,
   [HOUSE.id]: HOUSE,
@@ -31,4 +32,9 @@ export const SCENES = {
   // Story Pack 01 «الطرق اللي تتذكر»
   [ROADS.id]: ROADS,
   [ROSE_CLINIC.id]: ROSE_CLINIC,
+  // Story Pack 02 «أرشيف الأسرار»
+  [ARCHIVES.id]: ARCHIVES,
 };
+
+// Story Pack 02 adds clues, letter fragments and trail marks to existing locations
+export const SCENES = Object.fromEntries(Object.entries(BASE).map(([id, scene]) => [id, withExtras(scene)]));
