@@ -609,7 +609,18 @@ export const DEEP_EXTRAS = {
         if: DEEP_UNLOCK,
         cases: [
           // Snooki (with Ryan since the meeting) comes running at the word «علبة», for this beat only
-          { if: '!flag:dg-box', run: [{ place: 'snooki', x: 690, facing: 1 }, { show: 'snooki' }, { say: 'dg.box' }, { fx: ['flag:dg-box', 'journal:dg-box'] }] },
+          {
+            if: '!flag:dg-box',
+            run: [
+              { place: 'snooki', x: 690, facing: 1 },
+              { show: 'snooki' },
+              { say: 'dg.box' },
+              { fx: ['flag:dg-box', 'journal:dg-box'] },
+              // and back to Ryan (the hidden garden is past the workshop's far end)
+              { move: 'snooki', x: 1690, speed: 380 },
+              { show: 'snooki', visible: false },
+            ],
+          },
           { if: 'flag:dg-done', run: [{ say: 'dg.box-done' }] },
           { run: [{ say: 'dg.box-again' }] },
         ],

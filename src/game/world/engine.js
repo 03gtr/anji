@@ -409,20 +409,28 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const onDog = (a, p) => a && a.visible && Math.abs(p.x - a.x) < 30 && p.y > a.y - a.h && p.y < a.y + 8;
 
   // ── input: tap a thing to walk to it and use it; tap ground to walk there ──
-  scope.on(canvas, 'pointerup', (e) => {
-    if (mode !== 'play' || paused) return;
-    const p = screenToWorld(e.clientX, e.clientY);
-    if (onDog(snooki, p) && snookiReact()) return;
-    if (onDog(actors.get('husky'), p) && huskyReact()) return;
+  /** A tap at world point p. Her husky scouts ahead, often right over the thing Anji means to
+   *  use, so a scene object wins over the husky when they overlap. Returns what took the tap. */
+  function tapAt(p) {
+    if (onDog(snooki, p) && snookiReact()) return 'snooki';
     const hit = interactables()
       .filter((it) => Math.abs(p.x - it.x) <= Math.max(26, (it.w || 40) / 2 + 10) && p.y >= (it.y ?? GROUND) - (it.h || 140) - 20 && p.y <= GROUND + 40)
       .sort((a, b) => Math.abs(p.x - a.x) - Math.abs(p.x - b.x))[0];
     if (hit) {
       if (near(hit)) interact(hit);
       else autoWalk = { x: hit.x - Math.sign(hit.x - player.x) * ((hit.w || 40) / 2 + 12), then: hit };
-    } else if (p.y > GROUND - 160) {
-      autoWalk = { x: Math.max(20, Math.min(width - 20, p.x)), then: null };
+      return 'object';
     }
+    if (onDog(actors.get('husky'), p) && huskyReact()) return 'husky';
+    if (p.y > GROUND - 160) {
+      autoWalk = { x: Math.max(20, Math.min(width - 20, p.x)), then: null };
+      return 'ground';
+    }
+    return null;
+  }
+  scope.on(canvas, 'pointerup', (e) => {
+    if (mode !== 'play' || paused) return;
+    tapAt(screenToWorld(e.clientX, e.clientY));
   });
 
   // ── update ──
@@ -564,8 +572,15 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       const home = dogs.ryanX - 58;
       const out = Math.abs(snooki.x - home) < 4;
       nextWatch = t + (out ? 4 : 9 + Math.random() * 5);
-      snooki.pose = out ? 'sniff' : 'sit';
-      snooki.moveTo = { x: out ? home - 70 : home, speed: 70, resolve: () => (snooki.facing = 1) };
+      snooki.pose = null; // a real walk there and back, never sliding in a pose
+      snooki.moveTo = {
+        x: out ? home - 70 : home,
+        speed: 70,
+        resolve: () => {
+          snooki.facing = 1;
+          snooki.pose = out ? 'sniff' : 'sit'; // looks around out there; sits once back beside Ryan
+        },
+      };
     }
 
     // idle tracking, Snooki's ambient remarks (only when he is walking with her)
@@ -810,6 +825,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     },
     run,
     interact: () => interact(interactTarget),
+    /** Tap at a world point (tests; the canvas does the same from screen coordinates). */
+    tapAt: (x, y) => (mode === 'play' && !paused ? tapAt({ x, y }) : null),
     snookiReact: () => snookiReact(),
     huskyReact: () => huskyReact(),
     on(type, fn) {

@@ -16,6 +16,7 @@ import { SCENES } from '../../src/game/data/scenes/index.js';
 import { DEEP_SCENES } from '../../src/game/data/scenes/deep.js';
 import { HUSKY_FLAG } from '../../src/game/core/names.js';
 import { SNOOKI_RYAN_TAPS, HUSKY_TAPS } from '../../src/game/world/engine.js';
+import { GROUND } from '../../src/game/world/props.js';
 import { memoryStorage } from '../helpers.js';
 
 const game = (flags = {}, strings = {}) => {
@@ -173,15 +174,48 @@ describe('in the engine', () => {
     expect(w.actor('husky').companion).toBe(true);
     // Snooki: a measured look around (a few steps), then always back to Ryan
     let farthest = 0;
+    let movingFrames = 0;
+    let slidingFrames = 0; // moving while held in a pose (sit / sniff) = sliding, not walking
     for (let i = 0; i < 60 * 30; i++) {
       w.tick(1 / 60);
       farthest = Math.max(farthest, Math.abs(snooki.x - home));
+      if (snooki.moveTo && Math.abs(snooki.vx) > 1) {
+        movingFrames++;
+        if (snooki.pose) slidingFrames++;
+      }
     }
     expect(farthest).toBeGreaterThan(30);
     expect(farthest).toBeLessThan(120);
-    for (let i = 0; i < 60 * 12 && Math.abs(snooki.x - home) > 1; i++) w.tick(1 / 60);
+    expect(movingFrames).toBeGreaterThan(0);
+    expect(slidingFrames).toBe(0); // REGRESSION: he walks there and back, never slides sitting
+    for (let i = 0; i < 60 * 12 && (Math.abs(snooki.x - home) > 1 || snooki.moveTo); i++) w.tick(1 / 60);
     expect(Math.abs(snooki.x - home)).toBeLessThanOrEqual(1);
+    expect(snooki.pose).toBe('sit'); // and sits once he is back beside Ryan
     expect(Math.abs(snooki.x - w.actor('anji').x)).toBeGreaterThan(200); // he never wanders off to her
+  });
+
+  it('REGRESSION: a tap on a scene object reaches the object even when her husky stands over it', async () => {
+    const w = await enter('final', {}, 1700);
+    const husky = w.actor('husky');
+    // the husky alone (nothing else there): the tap is hers
+    husky.x = 1100;
+    expect(w.tapAt(1100, GROUND - 30)).toBe('husky');
+    expect(HUSKY_TAPS.map((r) => r.text)).toContain(husky.bubble.text);
+    // the husky right over Anji's notebook: the notebook gets the tap, not the husky
+    for (let i = 0; i < 60 * 2; i++) w.tick(1 / 60); // let her reaction pass
+    husky.bubble = null;
+    husky.moveTo = null;
+    husky.x = 1760;
+    expect(w.tapAt(1760, GROUND - 30)).toBe('object');
+    expect(husky.bubble).toBeFalsy();
+    await until(() => document.querySelector('.overlay-dialogue')); // the notebook opened
+  });
+
+  it('the workshop box: Snooki is shown for his beat only, then runs back toward Ryan and is gone', () => {
+    const box = SCENES.workshop.interact.find((i) => i.id === 'dg-seedbox').cases[0].run;
+    expect(box.slice(0, 2)).toEqual([{ place: 'snooki', x: 690, facing: 1 }, { show: 'snooki' }]);
+    expect(box.slice(-2)).toEqual([{ move: 'snooki', x: 1690, speed: 380 }, { show: 'snooki', visible: false }]);
+    expect(box.findIndex((a) => a.fx)).toBeLessThan(box.length - 2); // the step is saved before he leaves
   });
 
   it('on her own: no Snooki (not drawn, no taps, no remarks); her husky scouts ahead when she stops', async () => {
