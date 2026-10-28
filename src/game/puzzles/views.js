@@ -494,9 +494,10 @@ export const VIEWS = {
       rerender(
         body,
         `<div class="pg-stage">المستوى ${num(s.stage + 1)} من ${num(config.stages.length)}</div>
-         <p class="sr-label">أمثلة شغّلتها الآلة:</p>
+         ${stage.note ? `<p class="sr-note" role="status">${esc(tx(stage.note))}</p>` : ''}
+         <p class="sr-label">${esc(tx(config.labels?.examples ?? 'أمثلة شغّلتها الآلة:'))}</p>
          ${stage.examples.map((ex) => row(ex)).join('')}
-         <p class="sr-label">وهذا السطر وقف بنصه:</p>
+         <p class="sr-label">${esc(tx(config.labels?.question ?? 'وهذا السطر وقف بنصه:'))}</p>
          ${row(stage.question, 'is-question')}
          <div class="choice-grid sr-options">${stage.options
            .map((o) => `<button type="button" class="choice-item ${s.tried.includes(String(o)) ? 'is-wrong' : ''} ${right === String(o) ? 'is-solution' : ''}" data-k="o${o}" data-v="${esc(String(o))}" ${s.tried.includes(String(o)) ? 'disabled' : ''}>${token(o)}</button>`)

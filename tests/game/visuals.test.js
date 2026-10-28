@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 import { frameCamera, followTop, FRAME_H, MIN_VIEW_W, MIN_TOP } from '../../src/game/world/camera.js';
 import { VIEW_H, GROUND } from '../../src/game/world/props.js';
 import { KIND, PROMPT_ICON_FONT, PROMPT_FONT } from '../../src/game/world/engine.js';
-import { ryanSprite, ryanPortrait, ryanView } from '../../src/game/characters/cast.js';
+import { ryanSprite, ryanPortrait, ryanView, ryanFace, CAST } from '../../src/game/characters/cast.js';
 import { titleBackdrop, titleRoses, TITLE_LAYOUTS } from '../../src/game/art/title-scene.js';
 import { SCENES } from '../../src/game/data/scenes/index.js';
 import { ANJI_PALETTE, anjiPortrait } from '../../src/game/characters/anji.js';
@@ -84,7 +84,9 @@ describe('Ryan', () => {
     expect(KIND.shadow.h).toBe(KIND.ryan.h);
   });
 
-  it('keeps his face hidden in every view (story), while beard and glasses read in the half-turn', () => {
+  // Team Us (owner's photo reference): his face is now seen face to face; the back views,
+  // the embrace and the recordings keep it hidden, as before
+  it('keeps his face hidden in the back views, while beard and glasses read in the half-turn', () => {
     for (const svg of [ryanSprite({}), ryanSprite({ pose: 'walk', t: 0.3 }), ryanPortrait({ expr: 'back' }), ryanView('front-backlit')]) {
       // no eyes or mouth anywhere: those would be the only round dark shapes on a face
       expect(svg).not.toMatch(/eye|mouth|pupil/i);
@@ -92,6 +94,20 @@ describe('Ryan', () => {
     const turn = ryanPortrait({ expr: 'turn' });
     expect(turn).toContain('#121216'); // glasses frame
     expect(turn).toContain('#2a1e18'); // beard
+  });
+
+  it('face to face: the reference traits (crop, full beard and moustache, rectangular glasses, broad shoulders); back stays back', () => {
+    for (const expr of ['calm', 'smile']) {
+      const face = ryanFace({ expr });
+      expect(face.match(/<rect [^>]*rx="4.2"/g)).toHaveLength(2); // rectangular lenses
+      expect(face).toContain('#2a1e18'); // beard
+      expect(face).toMatch(/#3b2a20/); // brown eyes
+      expect(face).toMatch(/M2 200 C6 172/); // shoulders to the edges of the frame
+      expect(face).not.toMatch(/private-art|.webp|.jpg|.png/); // drawn, no photo
+    }
+    expect(CAST.ryan.portrait({ expr: 'turn' })).toMatch(/rx="4.2"/);
+    expect(CAST.ryan.portrait({ expr: 'back' })).not.toMatch(/eye|pupil|#3b2a20/);
+    expect(ryanView('turn')).not.toMatch(/#3b2a20/); // the character sheet's half-turn (and the embrace) unchanged
   });
 });
 

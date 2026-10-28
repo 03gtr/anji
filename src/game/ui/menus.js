@@ -587,8 +587,8 @@ export function openMap(app, { focus: asked, place } = {}) {
               const playable = unlocked && w.ready;
               const isTarget = targets.includes(w);
               const gate = w.from && worldById(w.from);
-              return `<button type="button" class="map-node ${w.x < 50 ? 'label-after' : 'label-before'} ${unlocked ? 'is-open' : 'is-locked'} ${w.optional ? 'is-optional' : ''} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
-                style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${w.optional ? ' (اختياري)' : ''}${gate ? ` — مدخلها من «${esc(gate.name)}»` : ''}${unvisited(w) ? ' — ما زرتيها بعد' : ''}${isTarget ? ' — مكان المهمة' : ''}">
+              return `<button type="button" class="map-node ${w.x < 50 ? 'label-after' : 'label-before'} ${unlocked ? 'is-open' : 'is-locked'} ${w.optional ? 'is-optional' : ''} ${w.together ? 'is-together' : ''} ${playable ? '' : 'is-soon'} ${w.scene && w.scene === here ? 'is-here' : ''} ${isTarget ? `is-target ${focus.status === 'complete' ? 'is-target-done' : ''}` : ''}"
+                style="--x:${w.x};--y:${w.y}" data-world="${w.id}" aria-label="${esc(w.name)}${unlocked ? '' : ' (مقفول)'}${w.optional ? ' (اختياري)' : ''}${w.together ? ' (نشاط سوا)' : ''}${gate ? ` — مدخلها من «${esc(gate.name)}»` : ''}${unvisited(w) ? ' — ما زرتيها بعد' : ''}${isTarget ? ' — مكان المهمة' : ''}">
                 <span class="map-icon">${unlocked ? symbol(w.icon) : ICONS.lock}</span>
                 ${unlocked && badge[w.id] ? `<span class="map-badge b-${badge[w.id]}" aria-hidden="true">${BADGE[badge[w.id]]}</span>` : ''}
                 ${unvisited(w) ? '<span class="map-new" aria-hidden="true"></span>' : ''}

@@ -23,7 +23,7 @@ import { MUNTHER_EXPRESSIONS } from '../../src/game/characters/cast.js';
 import { MOVE } from '../../src/game/world/physics.js';
 import { GROUND } from '../../src/game/world/props.js';
 
-const EXPR = { anji: ANJI_EXPRESSIONS, snooki: SNOOKI_EXPRESSIONS, needle: ['cheerful', 'determined', 'sneaky'], ryan: ['back', 'turn'], munther: MUNTHER_EXPRESSIONS };
+const EXPR = { anji: ANJI_EXPRESSIONS, snooki: SNOOKI_EXPRESSIONS, needle: ['cheerful', 'determined', 'sneaky'], ryan: ['back', 'turn', 'smile'], munther: MUNTHER_EXPRESSIONS };
 const COND_KINDS = new Set(['flag', 'item', 'got', 'seen', 'record', 'medal', 'count']);
 
 /** Every action (recursively) in a scene. */

@@ -1,0 +1,18 @@
+/* ─── «إحنا فريق»: shared activities (after the ending) ─── */
+
+/* a place where they do something together: a warm rose ring, apart from the investigations */
+.map-node.is-together .map-icon {
+  box-shadow: inset 0 0 0 2px rgba(229, 127, 154, 0.95), 0 0 10px rgba(229, 127, 154, 0.35);
+}
+
+/* a rule Anji changes mid-challenge: shown, never hidden (series `stage.note`) */
+.sr-note {
+  margin: 4px 0 8px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(229, 127, 154, 0.18);
+  box-shadow: inset 0 0 0 1.5px rgba(229, 127, 154, 0.8);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+}

@@ -17,6 +17,7 @@ import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
+import { dogsIn } from '../data/companions.js';
 
 /** Prompt text: the game's Arabic font; icons: the platform's colour-emoji font. */
 export const PROMPT_FONT = '700 10px "Baloo Bhaijaan 2", sans-serif';
@@ -54,7 +55,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const ctx = canvas.getContext('2d');
 
   // ── sprites (decoded before play: genuine progress) ──
-  const kinds = new Set(['anji', 'snooki', ...(scene.actors || []).map((a) => a.kind)]);
+  // which dogs are here, and with whom (data/companions.js): Snooki is Ryan's, the husky is hers
+  const dogs = dogsIn(scene, game);
+  const kinds = new Set(['anji', 'snooki', ...(dogs.husky === 'follow' ? ['husky'] : []), ...(scene.actors || []).map((a) => a.kind)]);
   const tables = [...kinds].map((k) => [k, frameTable(k, game.state.cosmetics)]);
   const totalFrames = tables.reduce((n, [, t]) => n + Object.values(t).reduce((m, l) => m + l.length, 0), 0);
   let loaded = 0;
@@ -108,8 +111,17 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     return a;
   }
   const player = addActor({ id: 'anji', kind: 'anji', x: spawnX ?? scene.spawn ?? 200, z: 2 });
-  const snooki = addActor({ id: 'snooki', kind: 'snooki', x: player.x - 70, companion: true, z: 3 });
-  if (scene.snookiHidden && check(scene.snookiHidden, game)) snooki.visible = false;
+  const snooki = addActor({
+    id: 'snooki',
+    kind: 'snooki',
+    x: dogs.snooki === 'ryan' ? dogs.ryanX - 58 : player.x - 70,
+    companion: dogs.snooki === 'follow',
+    z: 3,
+  });
+  if (dogs.snooki === 'away' || (scene.snookiHidden && check(scene.snookiHidden, game))) snooki.visible = false;
+  if (dogs.snooki === 'ryan') snooki.facing = 1;
+  // her own dog walks with her (a little further back when Snooki walks too)
+  if (dogs.husky === 'follow') addActor({ id: 'husky', kind: 'husky', x: player.x - 120, companion: true, gap: dogs.snooki === 'follow' ? 118 : 62, z: 3 });
   for (const def of scene.actors || []) if (check(def.if, game)) addActor(def);
 
   // ── state ──
@@ -426,7 +438,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
           a.facing = Math.sign(d);
         }
       } else if (a.companion && a.visible && mode === 'play') {
-        const v = followVelocity(a, player);
+        const v = followVelocity(a, player, a.def.gap ? { gap: a.def.gap } : undefined);
         a.vx = approach(a.vx, v, 900 * dt);
         a.x += a.vx * dt;
         if (Math.abs(a.vx) > 8) a.facing = Math.sign(a.vx);
@@ -517,7 +529,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (playing && Math.abs(player.vx) < 5 && player.onGround) idleTime += dt;
     else idleTime = 0;
     const ambient = scene.ambient?.filter((l) => check(l.if, game));
-    if (playing && ambient?.length && idleTime > 7 && t - lastAmbient > 14) {
+    if (playing && snooki.visible && ambient?.length && idleTime > 7 && t - lastAmbient > 14) {
       lastAmbient = t;
       const line = ambient[Math.floor(Math.random() * ambient.length)];
       snooki.bubble = { text: fillNames(line.t, game), until: t + 3.6 };

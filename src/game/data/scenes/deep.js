@@ -608,7 +608,8 @@ export const DEEP_EXTRAS = {
         icon: '📦',
         if: DEEP_UNLOCK,
         cases: [
-          { if: '!flag:dg-box', run: [{ say: 'dg.box' }, { fx: ['flag:dg-box', 'journal:dg-box'] }] },
+          // Snooki (with Ryan since the ending) comes running at the word «علبة», and stays for the case
+          { if: '!flag:dg-box', run: [{ place: 'snooki', x: 690, facing: 1 }, { show: 'snooki' }, { say: 'dg.box' }, { fx: ['flag:dg-box', 'journal:dg-box'] }] },
           { if: 'flag:dg-done', run: [{ say: 'dg.box-done' }] },
           { run: [{ say: 'dg.box-again' }] },
         ],
