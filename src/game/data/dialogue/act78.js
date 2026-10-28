@@ -159,6 +159,21 @@ export const ACT78 = {
     { s: 'ryan', e: 'turn', t: 'بالمناسبة… البذور اللي جمعتيها بالطريق؟ هنا مكانها. ازرعيها وين ما تحبين.' },
     { s: 'snooki', e: 'proud', t: 'وأي مكان بيه عظم، هو مكاني.' },
   ],
+  // The open ending: this chapter is complete, the hope stays, and the next adventures are hers to
+  // ask for — they come with later updates (nothing here sends a message or promises a date).
+  'a8.open': [
+    { s: 'anji', e: 'thinking', t: 'يعني… هنا تخلص الحكاية؟' },
+    { s: 'ryan', e: 'smile', t: 'هالحكاية، إي. بس الحديقة ما تخلص.' },
+    { s: 'anji', e: 'smirk', t: 'زين، لأن عندي بعد أفكار. ألغاز أصعب، أماكن ما شفناها… وتحديات إلك إنت.' },
+    { s: 'ryan', e: 'turn', t: 'بصراحة؟ صرتي أذكى من ألغازي. آني بعدني أحاول أفهم اللغز القديم مالتي.' },
+    { s: 'snooki', e: 'smug', t: 'أشهد. شفته يحچي ويا الدفتر بنص الليل.' },
+    { s: 'anji', e: 'smile', t: 'يعني تصمملي مهمات جديدة؟' },
+    { s: 'ryan', e: 'smile', t: 'إنتِ اطلبي، وآني أصمم. بس انطيني وقت أتمرن.' },
+    { s: 'note', t: '🌹 هنا تخلص هالحكاية… والحديقة بعدها تكبر.' },
+    { s: 'note', t: 'إذا تحسين بعدچ تريدين مغامرات أصعب، اتصلي بريان وخليه يصمملچ مهمات جديدة… لأن دماغچ شكله تفوّق على دماغ ريان، وهو بعده يحاول يفهم اللغز القديم 😂❤️' },
+    { s: 'note', t: 'المغامرات الجاية توصل ويا تحديثات جاية. ولحد ذاك الوقت الحديقة مفتوحة: ازرعي، استكشفي، وارجعي وقت ما تحبين.' },
+    { do: ['journal:ending-open'] },
+  ],
   'a8.ryan-idle': [
     // Phase 05: the way into the deep garden, once the ending is over (never a must)
     { if: '!flag:dg-box', s: 'ryan', e: 'turn', t: 'بالورشة علبة صغيرة إلچ، على الطاولة جنب الماكينة. افتحيها وقت ما تحبين… ماكو عجلة.' },

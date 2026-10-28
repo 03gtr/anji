@@ -96,6 +96,9 @@ export function openDrawing(app, { revisit = false } = {}) {
           finishOpen();
         }
       });
+      // a plain click (screen readers, switch access, voice control) opens it too; after a tap the
+      // paper is already open and this does nothing
+      scope.on(paper, 'click', finishOpen);
       scope.on(el.querySelector('[data-keep]'), 'click', () => {
         app.ui.toast('الرسمة محفوظة بالدفتر 📖 — تگدرين تفتحينها وقت ما تريدين.');
         close({ kept: true });
