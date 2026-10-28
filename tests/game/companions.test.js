@@ -214,7 +214,10 @@ describe('in the engine', () => {
   it('the workshop box: Snooki is shown for his beat only, then runs back toward Ryan and is gone', () => {
     const box = SCENES.workshop.interact.find((i) => i.id === 'dg-seedbox').cases[0].run;
     expect(box.slice(0, 2)).toEqual([{ place: 'snooki', x: 690, facing: 1 }, { show: 'snooki' }]);
-    expect(box.slice(-2)).toEqual([{ move: 'snooki', x: 1690, speed: 380 }, { show: 'snooki', visible: false }]);
+    expect(box.slice(-2)).toEqual([{ move: 'snooki', x: 20, speed: 380 }, { show: 'snooki', visible: false }]);
+    // he leaves by the workshop's only exit (the stairs, on the left), not toward the deep garden's back door
+    expect(SCENES.workshop.exits.map((e) => e.side)).toEqual(['left']);
+    expect(SCENES.workshop.interact.find((i) => i.id === 'dg-backdoor').x).toBeGreaterThan(1500);
     expect(box.findIndex((a) => a.fx)).toBeLessThan(box.length - 2); // the step is saved before he leaves
   });
 

@@ -825,6 +825,12 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     },
     run,
     interact: () => interact(interactTarget),
+    /** Where a world point is on screen (CSS pixels), the inverse of the canvas's tap mapping. */
+    toScreen(x, y) {
+      const r = canvas.getBoundingClientRect();
+      const k = r.width / viewW;
+      return { x: r.left + (x - camX) * k, y: r.top + (y - topY) * k };
+    },
     /** Tap at a world point (tests; the canvas does the same from screen coordinates). */
     tapAt: (x, y) => (mode === 'play' && !paused ? tapAt({ x, y }) : null),
     snookiReact: () => snookiReact(),

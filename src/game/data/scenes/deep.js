@@ -616,8 +616,8 @@ export const DEEP_EXTRAS = {
               { show: 'snooki' },
               { say: 'dg.box' },
               { fx: ['flag:dg-box', 'journal:dg-box'] },
-              // and back to Ryan (the hidden garden is past the workshop's far end)
-              { move: 'snooki', x: 1690, speed: 380 },
+              // and back to Ryan: out by the stairs (the workshop's only exit, on the left), not the back door
+              { move: 'snooki', x: 20, speed: 380 },
               { show: 'snooki', visible: false },
             ],
           },
