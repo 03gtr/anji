@@ -30,7 +30,7 @@ export const FILTERS = [
 
 export const STATUS_NAMES = { locked: 'مقفلة', available: 'متاحة', active: 'جارية', complete: 'مكتملة' };
 
-const CATEGORY = { story: 'main', side: 'side', arcade: 'side', collect: 'side', challenge: 'puzzle', puzzle: 'puzzle' };
+const CATEGORY = { story: 'main', side: 'side', arcade: 'side', collect: 'side', challenge: 'puzzle', puzzle: 'puzzle', together: 'side' };
 
 /** Chapter and place for the missions written before chapters were shown (V2). */
 const MISSION_META = {

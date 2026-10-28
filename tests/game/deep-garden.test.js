@@ -458,7 +458,9 @@ describe('old saves (synthetic)', () => {
 
   it('display numbers of older missions do not move (new missions are appended)', () => {
     const at = MISSIONS.findIndex((m) => m.id === 'dg-night');
-    expect(MISSIONS.slice(at).map((m) => m.id)).toEqual(MISSIONS_DEEP.map((m) => m.id));
+    // (later packs, e.g. «إحنا فريق», are appended after these, never before)
+    expect(MISSIONS.slice(at, at + MISSIONS_DEEP.length).map((m) => m.id)).toEqual(MISSIONS_DEEP.map((m) => m.id));
+    expect(MISSIONS.slice(0, at).some((m) => m.id.startsWith('dg-') || m.id.startsWith('tu-'))).toBe(false);
   });
 });
 

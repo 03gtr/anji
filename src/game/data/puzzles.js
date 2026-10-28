@@ -9,6 +9,7 @@ import { PUZZLES_V3 } from './puzzles-v3.js';
 import { PUZZLES_SP1 } from './puzzles-sp1.js';
 import { PUZZLES_SP2 } from './puzzles-sp2.js';
 import { PUZZLES_DEEP } from './puzzles-deep.js';
+import { PUZZLES_TEAM } from './puzzles-team.js';
 
 export const PUZZLES = {
   // Clue: the fountain engraving "from darkness to full light".
@@ -416,4 +417,5 @@ export const PUZZLES = {
 
   // Phase 04 «الحديقة العميقة» (Act VII, before the hidden garden)
   ...PUZZLES_DEEP,
+  ...PUZZLES_TEAM,
 };

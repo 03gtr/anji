@@ -485,6 +485,11 @@ export function clueHolds(config, cells, rule) {
     const vals = config.rows.map((r) => val(r.id, rule.distinct));
     return new Set(vals).size === vals.length;
   }
+  if (rule.pair) {
+    // Team Us: "whoever has A has B": a row has value a in column ca exactly when it has b in cb
+    const [ca, a, cb, b] = rule.pair;
+    return config.rows.every((r) => (val(r.id, ca) === a) === (val(r.id, cb) === b));
+  }
   throw new Error(`Unknown clue rule ${JSON.stringify(rule)}`);
 }
 export const logicgrid = {

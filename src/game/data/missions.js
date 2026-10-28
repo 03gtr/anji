@@ -18,8 +18,9 @@ import { check } from '../core/conditions.js';
 import { MISSIONS_SP1 } from './missions-sp1.js';
 import { MISSIONS_SP2 } from './missions-sp2.js';
 import { MISSIONS_DEEP } from './missions-deep.js';
+import { MISSIONS_TEAM } from './missions-team.js';
 
-export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية', puzzle: 'لغز' };
+export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية', puzzle: 'لغز', together: 'سوا' };
 
 const special = Object.entries(PIECES).filter(([, p]) => p.special);
 
@@ -215,6 +216,8 @@ export const MISSIONS = [
   ...MISSIONS_SP2,
   // Phase 04 «الحديقة العميقة» (appended: older display numbers never move)
   ...MISSIONS_DEEP,
+  // «إحنا فريق» (after the ending; appended)
+  ...MISSIONS_TEAM,
 ];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);
