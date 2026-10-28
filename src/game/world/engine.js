@@ -503,7 +503,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       } else if (a.companion && a.visible && mode === 'play' && (!a.leader || actors.get(a.leader)?.visible)) {
         // a companion walks with its own person: her, or (Snooki on a shared outing) Ryan
         const lead = a.leader ? actors.get(a.leader) : player;
-        const scouting = a.id === 'husky' && idleTime > 3;
+        // her husky scouts ahead while Anji stands — but comes back to her side to say something
+        // (on a phone's narrow view the scouting spot is at the screen's edge: a remark there is unseen)
+        const scouting = a.id === 'husky' && idleTime > 3 && !(a.bubble && t < a.bubble.until);
         const v = followVelocity(a, lead, scouting ? { gap: -110, speed: 230 } : a.leader ? { gap: 50 } : a.def.gap ? { gap: a.def.gap } : undefined);
         a.vx = approach(a.vx, v, 900 * dt);
         a.x += a.vx * dt;
