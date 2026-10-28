@@ -26,28 +26,51 @@ Every activity is optional and playable on its own.
 
 ## 2. Who is where: Snooki is Ryan's, the husky is hers (`data/companions.js`)
 
-The owner's correction is applied as one pure rule, `dogsIn(scene, game)`. The engine reads it when a scene starts; nothing is saved.
+The owner's rule is applied as one pure rule, `dogsIn(scene, game)`. The engine reads it when a scene starts; nothing is saved.
+
+**The turning point is the meeting under the blue rose tree.** That is the `meet` trigger of the `final` scene, `MET_RYAN` = `t.final.meet` OR `game-complete`. In that very meeting a `stay` action ends Snooki's walking with her.
 
 | Story state | Snooki | Her husky |
 | --- | --- | --- |
-| Before the ending (every save that has not finished it) | walks with Anji (Ryan sent him: the original story, unchanged) | only where a scene places her |
-| After the ending, Ryan in the scene | **beside Ryan** | follows Anji (once met) |
-| After the ending, no Ryan, no story for Snooki | **away, with Ryan** (not drawn, no remarks, no taps) | follows Anji |
-| After the ending, a story he is part of is open (`SNOOKI_JOINS`: Story Pack 01's roads, Story Pack 02's archive if played late, the deep garden's case until the second rose) | joins Anji | follows Anji |
-| A scene that brings all four (`dogsAfter`: the walk) | follows | follows (Ryan walks too) |
+| Before the meeting | walks with Anji: his mission, to bring her to Ryan (the original story, unchanged) | only where a scene places her |
+| After the meeting, Ryan in the scene (the hidden garden, the clinic, the training hall) | **beside Ryan** | follows Anji (once met) |
+| After the meeting, Anji on her own (any scene without Ryan, whatever story is open) | **away, with Ryan** (not drawn, no remarks, no taps) | follows Anji; before she has met her, Anji walks alone |
+| Both together and the scene says so (`together: true`: the walk with all four) | follows | follows (Ryan walks too) |
 
-The rule also guarantees:
-- **She always has a dog:** a finished game that hasn't met the husky yet is never left without one; Snooki stays with her.
+**Each dog is like its person, shown by behaviour (engine), not by labels:**
+- **Snooki beside Ryan: loyal, steady, watchful.**
+  - He sits at Ryan's side.
+  - Now and then he takes a few measured steps out to look around, then always returns to Ryan.
+  - Tapped, he answers in kind («آني هنا. يم ريان. هذا مكاني.»), sometimes stubbornly («ما أتحرك. ريان يمكن يحتاجني.»).
+  - His comic remarks only come when he is actually walking with her.
+- **Her husky: curious, quick, playful, a little mischievous.**
+  - When Anji stops, she runs ahead to scout new ground, and falls back in when Anji walks.
+  - Tapped, she reacts playfully (a howl, a sly look, a butterfly), and sometimes darts off to explore.
+  - She never points at puzzle answers: hints stay on request only.
+
+**The rule also guarantees:**
 - **No duplicate husky:** a scene that places the husky itself keeps her there.
-- **Deep Garden box beat:** Snooki is shown running in before he speaks.
-- **Names and introductions:** no dog is renamed or reintroduced. The introduction stays guarded by `!flag:husky-name` / `!flag:sp1-husky-met`.
+- **Deep Garden box beat:** Snooki is shown running in for that beat only.
+- **Names and introductions:** no dog is renamed or reintroduced (still guarded by `!flag:husky-name` / `!flag:sp1-husky-met`).
+- **History:** no mission or journal history changes.
+
+**Known content gap:** some post-meeting solo scenes have Snooki lines in their dialogue, and those lines play while he is not on screen:
+- Story Pack 01's roads before Ryan appears;
+- the deep garden's case;
+- Story Pack 02 if played late.
+
+Rewriting those lines, or bringing Ryan and Snooki into those scenes, is a content decision for the owner.
 
 Tests (`tests/game/companions.test.js`, 11):
-- every scene before the ending;
-- the hidden garden, garden places, Story Pack 01, the deep garden, the archive and the walk;
-- invariants across every scene and six story states (no save writes; name unchanged; Snooki beside Ryan only where Ryan is);
-- no second introduction;
-- two checks in the real engine (who is visible, who follows, where).
+- before the meeting;
+- the meeting itself, including a save left mid-ending;
+- re-entering the rose garden;
+- the exact regression: Snooki never follows her on her own after the meeting, whatever story is open;
+- Anji alone, with and without her husky;
+- both together, and all four on the walk;
+- a placed husky;
+- saves untouched (name, missions, journal, no second introduction);
+- three real-engine checks: Snooki's watch-and-return beside Ryan, the husky scouting ahead, each dog's own taps.
 
 ## 3. Ryan's look (from the owner's reference photo)
 

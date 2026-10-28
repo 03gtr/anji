@@ -1,36 +1,30 @@
 /**
- * Which dogs are in a scene, and with whom (the owner's correction): Snooki is Ryan's dog;
- * Anji's own dog is the white husky she names.
+ * Which dogs are in a scene, and with whom (the owner's rule): Snooki is Ryan's dog; Anji's
+ * own dog is the white husky she names. The canonical turning point is the meeting under the
+ * blue rose tree in the hidden garden (the `meet` trigger of the `final` scene).
  *
- *   Before the ending  Snooki walks with Anji: Ryan sent him to guide her (the original
- *                      story, unchanged for every save that has not finished it).
- *   After the ending   Snooki stays with Ryan: next to him wherever Ryan is in the scene,
- *                      otherwise away with him. Anji walks with her husky once she has met her.
- *                      Snooki joins Anji again only when a story brings him along
- *                      (SNOOKI_JOINS: an unfinished story he is part of, or a scene that says
- *                      so with `dogsAfter: { snooki: 'follow' }`, like a walk with all four).
- *                      Where Ryan is in the scene, Snooki is beside him.
+ *   Before the meeting  Snooki walks with Anji: Ryan sent him to bring her to him (his mission;
+ *                       the original story, unchanged).
+ *   At the meeting      Snooki's mission ends there: he goes to Ryan and stays (`stay` action in
+ *                       the meeting itself, so even the rest of that scene agrees).
+ *   After the meeting   Snooki is with Ryan: beside him wherever Ryan is in the scene, otherwise
+ *                       away with him, never her companion when she is on her own. Anji walks
+ *                       with her own husky once she has met her (before that, on her own). Where
+ *                       a scene brings the two of them together and says so (`together: true`,
+ *                       e.g. the walk with all four), both dogs come along.
  *   A scene that places the husky itself (an actor) keeps her there, never a second copy.
  *
  * Nothing here is saved: it is read from story flags each time a scene starts, so no save
- * changes and no dog is ever renamed, replaced or handed to the other person.
+ * changes, no mission or journal entry is touched, and no dog is renamed or replaced.
  */
 import { check } from '../core/conditions.js';
 import { HUSKY_MET } from './missions-sp2.js';
 
 /**
- * After the ending, Snooki tags along while a story he is in is still open: Story Pack 01's
- * roads (he was there when she met the husky), Story Pack 02's archive if she plays it late
- * (he is her co-detective), and the deep garden's case until the second rose is planted
- * (he is, after all, the suspect).
+ * The meeting has happened: its one-time trigger fired (set the moment it starts), or the
+ * ending it leads to is complete (every finished save, whatever version it was made with).
  */
-export const SNOOKI_JOINS = {
-  any: [
-    '!flag:sp1-done',
-    ['flag:sp2-entered', '!flag:sp2-done'],
-    ['flag:dg-box', '!flag:dg-planted'],
-  ],
-};
+export const MET_RYAN = { any: ['flag:t.final.meet', 'flag:game-complete'] };
 
 const present = (scene, kind, game) => (scene.actors || []).find((a) => a.kind === kind && check(a.if, game)) ?? null;
 
@@ -39,13 +33,10 @@ const present = (scene, kind, game) => (scene.actors || []).find((a) => a.kind =
  */
 export function dogsIn(scene, game) {
   const ryan = present(scene, 'ryan', game);
-  const husky = present(scene, 'husky', game) ? 'placed' : 'away';
-  if (!game.flag('game-complete')) return { snooki: 'follow', husky, ryanX: ryan?.x ?? null };
-  const herDog = husky === 'placed' ? 'placed' : check(HUSKY_MET, game) ? 'follow' : 'away';
-  // where Ryan is, Snooki is beside him; elsewhere he joins her only when a story brings him
-  let snooki = scene.dogsAfter?.snooki ?? (ryan ? 'ryan' : check(SNOOKI_JOINS, game) ? 'follow' : 'away');
-  if (snooki === 'ryan' && !ryan) snooki = 'away';
-  // she is never left with no dog at all before she has met her own
-  if (snooki === 'away' && herDog === 'away') snooki = 'follow';
-  return { snooki, husky: herDog, ryanX: ryan?.x ?? null };
+  const placed = present(scene, 'husky', game) ? 'placed' : 'away';
+  if (!check(MET_RYAN, game)) return { snooki: 'follow', husky: placed, ryanX: ryan?.x ?? null };
+  const husky = placed === 'placed' ? 'placed' : check(HUSKY_MET, game) ? 'follow' : 'away';
+  // both owners together in this scene (and the scene says they walk as one): both dogs come along
+  if (scene.together && ryan) return { snooki: 'follow', husky, ryanX: ryan.x };
+  return { snooki: ryan ? 'ryan' : 'away', husky, ryanX: ryan?.x ?? null };
 }

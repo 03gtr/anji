@@ -44,6 +44,21 @@ export const SNOOKI_TAPS = [
   { pose: 'celebrate', text: 'نطّة احتفال! بدون سبب. الأسباب مبالغ بيها.' },
   { pose: 'stubborn', text: 'لا. مو هسه. آني مشغول… بالتفكير.' },
 ];
+/** Snooki beside Ryan (after the meeting): Ryan's dog — loyal, steady, watchful, a little stubborn. */
+export const SNOOKI_RYAN_TAPS = [
+  { pose: 'sit', text: 'آني هنا. يم ريان. هذا مكاني.' },
+  { pose: 'sniff', text: 'فحصت المنطقة. كلشي تمام. لا تقلقون.' },
+  { pose: 'wag', text: 'ريان ما يحچي هواية. آني هم. نفهم بعض.' },
+  { pose: 'stubborn', text: 'لا. ما أتحرك. ريان يمكن يحتاجني.' },
+];
+/** Anji's husky: like her — curious, quick, playful, a little mischievous (she acts more than she talks). */
+export const HUSKY_TAPS = [
+  { pose: 'sniff', text: '👃… ؟', scout: true },
+  { pose: 'excited', text: 'أووو! 🐾' },
+  { pose: 'wag', text: '😏', scout: true },
+  { pose: 'celebrate', text: '✨🦋' },
+  { pose: 'sit', text: '👀' },
+];
 
 export async function createWorld(host, scene, app, { spawnX, onProgress } = {}) {
   const { game, audio, input, scope } = app;
@@ -119,7 +134,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     z: 3,
   });
   if (dogs.snooki === 'away' || (scene.snookiHidden && check(scene.snookiHidden, game))) snooki.visible = false;
-  if (dogs.snooki === 'ryan') snooki.facing = 1;
+  if (dogs.snooki === 'ryan') {
+    snooki.facing = 1;
+    snooki.pose = 'sit';
+  }
   // her own dog walks with her (a little further back when Snooki walks too)
   if (dogs.husky === 'follow') addActor({ id: 'husky', kind: 'husky', x: player.x - 120, companion: true, gap: dogs.snooki === 'follow' ? 118 : 62, z: 3 });
   for (const def of scene.actors || []) if (check(def.if, game)) addActor(def);
@@ -141,6 +159,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   let interactTarget = null;
   let autoWalk = null; // { x, then }
   let idleTime = 0;
+  let nextWatch = 8; // Snooki's first look around (beside Ryan)
   let lastAmbient = 0;
   let lastLocationSave = 0;
   const firedTriggers = new Set();
@@ -286,6 +305,11 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       actors.delete(act.despawn);
       return;
     }
+    if (act.stay) {
+      const a = actors.get(act.stay);
+      if (a) a.companion = false;
+      return;
+    }
     if (act.show !== undefined) {
       const a = actors.get(act.show);
       if (a) a.visible = act.visible ?? true;
@@ -361,26 +385,35 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     game.setLocation(scene.id, player.x);
   }
 
-  /** Tap on Snooki: a short pose + line (never blocks play). */
-  let snookiBusyUntil = 0;
-  function snookiReact() {
-    if (t < snookiBusyUntil || !snooki.visible) return false;
-    const r = SNOOKI_TAPS[game.nextLine('snooki-tap', SNOOKI_TAPS.length)];
-    snookiBusyUntil = t + 1.6;
-    snooki.pose = r.pose;
-    snooki.bubble = { text: r.text, until: t + 2.6 };
+  /** Tap on a dog: a short pose + line from its own list (never blocks play). */
+  const busyUntil = {};
+  function dogReact(a, list, key) {
+    if (!a || t < (busyUntil[a.id] ?? 0) || !a.visible) return false;
+    const r = list[game.nextLine(key, list.length)];
+    busyUntil[a.id] = t + 1.6;
+    a.pose = r.pose;
+    a.bubble = { text: r.text, until: t + 2.6 };
     if (r.sfx) audio.play(r.sfx);
+    // her husky sometimes darts ahead to see what is there, then comes back to her side
+    if (r.scout && a.companion && !a.moveTo && mode === 'play') {
+      const x = Math.max(30, Math.min(width - 30, player.x + player.facing * 170));
+      a.moveTo = { x, speed: 260, resolve: () => {} };
+    }
     scope.timeout(() => {
-      if (snooki.pose === r.pose) snooki.pose = null;
+      if (a.pose === r.pose) a.pose = a === snooki && dogs.snooki === 'ryan' ? 'sit' : null;
     }, 1500);
     return true;
   }
+  const snookiReact = () => dogReact(snooki, dogs.snooki === 'ryan' ? SNOOKI_RYAN_TAPS : SNOOKI_TAPS, dogs.snooki === 'ryan' ? 'snooki-ryan-tap' : 'snooki-tap');
+  const huskyReact = () => dogReact(actors.get('husky'), HUSKY_TAPS, 'husky-tap');
+  const onDog = (a, p) => a && a.visible && Math.abs(p.x - a.x) < 30 && p.y > a.y - a.h && p.y < a.y + 8;
 
   // ── input: tap a thing to walk to it and use it; tap ground to walk there ──
   scope.on(canvas, 'pointerup', (e) => {
     if (mode !== 'play' || paused) return;
     const p = screenToWorld(e.clientX, e.clientY);
-    if (Math.abs(p.x - snooki.x) < 30 && p.y > snooki.y - snooki.h && p.y < snooki.y + 8 && snookiReact()) return;
+    if (onDog(snooki, p) && snookiReact()) return;
+    if (onDog(actors.get('husky'), p) && huskyReact()) return;
     const hit = interactables()
       .filter((it) => Math.abs(p.x - it.x) <= Math.max(26, (it.w || 40) / 2 + 10) && p.y >= (it.y ?? GROUND) - (it.h || 140) - 20 && p.y <= GROUND + 40)
       .sort((a, b) => Math.abs(p.x - a.x) - Math.abs(p.x - b.x))[0];
@@ -438,7 +471,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
           a.facing = Math.sign(d);
         }
       } else if (a.companion && a.visible && mode === 'play') {
-        const v = followVelocity(a, player, a.def.gap ? { gap: a.def.gap } : undefined);
+        const scouting = a.id === 'husky' && idleTime > 3;
+        const v = followVelocity(a, player, scouting ? { gap: -110, speed: 230 } : a.def.gap ? { gap: a.def.gap } : undefined);
         a.vx = approach(a.vx, v, 900 * dt);
         a.x += a.vx * dt;
         if (Math.abs(a.vx) > 8) a.facing = Math.sign(a.vx);
@@ -525,11 +559,20 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       emit('target', best);
     }
 
-    // idle tracking, Snooki's ambient remarks
+    // Snooki beside Ryan: steady and watchful — a short look around now and then, back to his side
+    if (dogs.snooki === 'ryan' && playing && snooki.visible && !snooki.moveTo && t > nextWatch) {
+      const home = dogs.ryanX - 58;
+      const out = Math.abs(snooki.x - home) < 4;
+      nextWatch = t + (out ? 4 : 9 + Math.random() * 5);
+      snooki.pose = out ? 'sniff' : 'sit';
+      snooki.moveTo = { x: out ? home - 70 : home, speed: 70, resolve: () => (snooki.facing = 1) };
+    }
+
+    // idle tracking, Snooki's ambient remarks (only when he is walking with her)
     if (playing && Math.abs(player.vx) < 5 && player.onGround) idleTime += dt;
     else idleTime = 0;
     const ambient = scene.ambient?.filter((l) => check(l.if, game));
-    if (playing && snooki.visible && ambient?.length && idleTime > 7 && t - lastAmbient > 14) {
+    if (playing && snooki.visible && snooki.companion && ambient?.length && idleTime > 7 && t - lastAmbient > 14) {
       lastAmbient = t;
       const line = ambient[Math.floor(Math.random() * ambient.length)];
       snooki.bubble = { text: fillNames(line.t, game), until: t + 3.6 };
@@ -768,6 +811,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     run,
     interact: () => interact(interactTarget),
     snookiReact: () => snookiReact(),
+    huskyReact: () => huskyReact(),
     on(type, fn) {
       listeners[type].push(fn);
     },

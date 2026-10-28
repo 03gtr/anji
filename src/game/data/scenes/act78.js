@@ -192,6 +192,8 @@ export const FINAL = {
       run: [
         { camera: 1420, ms: 900 },
         { move: 'snooki', x: 1400, speed: 300 },
+        // the meeting: Snooki's mission ends here, he stays with Ryan (data/companions.js)
+        { stay: 'snooki' },
         { pose: 'snooki', anim: 'excited', for: 900 },
         { face: 'ryan', dir: -1 },
         { say: 'a8.meet' },
