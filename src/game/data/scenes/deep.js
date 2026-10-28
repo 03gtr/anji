@@ -9,7 +9,7 @@
  * Facts picked up become journal entries (the evidence notebook lists them by place).
  */
 import { GROUND } from '../../world/props.js';
-import { DEEP_OPEN } from '../missions-deep.js';
+import { DEEP_OPEN, DEEP_UNLOCK } from '../missions-deep.js';
 
 const once = (key) => ({ if: `!seen:${key}`, then: [{ say: key }] });
 /** A door to another place (the same place the map would take her). */
@@ -606,7 +606,7 @@ export const DEEP_EXTRAS = {
         h: 70,
         label: 'علبة البذرة الأخيرة',
         icon: '📦',
-        if: 'flag:sp2-final-done',
+        if: DEEP_UNLOCK,
         cases: [
           { if: '!flag:dg-box', run: [{ say: 'dg.box' }, { fx: ['flag:dg-box', 'journal:dg-box'] }] },
           { if: 'flag:dg-done', run: [{ say: 'dg.box-done' }] },
@@ -620,7 +620,7 @@ export const DEEP_EXTRAS = {
       {
         x: 760,
         reach: 40,
-        if: 'flag:sp2-final-done',
+        if: DEEP_UNLOCK,
         draw(ctx, { P }) {
           P.table(ctx, 760, GROUND + 2, 50, { cloth: '#2b3a8c' });
           ctx.fillStyle = '#6b4e2a';
@@ -665,6 +665,46 @@ export const DEEP_EXTRAS = {
   garden: {
     interact: [door('dg-clockgate', 1700, 'بوابة الساعات', 'clockgarden', DEEP_OPEN)],
     dynamic: [doorGlow(1700, DEEP_OPEN)],
+  },
+  // the epilogue: the woken seed is planted with Ryan, next to the first rose (after the ending only)
+  final: {
+    interact: [
+      {
+        id: 'dg-second-rose',
+        x: 1290,
+        w: 50,
+        h: 60,
+        label: 'جنب الوردة الأولى',
+        icon: '🌱',
+        if: ['flag:game-complete', 'flag:dg-done', '!flag:dg-planted'],
+        run: [
+          { say: 'dg.plant-intro' },
+          { move: 'snooki', x: 1290, speed: 240 },
+          { pose: 'snooki', anim: 'excited', for: 800 },
+          { say: 'dg.plant' },
+          { shake: 0.2 },
+          { fx: ['flag:dg-planted', 'journal:dg-planted'] },
+          { say: 'dg.plant-done' },
+        ],
+      },
+      { id: 'dg-rose-2', x: 1290, w: 40, h: 60, label: 'الوردة الثانية', icon: '🌹', glow: false, if: 'flag:dg-planted', run: [{ say: 'dg.rose-2' }] },
+    ],
+    dynamic: [
+      {
+        x: 1290,
+        reach: 40,
+        if: 'flag:dg-planted',
+        draw(ctx, { P }) {
+          ctx.strokeStyle = '#3f7a4a';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.moveTo(1290, GROUND + 2);
+          ctx.quadraticCurveTo(1294, GROUND - 10, 1290, GROUND - 18);
+          ctx.stroke();
+          P.rose(ctx, 1290, GROUND - 22, 5, 'pink');
+        },
+      },
+    ],
   },
 };
 

@@ -24,13 +24,12 @@ export const SP2_UNLOCK = 'flag:act4-done';
 /** The workshop opens when the archive seals are lit — or if she is already past that point. */
 export const SP2_GATE = { any: ['flag:sp2-done', 'flag:workshop-entered'] };
 /**
- * The finale is earned: the hidden garden (Act VIII) needs «خريطة الغد» (Phase 03) and,
- * since Phase 04, the whole «الحديقة العميقة» chain ending in the last page (`dg-done`, which
- * can only be reached through «خريطة الغد»), unless she has already been there: any save that
- * entered the finale keeps going. No save ever had `dg-done` before Phase 04, and «خريطة الغد»
- * never shipped to the live site, so no published progress is rolled back.
+ * The finale is earned: the hidden garden (Act VIII) needs «خريطة الغد» (Phase 03), unless she
+ * has already been there: any save that entered the finale keeps going. «الحديقة العميقة»
+ * (Phase 04) is NOT part of this gate: it is a continuation that opens after the ending
+ * (DEEP_UNLOCK, missions-deep.js), so the published ending never waits for it.
  */
-export const SP2_FINAL_GATE = { any: ['flag:dg-done', 'flag:final-entered'] };
+export const SP2_FINAL_GATE = { any: ['flag:sp2-final-done', 'flag:final-entered'] };
 /** She has met the husky: at the sanctuary before the ending, or in Story Pack 01 after it. */
 export const HUSKY_MET = { any: ['flag:sp2-husky-early', 'flag:sp1-husky-met'] };
 

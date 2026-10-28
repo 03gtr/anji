@@ -3,6 +3,57 @@
 Branch `feature/story-pack-02`, on top of Phase 03 / 03b (PR #5). Nothing here is merged or
 deployed. `main` and the live site are untouched.
 
+## 0. Phase 05: the deep garden comes AFTER the ending (owner's decision)
+
+The owner chose to keep the published ending exactly as players know it and to make this
+expansion a new chapter that opens after it. This section replaces the gate described in §4;
+the puzzles, chains and places below are unchanged.
+
+**The published ending, as the code on `main` (`ec671db`) defines it.** The hidden garden opens
+on the map with `act7-done`. Entering it sets `final-entered`. The `meet` trigger (`act7-done`
+and not `game-complete`) plays the drawing, planting the blue rose (`rose-planted`), one of three
+ending lines (`ending-hope` / `ending-memories` / `ending-growing`) and the credits. Then
+`a8.ending` sets `game-complete` and `act8-done`. Story Pack 01 opens after `game-complete`.
+Story Pack 02 and the deep garden are not on `main`.
+
+**Gate rules now.**
+- The hidden garden: `act7-done` AND (`sp2-final-done` OR `final-entered`). This is the Phase 03 gate again; nothing from the deep garden is in it or in any act objective (tested).
+- The way in: `DEEP_UNLOCK` = `game-complete` OR `dg-box`.
+  - `dg-box` is set only by the box, which shows only with `DEEP_UNLOCK`. So for every real save this means "after the ending".
+  - It also keeps a Phase 04 preview save that began the chain before its ending (never published) from being shut out.
+- No Story Pack 02 is needed. A finished game from the live site can start straight away.
+- Act VII is back to its Phase 03 objectives. The deep missions are post-game (`pack: 'deep'`, no chapter). Their places are `act: 8` on the map's second page.
+
+**How a returning player finds it.** These are three light hooks; none of them forces anything.
+- A one-time notice: «أنجي، ريان ترك علبة صغيرة بالورشة… وطلعت فارغة 📦», with «استكشفي هسه» and «بعدين».
+  - It is shown after any notice still due. A live save that never saw Story Pack 02 gets the archive notice first, one at a time.
+- Ryan in the hidden garden mentions the box until it is opened.
+- The journal lists «الليلة الضائعة» as an available post-game mission.
+
+**The new ending of the chain (no ending is rewritten).** The rose in the finale is the first rose. The empty box was for its second seed.
+- After the last page (`dg-done`), the hidden garden offers «جنب الوردة الأولى»: a short scene where Anji surprises Ryan with the seed and they plant it.
+  - The roles come from the logic grid: Snooki digs, Anji places the seed, Ryan waters, the light together.
+  - It sets `dg-planted` and journal `dg-planted`, and draws a second rose next to the first.
+- `dg-seed` gained this third step. Missions are recorded complete once (`mission:<id>`), so a preview save that had already finished `dg-seed` stays complete.
+- The Phase 04 finale line that assumed the seed came before the ending was removed.
+
+**Wedding: deferred, not shipped.**
+- No wedding scene, date, vow or marriage flag exists. This is tested: `tests/game/post-finale.test.js` scans every line, journal entry and mission condition.
+- The published promise is kept as it was: Story Pack 01's «وعد» card, and Ryan's «نكمل لأن إحنا الاثنين نريد».
+- A future wedding is a separate narrative milestone, earned after more shared story, not a meter to fill.
+
+**Save categories tested** (synthetic saves only, `tests/game/post-finale.test.js` plus the updated `deep-garden.test.js` and `phase-03.test.js`):
+- a new game reaching the original ending with no `dg-` flag;
+- the live-shaped finished game (no Story Pack 02): it loads unchanged, Acts VII–VIII stay done, the chain opens, plants once, and nothing is paid twice;
+- an Act V save mid Story Pack 02, with its puzzle stage kept;
+- a save inside the finale (entered, not finished): the ending still plays, the deep garden waits;
+- a live save that entered the finale before Story Pack 02 existed;
+- a preview save inside the deep garden before its ending (steps and draft kept);
+- a preview save that finished the deep garden;
+- a named husky: nothing asks for or writes the name.
+
+`SAVE_VERSION` stays 3; every change is additive.
+
 ## 1. Baseline audit (from the repository, before Phase 04)
 
 | | Before Phase 04 | After Phase 04 |
@@ -150,7 +201,9 @@ Progress is flags and journal entries only. Puzzles resume at their stage (`psta
   - Snooki's «تلميح مجاني» line is gone;
   - the ledger's waiting list now repeats only what the ledger says (no exact spots).
 
-## 4. Saves and the ending gate
+## 4. Saves and the ending gate (Phase 04 design; superseded by §0)
+
+> Phase 05 moved the deep garden after the ending: the rules below are no longer in force.
 
 - `SP2_FINAL_GATE` = `dg-done` OR `final-entered`.
   - A save that entered the finale keeps it.
@@ -172,7 +225,7 @@ Progress is flags and journal entries only. Puzzles resume at their stage (`psta
 | Optional (bells, lighthouse) | 2 | 15–30 min |
 
 - **New main play: roughly 2.3–4.2 hours by design.**
-- With Story Pack 02 (1.75–2.75 h), that is about **4–7 hours** of pre-finale content beyond the original acts.
+- With Story Pack 02 (1.75–2.75 h), that is about **4–7 hours** of new content beyond the original acts (since Phase 05: Story Pack 02 before the ending, the deep garden after it).
 - This is an estimate from the mechanics. Nobody has played it yet.
 
 **How to check it is fun, not repetition** (playtest plan):

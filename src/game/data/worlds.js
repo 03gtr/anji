@@ -30,13 +30,13 @@ export const WORLDS = [
   { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 37, y: 55.5, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 12, y: 24.5, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
   // Phase 03: the finale is earned — Act VII and «خريطة الغد» (or she has already been there)
-  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تنزرع البذرة الأخيرة… وهي بعدها مفقودة.' },
+  { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تكتمل «خريطة الغد» بالورشة.' },
   // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
   { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 12, y: 86.5, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
   // Story Pack 02 «أرشيف الأسرار» (main story, after Act IV)
   { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 87, y: 71, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
   { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
-  // Phase 04 «الحديقة العميقة»: the map's second page (`region: 'deep'`), its own 4 × 6 grid.
+  // Phase 04 «الحديقة العميقة» (after the ending since Phase 05): the map's second page (`region: 'deep'`), its own 4 × 6 grid.
   // `from` is the garden place each one is entered from (drawn as «من …» under its name).
   ...[
     // `short`: the label drawn on the map (two words at most, so it fits a 320 px phone);
@@ -55,7 +55,7 @@ export const WORLDS = [
     { id: 'bridge', name: 'الجسر المخفي', icon: 'drop', x: 37, y: 24.5, unlock: 'flag:dg-hedge', locked: 'تنفتح لمن تعبرين متاهة السياج.' },
     { id: 'forgottengreen', name: 'البيت الأخضر المنسي', short: 'البيت الأخضر', icon: 'rose', x: 62, y: 24.5, unlock: 'flag:dg-bridge', locked: 'وراء الجسر المخفي.' },
     { id: 'evidenceroom', name: 'غرفة الأدلة الأخيرة', short: 'غرفة الأدلة', icon: 'key', x: 62, y: 9, unlock: 'flag:dg-awake', locked: 'تنفتح لمن تصحى البذرة.' },
-  ].map((w) => ({ act: 7, scene: w.id, spawn: 140, ready: true, pack: 'sp2', region: 'deep', ...w, locked: w.locked ?? 'تنفتح لمن تكملين «خريطة الغد» وتلگين علبة البذرة فارغة.' })),
+  ].map((w) => ({ act: 8, scene: w.id, spawn: 140, ready: true, pack: 'deep', region: 'deep', ...w, locked: w.locked ?? 'تنفتح بعد نهاية الحكاية، لمن تلگين علبة البذرة الأخيرة فارغة بالورشة.' })),
 ];
 
 /** Map pages: the garden, and (Phase 04) the deep garden under and behind it. */

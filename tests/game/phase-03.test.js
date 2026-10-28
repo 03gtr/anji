@@ -52,19 +52,17 @@ const SP2_CORE = ['sp2-entered', 'sp2-ledger-read', 'sp2-clue-a', 'sp2-clue-b', 
 const FINAL = ['sp2-final-read', 'sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3', 'sp2-final-rule', 'sp2-final-done'];
 
 describe('the finale is earned', () => {
-  // Phase 04 moved the gate further on purpose (owner's spec: the deep garden comes before the
-  // finale), so «خريطة الغد» alone no longer opens it; the chain to `dg-done` is played through
-  // in tests/game/deep-garden.test.js, which checks the gate independently.
-  it('Act VII alone does not open the hidden garden, nor «خريطة الغد» alone; the deep garden does', () => {
+  // Phase 05 restored this test's Phase 03 expectation: the deep garden (Phase 04) moved to
+  // AFTER the ending (owner's decision), so «خريطة الغد» alone opens the hidden garden again.
+  // The post-ending gate is checked on its own in tests/game/post-finale.test.js.
+  it('Act VII alone no longer opens the hidden garden; «خريطة الغد» does', () => {
     const g = throughAct(7, game());
     g.setFlags([...SP2_CORE, 'workshop-entered']); // an Act VII save has been in the workshop
     expect(check(worldById('final').unlock, g)).toBe(false);
     expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: sp2('sp2-final').steps[0].text });
     g.setFlags(FINAL);
-    expect(check(worldById('final').unlock, g)).toBe(false);
-    expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: mission('dg-night').steps[0].text });
-    g.setFlag('dg-done');
     expect(check(worldById('final').unlock, g)).toBe(true);
+    expect(currentObjective(g).act).toBe(8);
   });
 
   it('the mission opens step by step; the inscriptions only after Act VII and reading the map', () => {

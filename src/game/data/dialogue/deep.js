@@ -1,7 +1,8 @@
 /**
- * Phase 04 «الحديقة العميقة»: dialogue. Played after «خريطة الغد», before the hidden
- * garden, while Ryan is still away: he speaks only through his labels, notes and the last
- * page. Fiction about the garden, not real memories. Tone: Snooki keeps it light; nothing
+ * Phase 04 «الحديقة العميقة»: dialogue. Since Phase 05 it is played AFTER the ending: the
+ * blue rose is planted, Ryan stays in the hidden garden looking after it, and Anji runs the
+ * investigation herself; he speaks through his old labels, notes and the last page until
+ * the epilogue, where they plant the second rose together. Fiction about the garden, not real memories. Tone: Snooki keeps it light; nothing
  * here tells her an answer before she has the evidence (waiting lines say WHAT is missing,
  * never what it says); intro lines play once.
  */
@@ -11,8 +12,9 @@ export const DEEP = {
   /* ── the empty box (workshop) ── */
   'dg.box': [
     { s: 'anji', e: 'surprised', t: 'علبة صغيرة… فاضية. والملصق بخط ريان: «البذرة الأخيرة — ما تنزرع بإيد وحدة.»' },
-    { s: 'anji', e: 'thinking', t: 'الخريطة ضوت نص الحديقة المخفية. النص الثاني… يمكن ينتظر هالبذرة.' },
+    { s: 'anji', e: 'thinking', t: 'وردتنا بالحديقة المخفية زرعناها من بذرة وحدة… وهاي العلبة چانت لأختها.' },
     { s: 'snooki', e: 'serious', t: 'سرقة! بالورشة! گدام عيوني! … اللي چانت نايمة. اقتراح: كل واحد مر البارحة يكتب شنو سوّى، والرسائل تروح لقاعة الرسائل.' },
+    { s: 'anji', e: 'determined', t: 'ريان مشغول بالوردة. أحلها آني، وأرجعله بالبذرة. مفاجأة.' },
     { s: 'anji', e: 'curious', t: 'والخريطة صار بيها صفحة ثانية: «الحديقة العميقة». أماكن ما شفتها قبل.' },
   ],
   'dg.box-again': [{ s: 'anji', e: 'thinking', t: 'العلبة فاضية، والغطا مسدود زين. اللي أخذها ما چان مستعجل.' }],
@@ -195,9 +197,28 @@ export const DEEP = {
   'dg.ritual-done': [
     { s: 'anji', e: 'soft', t: 'سنوكي يحفر. آني أحط البذرة. ريان يسقي. والضوء… سوا.' },
     { s: 'anji', e: 'soft', t: 'بأسفل الصفحة، بخط ريان: «هاي الوردة ما تنزرع بإيد وحدة.»' },
-    { s: 'snooki', e: 'happy', t: 'والخريطة! الحديقة المخفية بانت كلها! يلا، قبل ما أغيّر رأيي. ما راح أغيّره.' },
+    { s: 'snooki', e: 'happy', t: 'يعني نرجع للحديقة المخفية؟ ريان هناك، والوردة الأولى تنتظر أختها. يلا، قبل ما أغيّر رأيي. ما راح أغيّره.' },
   ],
   'dg.ritual-again': [{ s: 'anji', e: 'soft', t: 'الصفحة كاملة. الحديقة المخفية تنتظر.' }],
+
+  /* ── the epilogue (the hidden garden, after the ending) ── */
+  'dg.plant-intro': [
+    { s: 'anji', e: 'smile', t: 'ريان. سدّ عيونك… وافتح إيدك.' },
+    { s: 'ryan', e: 'turn', t: '…البذرة الأخيرة؟ العلبة چانت فارغة. شلون؟' },
+    { s: 'anji', e: 'smirk', t: 'قضية كاملة: شهادات، ساعات، جذور، ومراية. والمتهم الرئيسي واگف يمك.' },
+    { s: 'snooki', e: 'guilty', t: 'المتهم يطلب محامي. أو بسكويتة. أيهم أسرع.' },
+  ],
+  'dg.plant': [
+    { s: 'anji', e: 'soft', t: 'الصفحة تگول: سنوكي يحفر، آني أحط البذرة، إنت تسقي… والضوء سوا.' },
+    { s: 'snooki', e: 'proud', t: 'الحفر رد اعتبار. سجّلوها.' },
+    { s: 'ryan', e: 'turn', t: 'خليتيني بس أسقي؟ … زين. أحسن دور بالقصة.' },
+  ],
+  'dg.plant-done': [
+    { s: 'narrator', t: 'البذرة نزلت بالتراب، والماي وراها، والضوء من إيدين اثنين. وردة صغيرة طلعت جنب الأولى.' },
+    { s: 'ryan', e: 'turn', t: 'هسه صاروا ثنتين. الحديقة تحب الأشياء اللي تجي ويا بعض.' },
+    { s: 'anji', e: 'smile', t: 'والقضية الجاية… آني أختارها.' },
+  ],
+  'dg.rose-2': [{ s: 'anji', e: 'soft', t: 'الوردة الثانية. أصغر من أختها… بس عنيدة مثل اللي زرعها.' }],
 
   /* ── optional ── */
   'dg.musicroom-enter': [{ s: 'anji', e: 'curious', t: 'غرفة موسيقى مهجورة. أربع أجراس، وكل جرس محفور عليه شي.' }],

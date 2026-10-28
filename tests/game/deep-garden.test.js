@@ -52,6 +52,17 @@ function afterMap() {
   g.setFlags(['workshop-entered', 'map-open', 'sp2-done', 'sp2-final-read', 'sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3', 'sp2-final-rule', 'sp2-final-done']);
   return g;
 }
+/** Every step of the Story Pack 01 / 02 story missions (so those chapters are finished, not just started). */
+const SP1_ATOMS = MISSIONS.filter((m) => ['sp1', 'sp2'].includes(m.pack) && m.kind === 'story').flatMap((m) => m.steps.flatMap((st) => atoms(st.done)));
+const SP1_DONE = SP1_ATOMS.filter((a) => a.startsWith('flag:')).map((a) => a.slice(5));
+/** A finished game (Phase 05: the deep garden comes after the ending), Story Pack 01 done too (synthetic). */
+function afterEnding() {
+  const g = afterMap();
+  g.setFlags(['final-entered', 'rose-planted', 'game-complete', 'act8-done', ...SP1_DONE]);
+  for (const a of SP1_ATOMS) if (a.startsWith('seen:')) g.markSeen(a.slice(5));
+  expect(SP1_ATOMS.every((a) => /^(flag|seen):/.test(a))).toBe(true); // nothing else to fake
+  return g;
+}
 /** Main-story flags in a valid play order (each step only after what it needs). */
 const PLAY = [
   ['dg-box', 'dg-guestbook'],
@@ -81,7 +92,7 @@ describe('the map: a second page that fits', () => {
       // the drawn label stays at two words, the size of the garden page's labels (320 px phone)
       expect((w.short ?? w.name).split(' ').length, w.id).toBeLessThanOrEqual(2);
       expect(SCENES[w.scene], w.id).toBeTruthy();
-      expect(w.ready && w.pack === 'sp2' && w.act === 7, w.id).toBe(true);
+      expect(w.ready && w.pack === 'deep' && w.act === 8, w.id).toBe(true);
       expect(w.locked, w.id).toBeTruthy();
     }
     expect(DEEP_SCENES.map((s) => s.id).sort()).toEqual([...deepIds].sort());
@@ -118,44 +129,58 @@ describe('the map: a second page that fits', () => {
   });
 });
 
-describe('the investigations: order, cross-links and the finale gate', () => {
-  it('nothing deep opens before «خريطة الغد» and the empty box', () => {
+describe('the investigations: order, cross-links and the gate after the ending', () => {
+  it('nothing deep opens before the ending — not even with «خريطة الغد» done — and then only after the empty box', () => {
     const g = throughAct(7, game());
     g.setFlag('workshop-entered');
     expect(DEEP.filter((w) => check(w.unlock, g))).toEqual([]);
     expect(missionState(mission('dg-night'), g).status).toBe('locked');
-    g.setFlags(['sp2-final-read', 'sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3', 'sp2-final-rule', 'sp2-final-done']);
+    g.setFlags(['sp2-final-read', 'sp2-insc-1', 'sp2-insc-2', 'sp2-insc-3', 'sp2-final-rule', 'sp2-final-done', 'final-entered']);
+    expect(missionState(mission('dg-night'), g).status).toBe('locked'); // in the finale, not past it
+    expect(SCENES.workshop.interact.find((i) => i.id === 'dg-seedbox').if).toBeTruthy();
+    expect(check(SCENES.workshop.interact.find((i) => i.id === 'dg-seedbox').if, g)).toBe(false);
+    g.setFlags(['game-complete', 'act8-done']);
     expect(missionState(mission('dg-night'), g)).toMatchObject({ step: 0 });
     expect(missionState(mission('dg-night'), g).status).not.toBe('locked');
+    expect(check(SCENES.workshop.interact.find((i) => i.id === 'dg-seedbox').if, g)).toBe(true);
     expect(DEEP.filter((w) => check(w.unlock, g))).toEqual([]); // the box first
     g.setFlag('dg-box');
     expect(DEEP.filter((w) => check(w.unlock, g)).map((w) => w.id).sort()).toEqual(['clockgarden', 'falsetrails', 'letterhall', 'sealedroom']);
   });
 
-  it('played in order, every place and mission opens, and the finale only at the very end', () => {
-    const g = afterMap();
+  it('played in order after the ending, every place and mission opens, it ends with planting; the ending is untouched', () => {
+    const g = afterEnding();
+    const ending = ['game-complete', 'final-entered', 'rose-planted', 'act8-done'];
     const opened = new Set();
     for (const batch of PLAY) {
-      expect(check(worldById('final').unlock, g), `final before ${batch}`).toBe(false);
       g.setFlags(batch);
       for (const w of DEEP) if (check(w.unlock, g)) opened.add(w.id);
+      for (const f of ending) expect(g.flag(f), f).toBe(true);
+      expect(check(worldById('final').unlock, g)).toBe(true);
     }
     expect([...opened].sort()).toEqual([...deepIds].sort()); // optional places open too
-    expect(check(worldById('final').unlock, g)).toBe(true);
+    const seed = mission('dg-seed');
+    expect(missionState(seed, g)).toMatchObject({ status: 'active', step: 2 });
+    expect(currentObjective(g).text).toBe(seed.steps[2].text);
+    expect(seed.steps[2].world).toBe('final');
+    g.setFlag('dg-planted');
     for (const m of MISSIONS_DEEP.filter((x) => x.kind === 'story')) expect(missionState(m, g).status, m.id).toBe('complete');
-    expect(currentObjective(g).act).toBe(8);
   });
 
-  it('every flag short of the last page keeps the hidden garden shut', () => {
+  it('the original ending never waits for the deep garden, and finishing it never marks the deep garden done', () => {
     const g = afterMap();
-    g.setFlags(PLAY.flat().filter((f) => f !== 'dg-done'));
-    g.setFlags(['dg-in-musicroom', 'dg-song', 'dg-in-lighthouse', 'dg-lights']);
-    expect(check(SP2_FINAL_GATE, g)).toBe(false);
-    expect(check(worldById('final').unlock, g)).toBe(false);
+    expect(check(SP2_FINAL_GATE, g)).toBe(true);
+    expect(check(worldById('final').unlock, g)).toBe(true);
+    expect(currentObjective(g).act).toBe(8);
+    const done = afterEnding();
+    expect(check(DEEP_OPEN, done)).toBe(false);
+    expect(done.flag('dg-done')).toBeFalsy();
+    for (const m of MISSIONS_DEEP) expect(missionState(m, done).status, m.id).not.toBe('complete');
+    for (const a of ACTS) for (const o of a.objectives) expect(JSON.stringify(o.done), `act ${a.act}`).not.toMatch(/dg-/);
   });
 
   it('the cross-links: B waits for A, D waits for A, C waits for D, the seed waits for B and C', () => {
-    const g = afterMap();
+    const g = afterEnding();
     g.setFlags(['dg-box', 'dg-pattern']);
     const wheel = SCENES.starchamber.interact.find((i) => i.id === 'wheel');
     expect(says(firstCase(wheel, g).run)).toEqual(['dg.wheel-wait']); // the hour comes from the night
@@ -388,7 +413,7 @@ describe('content wiring', () => {
   });
 
   it('the evidence notebook asks an open question until it is answered, and lists facts by place', () => {
-    const g = afterMap();
+    const g = afterEnding();
     applyEffects(['flag:dg-box', 'journal:dg-box', 'journal:dg-clock-3'], g);
     const night = evidenceView(g, journalEntries(g)).find((v) => v.mission.id === 'dg-night');
     expect(night.question).toMatch(/ليلة/);
@@ -402,16 +427,18 @@ describe('content wiring', () => {
 });
 
 describe('old saves (synthetic)', () => {
-  it('a finished game keeps the hidden garden, Act VII stays done, and the deep garden is a return visit', () => {
+  it('a finished game keeps the hidden garden and Act VII; the deep garden opens with no Story Pack 02 needed', () => {
     const g = throughAct(8, game());
     g.setFlags(['workshop-entered', 'final-entered', 'game-complete', 'map-open']);
     expect(check(worldById('final').unlock, g)).toBe(true);
     expect(ACTS.find((a) => a.act === 7).objectives.every((o) => check(o.done, g))).toBe(true);
-    expect(missionState(mission('sp2-final'), g).status).not.toBe('locked'); // the way in is open
-    expect(DEEP.filter((w) => check(w.unlock, g))).toEqual([]); // until «خريطة الغد» and the box
+    expect(missionState(mission('dg-night'), g).status).not.toBe('locked'); // the way in is open
+    expect(DEEP.filter((w) => check(w.unlock, g))).toEqual([]); // until the box
+    g.setFlag('dg-box');
+    expect(DEEP.filter((w) => check(w.unlock, g)).length).toBe(4);
   });
 
-  it('a save in the workshop (Act VII) goes on through «خريطة الغد» and the deep garden; nothing is reset', () => {
+  it('a save in the workshop (Act VII) goes on through «خريطة الغد» to the ending; nothing is reset', () => {
     const g = throughAct(6, game());
     g.setFlags(['workshop-entered', 'wk-stage1']);
     const before = JSON.stringify(g.state.flags);
@@ -422,10 +449,11 @@ describe('old saves (synthetic)', () => {
     expect(missionState(mission('sp2-final'), g).status).not.toBe('locked');
   });
 
-  it('a save from Phase 03 that finished «خريطة الغد» but never entered the finale now meets the deep garden', () => {
+  it('a save from Phase 03 that finished «خريطة الغد» goes straight on to the ending; the deep garden waits for after it', () => {
     const g = afterMap();
-    expect(check(worldById('final').unlock, g)).toBe(false);
-    expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: mission('dg-night').steps[0].text });
+    expect(check(worldById('final').unlock, g)).toBe(true);
+    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[0].text });
+    expect(missionState(mission('dg-night'), g).status).toBe('locked');
   });
 
   it('display numbers of older missions do not move (new missions are appended)', () => {
@@ -473,8 +501,8 @@ describe('in the app', () => {
   });
 
   function start(extra = []) {
-    const g = afterMap();
-    g.setFlags(['intro-done', 'notice:sp2', ...extra]);
+    const g = afterEnding();
+    g.setFlags(['intro-done', 'notice:sp2', 'notice:sp1', 'notice:deep', ...extra]);
     app = createGameApp(root, { storage: memoryStorage({ [SAVE_KEY]: JSON.stringify({ ...g.state, location: { scene: 'workshop', x: 300 } }) }), reducedMotion: true });
     app.settings.set({ tips: false });
   }

@@ -297,9 +297,10 @@ first install reports 'installing'. A unit test reproduces the bug (`tests/game/
 
 ## 16. Phase 04 — «الحديقة العميقة»
 
-The finale now also needs the deep garden: 14 new places on a second map page and four
-cross-linked investigations, ending in `dg-done`. Saves that already entered the finale
-keep it. The design, the dependency graph, the puzzle validation, save behaviour and the
+14 new places on a second map page and four cross-linked investigations, ending in
+`dg-done` and planting a second rose with Ryan. Since Phase 05 this is a continuation that
+opens **after** the ending (`game-complete`); the finale needs «خريطة الغد» only, as in
+Phase 03. The design, the dependency graph, the puzzle validation, save behaviour and the
 updated length estimate are in [DEEP_GARDEN.md](DEEP_GARDEN.md); §13's estimate above
 covers Story Pack 02 alone.
 

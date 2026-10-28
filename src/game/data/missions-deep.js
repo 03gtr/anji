@@ -1,8 +1,9 @@
 /**
- * Phase 04 «الحديقة العميقة» (The Deep Garden) — main-story content between
- * «خريطة الغد» and the hidden garden. The stitched map showed half the hidden
- * garden; the other half needs the last blue rose seed… and its box in the
- * workshop is empty. Fiction about the garden, not real memories.
+ * Phase 04 «الحديقة العميقة» (The Deep Garden) — an optional continuation AFTER the
+ * published ending (Phase 05). The blue rose is planted; Ryan's box for its second
+ * seed, «البذرة الأخيرة», turns out to be empty. Finding it, waking it and planting
+ * it next to the first rose is a new chapter, never a condition of the ending.
+ * Fiction about the garden, not real memories.
  *
  * Four investigations run side by side and feed each other:
  *   dg-night   A · the contradictory night   (clocks, letters, a bed, a log, a guest book)
@@ -10,35 +11,45 @@
  *   dg-stars   B · the observatory cipher    (a pattern, a star wheel set to A's hour, a mirror)
  *   dg-roots   C · the changing roots        (opens once D proves where the seed went)
  *   dg-seed    the synthesis: the seasons machine (B's light, C's and D's notes) and the
- *              last page (one strip from each investigation) → the hidden garden
+ *              last page (one strip from each investigation) → planting the second rose
+ *              with Ryan in the hidden garden (`dg-planted`)
  * Optional: dg-music (the abandoned music room), dg-lighthouse (the lighthouse of memories).
  *
  * Every new location sits on the map's second page («الحديقة العميقة», `region: 'deep'`).
- * Old saves: nothing here is needed by anything that existed before, except the hidden garden
- * itself — and a save that has already been there keeps it (SP2_FINAL_GATE, missions-sp2.js).
+ * Old saves: nothing that existed before needs anything here. A finished game (any version,
+ * the live one included) can start it straight away — no Story Pack 02 needed, nothing
+ * replayed. Finishing the old ending never marks any of it done.
  * Missions are APPENDED to data/missions.js, so no older display number moves.
  */
-import { PACK_SP2 } from './missions-sp2.js';
-
-/** The deep garden opens when «خريطة الغد» is done and the empty box has been seen. */
-export const DEEP_OPEN = ['flag:sp2-final-done', 'flag:dg-box'];
+export const PACK_DEEP = 'deep';
+/**
+ * The way in: the ending. `dg-box` also counts, so a Phase 04 preview save that started the
+ * chain before its ending (it was never published) is not shut out of what it began.
+ */
+export const DEEP_UNLOCK = { any: ['flag:game-complete', 'flag:dg-box'] };
+/** The deep places open once the empty box has been seen (which needs DEEP_UNLOCK). */
+export const DEEP_OPEN = [DEEP_UNLOCK, 'flag:dg-box'];
 /** The whole chain is done: the last page was put together. */
 export const DEEP_DONE = 'flag:dg-done';
 
-const OPEN_TEXT = 'تنفتح لمن تكملين «خريطة الغد» وتلگين علبة البذرة فارغة.';
+/** The returning-player notice (content-notice.js): once, after the ending, pointing at the box. */
+export const PACKS_DEEP = [
+  { id: PACK_DEEP, title: 'الحديقة العميقة', unlock: 'flag:game-complete', scene: 'workshop', world: 'workshop', notice: 'أنجي، ريان ترك علبة صغيرة بالورشة… وطلعت فارغة 📦' },
+];
+
+const OPEN_TEXT = 'تنفتح بعد نهاية الحكاية، لمن تلگين علبة البذرة الأخيرة فارغة بالورشة.';
 
 export const MISSIONS_DEEP = [
   {
     id: 'dg-night',
     kind: 'story',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: ['workshop', 'clockgarden', 'letterhall'],
     title: 'الليلة الضائعة',
     where: 'الورشة · حديقة الساعات الساكتة · قاعة الرسائل · …',
     summary: 'علبة «البذرة الأخيرة» بالورشة فارغة. كل واحد مر بالورشة البارحة كتب شنو سوّى… بس الشهادات ما تركب ويا بعض.',
-    unlock: 'flag:sp2-final-done',
-    locked: 'تنفتح لمن تكملين «خريطة الغد».',
+    unlock: DEEP_UNLOCK,
+    locked: 'تنفتح بعد نهاية الحكاية.',
     steps: [
       { done: 'flag:dg-box', world: 'workshop', text: 'افحصي علبة البذرة الأخيرة بالورشة.', hint: 'العلبة على الطاولة الصغيرة، بين صندوق الموسيقى والماكينة.' },
       {
@@ -63,8 +74,7 @@ export const MISSIONS_DEEP = [
   {
     id: 'dg-trails',
     kind: 'story',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: ['falsetrails', 'hyporoom'],
     title: 'الفرضيات الأربع',
     where: 'حديقة الآثار الكاذبة · غرفة الفرضيات الأربع',
@@ -87,8 +97,7 @@ export const MISSIONS_DEEP = [
   {
     id: 'dg-stars',
     kind: 'story',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: ['sealedroom', 'starchamber', 'mirrorhouse'],
     title: 'شفرة المرصد',
     where: 'غرفة المرصد المختومة · قاعة خريطة النجوم · بيت المرايا',
@@ -107,8 +116,7 @@ export const MISSIONS_DEEP = [
   {
     id: 'dg-roots',
     kind: 'story',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: ['roots', 'hedgemaze', 'bridge'],
     title: 'طريق الجذور',
     where: 'سرداب الجذور · متاهة السياج الدوّارة · الجسر المخفي',
@@ -127,8 +135,7 @@ export const MISSIONS_DEEP = [
   {
     id: 'dg-seed',
     kind: 'story',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: ['forgottengreen', 'evidenceroom'],
     title: 'البذرة الأخيرة',
     where: 'البيت الأخضر المنسي · غرفة الأدلة الأخيرة',
@@ -138,17 +145,17 @@ export const MISSIONS_DEEP = [
     steps: [
       { done: 'flag:dg-awake', world: 'forgottengreen', text: 'صحّي البذرة بآلة الفصول.', hint: 'الضوء من المراية؛ الماي والدفا من ورقتين: وحدة بالجذور، ووحدة چانت بفرو سنوكي.' },
       { done: 'flag:dg-done', world: 'evidenceroom', text: 'ركّبي الصفحة الأخيرة من الأشرطة الأربعة.', hint: 'كل شريط فيه قاعدتين. القاعدة اللي ما تنطبق يذكرها التحقق.' },
+      { done: 'flag:dg-planted', world: 'final', text: 'ازرعي البذرة ويا ريان، جنب الوردة الأولى.', hint: 'ريان بالحديقة المخفية، جنب الوردة اللي زرعتوها.' },
     ],
-    reward: ['journal:dg-done'],
-    rewardText: 'الحديقة المخفية تنفتح',
+    reward: ['journal:dg-planted'],
+    rewardText: 'وردة ثانية بالحديقة المخفية',
     leadsTo: [],
   },
   // optional
   {
     id: 'dg-music',
     kind: 'side',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: 'musicroom',
     title: 'غرفة الموسيقى المهجورة',
     where: 'غرفة الموسيقى المهجورة',
@@ -166,8 +173,7 @@ export const MISSIONS_DEEP = [
   {
     id: 'dg-lighthouse',
     kind: 'side',
-    pack: PACK_SP2,
-    chapter: 7,
+    pack: PACK_DEEP,
     world: 'lighthouse',
     title: 'منارة الذكريات',
     where: 'منارة الذكريات',
