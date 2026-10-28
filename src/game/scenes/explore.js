@@ -127,6 +127,24 @@ export function createExplore(app, scene, { spawnX } = {}) {
     }
   });
 
+  function showOpenError() {
+    loading.removeAttribute('aria-valuenow');
+    loading.setAttribute('role', 'alert');
+    const toMap = game.flag('map-open');
+    loading.replaceChildren(
+      h(`<div class="card scene-error">
+          <p>ما گدرت أفتح «${esc(scene.title)}» هسه.</p>
+          <p class="muted">تقدمچ محفوظ، ما ضاع شي.</p>
+          <div class="stack">
+            <button type="button" class="btn btn-primary" data-retry>جرّبي مرة ثانية</button>
+            <button type="button" class="btn btn-ghost" data-away>${toMap ? 'رجوع للخريطة' : 'الصفحة الرئيسية'}</button>
+          </div></div>`),
+    );
+    scope.on(loading.querySelector('[data-retry]'), 'click', () => app.go(scene.id, { spawnX }));
+    scope.on(loading.querySelector('[data-away]'), 'click', () => (toMap ? app.ui.openMap() : app.toTitle()));
+    loading.querySelector('[data-retry]').focus({ preventScroll: true });
+  }
+
   return {
     el,
     async enter() {
@@ -135,15 +153,24 @@ export function createExplore(app, scene, { spawnX } = {}) {
       renderHints();
       // (an overlay still open from the scene change re-enables input when it closes)
       input.setEnabled(!app.overlays.count);
-      world = await createWorld(stage, scene, app, {
-        spawnX,
-        onProgress: (done, total) => {
-          const pct = Math.round((done / total) * 100);
-          loading.setAttribute('aria-valuenow', String(pct));
-          loading.querySelector('i').style.width = `${pct}%`;
-          loading.setAttribute('aria-valuetext', `${num(pct)}٪`);
-        },
-      });
+      try {
+        world = await createWorld(stage, scene, app, {
+          spawnX,
+          onProgress: (done, total) => {
+            const pct = Math.round((done / total) * 100);
+            loading.setAttribute('aria-valuenow', String(pct));
+            loading.querySelector('i').style.width = `${pct}%`;
+            loading.setAttribute('aria-valuetext', `${num(pct)}٪`);
+          },
+        });
+      } catch (err) {
+        // the place could not be built (e.g. the phone ran short of memory): say so and offer a
+        // way on, instead of a loading bar that never ends. Nothing is lost: her saved place is
+        // still the one before this (it is only updated once a scene is up).
+        console.error('[scene] could not open', scene.id, err);
+        showOpenError();
+        return;
+      }
       if (!world) return;
       loading.remove();
       game.setLocation(scene.id, world.player.x);

@@ -62,7 +62,28 @@ export function openMinigame(app, id, options = {}) {
         area.replaceChildren();
         runScope = createScope();
         scope.add(() => runScope.dispose());
-        mod = mod || (await meta.load());
+        try {
+          mod = mod || (await meta.load());
+        } catch (err) {
+          // its code could not be loaded (no network and not cached, or an old copy): never a
+          // blank screen with no way out — say so, and offer to try again or go back
+          console.error('[minigame] could not load', id, err);
+          if (scope.disposed) return;
+          state = 'error';
+          showLayer(
+            `<div class="card mg-card" role="alert"><h3>ما گدرت أفتح هاللعبة هسه</h3>
+              <p class="muted">تقدمچ محفوظ. جرّبي مرة ثانية، أو ارجعي وكمّلي المغامرة.</p>
+              <div class="stack">
+                <button type="button" class="btn btn-primary" data-act="retry" data-autofocus>جرّبي مرة ثانية</button>
+                <button type="button" class="btn btn-ghost" data-act="exit">رجوع للمغامرة</button>
+              </div></div>`,
+            (l) => {
+              l.querySelector('[data-act="retry"]').addEventListener('click', begin);
+              l.querySelector('[data-act="exit"]').addEventListener('click', () => close({ completed: false, quit: true }));
+            },
+          );
+          return;
+        }
         if (scope.disposed) return;
         state = 'play';
         instance = mod.mount(area, {
