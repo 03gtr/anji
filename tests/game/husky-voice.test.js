@@ -18,11 +18,26 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createGameApp } from '../../src/game/app.js';
 import { createGame } from '../../src/game/core/game.js';
 import { SAVE_KEY, defaultState } from '../../src/game/core/save.js';
-import { HUSKY_TAPS, HUSKY_AMBIENT, SNOOKI_TAPS, SNOOKI_RYAN_TAPS } from '../../src/game/world/engine.js';
+import { HUSKY_TAPS, HUSKY_AMBIENT, SNOOKI_TAPS, SNOOKI_RYAN_TAPS, bubbleLines } from '../../src/game/world/engine.js';
 import { HUSKY_FLAG } from '../../src/game/core/names.js';
 import { memoryStorage } from '../helpers.js';
 
 const ARABIC_WORD = /[ء-ي]{2,}/;
+
+describe('a speech bubble fits a phone: its words wrap into lines within the width', () => {
+  const measure = (s) => s.length * 5; // a stand-in for the font: 5 units a letter
+  it('every word kept, in order; no line wider than allowed; short text stays one line', () => {
+    for (const text of [...HUSKY_TAPS.map((r) => r.text), ...HUSKY_AMBIENT, ...SNOOKI_RYAN_TAPS.map((r) => r.text)]) {
+      const lines = bubbleLines(text, measure, 140);
+      expect(lines.join(' ')).toBe(text.split(/\s+/).filter(Boolean).join(' '));
+      for (const l of lines) expect(measure(l) <= 140 || !l.includes(' '), l).toBe(true);
+    }
+    expect(bubbleLines('هاو!', measure, 140)).toEqual(['هاو!']);
+  });
+  it('a single word wider than the line keeps a line of its own (never split inside a word)', () => {
+    expect(bubbleLines('آ ب ' + 'ج'.repeat(40) + ' د', measure, 50)).toEqual(['آ ب', 'ج'.repeat(40), 'د']);
+  });
+});
 
 describe('her lines', () => {
   it('words, not only an emoji — every tap line and every idle remark', () => {
