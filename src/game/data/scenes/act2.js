@@ -5,6 +5,7 @@
  */
 import { GROUND } from '../../world/props.js';
 import { ACT2_AMBIENT } from '../dialogue/act2.js';
+import { SP2_GATE } from '../missions-sp2.js';
 
 const SCONCES = [170, 700, 1290, 1790, 2380];
 
@@ -167,7 +168,9 @@ export const HOUSE = {
       label: 'الدرج',
       icon: '⬇',
       cases: [
-        { if: 'flag:workshop-open', run: [{ goto: 'workshop', x: 140 }] },
+        // Story Pack 02: the workshop door carries the archive seals (open if she is already past them)
+        { if: ['flag:workshop-open', SP2_GATE], run: [{ goto: 'workshop', x: 140 }] },
+        { if: 'flag:workshop-open', run: [{ say: 'sp2.stairs-sealed' }] },
         { run: [{ say: 'a2.stairs-locked' }] },
       ],
     },

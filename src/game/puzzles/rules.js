@@ -176,30 +176,48 @@ export const connect = {
 
 /* ── program: arrange commands so a little robot reaches the bone ── */
 const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // east, south, west, north (screen)
+/** Keys and doors (Story Pack 02): a lowercase letter is a key, the same letter in uppercase its door. */
+const KEY_CHARS = 'kq';
+/**
+ * Phase 04 — root gates: '1' lets her in only on an odd-numbered command (1st, 3rd…),
+ * '2' only on an even-numbered one. Every command is one beat, turns and «⏸ انتظري» too.
+ */
+export const gateOpen = (cell, beat) => (cell === '1' ? beat % 2 === 1 : cell === '2' ? beat % 2 === 0 : true);
 export function runProgram(stage, prog) {
   const rows = stage.grid;
   let { x, y, dir } = stage.start;
-  const trace = [{ x, y, dir }];
+  let keys = '';
+  const trace = [{ x, y, dir, keys, beat: 0 }];
   const at = (cx, cy) => rows[cy]?.[cx] ?? '#';
   if (at(x, y) === 'B') return { ok: true, trace, crash: false };
-  for (const c of prog) {
+  for (const [i, c] of prog.entries()) {
+    const beat = i + 1;
     if (c === 'L') dir = (dir + 3) % 4;
     else if (c === 'R') dir = (dir + 1) % 4;
     else if (c === 'F') {
       const nx = x + DIRS[dir][0];
       const ny = y + DIRS[dir][1];
-      if (at(nx, ny) === '#') {
-        trace.push({ x, y, dir, bump: true });
-        return { ok: false, trace, crash: true };
+      const cell = at(nx, ny);
+      const door = KEY_CHARS.includes(cell.toLowerCase()) && cell !== cell.toLowerCase();
+      if (!gateOpen(cell, beat)) {
+        trace.push({ x, y, dir, keys, beat, bump: true });
+        return { ok: false, trace, crash: true, gate: true };
+      }
+      if (cell === '#' || (door && !keys.includes(cell.toLowerCase()))) {
+        trace.push({ x, y, dir, keys, beat, bump: true });
+        return { ok: false, trace, crash: true, door };
       }
       x = nx;
       y = ny;
+      if (KEY_CHARS.includes(cell) && !keys.includes(cell)) keys = [...keys, cell].sort().join('');
     }
-    trace.push({ x, y, dir });
+    trace.push({ x, y, dir, keys, beat });
     if (at(x, y) === 'B') return { ok: true, trace, crash: false };
   }
   return { ok: false, trace, crash: false };
 }
+/** Commands a program puzzle offers: «⏸ انتظري» (W) only where the config allows waiting. */
+export const programCommands = (config) => (config.wait ? ['F', 'L', 'R', 'W'] : ['F', 'L', 'R']);
 export const program = {
   /**
    * config: { stages: [{ grid: ['..B'], start: {x,y,dir}, max }],
@@ -209,7 +227,7 @@ export const program = {
   init: () => ({ stage: 0, prog: [], runs: 0, mistakes: 0, trace: null }),
   add(config, state, cmd) {
     const stage = config.stages[state.stage];
-    if (!['F', 'L', 'R'].includes(cmd) || state.prog.length >= stage.max) return { state, outcome: 'noop' };
+    if (!programCommands(config).includes(cmd) || state.prog.length >= stage.max) return { state, outcome: 'noop' };
     return { state: { ...state, prog: [...state.prog, cmd], trace: null }, outcome: 'progress' };
   },
   remove(config, state, i = state.prog.length - 1) {
@@ -225,7 +243,11 @@ export const program = {
       return {
         state: { ...state, runs, mistakes: state.mistakes + 1, trace: res.trace },
         outcome: 'wrong',
-        message: res.crash
+        message: res.gate
+          ? config.messages?.gate ?? 'البوابة چانت مسدودة بهالنبضة. عدّي الأوامر من الأول.'
+          : res.door
+          ? config.messages?.door ?? 'الباب مقفول. يحتاج مفتاحه — دوّري عليه بالشبكة.'
+          : res.crash
           ? config.messages?.crash ?? 'بوم! الروبوت دگ بالصندوق. شيلي الأمر الغلط وجرّبي.'
           : config.messages?.short ?? 'الروبوت وقف قبل العظمة. يحتاج أوامر أكثر (أو غير).',
       };
@@ -321,7 +343,213 @@ export const deduction = {
   },
 };
 
-export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction };
+/* ── series (Story Pack 02): learn a hidden rule from examples, then complete a new row ──
+ * config: { stages: [{ examples: [[…]], question: [… , null], options: [...], answer, rule }] }
+ * Tokens are numbers or 'sym:<name>'. Each stage has exactly one option that follows the
+ * rule shown by its examples; `rule` explains it once the stage is solved. */
+export const series = {
+  init: () => ({ stage: 0, mistakes: 0, tried: [] }),
+  pick(config, state, value) {
+    const stage = config.stages[state.stage];
+    if (!stage || !stage.options.some((o) => String(o) === String(value)) || state.tried.includes(String(value))) return { state, outcome: 'noop' };
+    if (String(value) !== String(stage.answer)) {
+      return { state: { ...state, mistakes: state.mistakes + 1, tried: [...state.tried, String(value)] }, outcome: 'wrong' };
+    }
+    const next = state.stage + 1;
+    if (next >= config.stages.length) return { state, outcome: 'solved' };
+    return {
+      state: { ...state, stage: next, tried: [] },
+      outcome: 'progress',
+      message: `✓ ${stage.rule} — المستوى ${next + 1} من ${config.stages.length}.`,
+    };
+  },
+};
+
+/* ── machine (Phase 04): a logic machine with several dials and levers ──
+ * config: { dials: [{ label, states: [...] }],
+ *           levers: [{ id, label, effects: [{ dial, by, if?: { dial, is | not } }] }],
+ *           stages: [{ start: [...], target: [...], hidden?, max? }], messages? }
+ * A lever's conditions read the dials as they were BEFORE the pull (all effects at once).
+ * Pulling is free experimenting (the log shows what changed); only «شغّلي» checks, and a
+ * wrong run keeps the dials. `hidden` targets come from the evidence, not the screen;
+ * `max` limits the pulls (then planning matters; «رجّعي» restarts the stage). */
+const MACHINE_LOG = 6;
+export function machineDials(config, state) {
+  return state.dials ?? config.stages[state.stage].start;
+}
+export function machinePull(config, dials, leverId) {
+  const lever = config.levers.find((l) => l.id === leverId);
+  if (!lever) return null;
+  const next = [...dials];
+  for (const e of lever.effects) {
+    if (e.if && ('is' in e.if ? dials[e.if.dial] !== e.if.is : dials[e.if.dial] === e.if.not)) continue;
+    const n = config.dials[e.dial].states.length;
+    next[e.dial] = (((next[e.dial] + e.by) % n) + n) % n;
+  }
+  return next;
+}
+export const machine = {
+  init: () => ({ stage: 0, dials: null, moves: 0, log: [], mistakes: 0 }),
+  pull(config, state, leverId) {
+    const stage = config.stages[state.stage];
+    const before = machineDials(config, state);
+    const dials = machinePull(config, before, leverId);
+    if (!dials) return { state, outcome: 'noop' };
+    if (stage.max && state.moves >= stage.max) {
+      return { state, outcome: 'noop', message: config.messages?.max ?? 'خلصت الحركات. رجّعي الآلة للبداية وخططي.' };
+    }
+    const log = [{ lever: leverId, from: before, to: dials }, ...state.log].slice(0, MACHINE_LOG);
+    return { state: { ...state, dials, moves: state.moves + 1, log }, outcome: 'progress' };
+  },
+  reset: (config, state) => ({ state: { ...state, dials: null, moves: 0, log: [] }, outcome: 'progress' }),
+  run(config, state) {
+    const stage = config.stages[state.stage];
+    const dials = machineDials(config, state);
+    if (!dials.every((d, i) => d === stage.target[i])) {
+      return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong', message: config.messages?.wrong };
+    }
+    const next = state.stage + 1;
+    if (next >= config.stages.length) return { state, outcome: 'solved' };
+    return {
+      state: { ...state, stage: next, dials: null, moves: 0, log: [] },
+      outcome: 'progress',
+      message: `${config.messages?.next ?? 'اشتغلت!'} — المستوى ${next + 1} من ${config.stages.length}.`,
+    };
+  },
+  // the dials she has set survive closing the panel (a flag string; no save-schema change)
+  draft: {
+    save: (state) => JSON.stringify({ stage: state.stage, dials: state.dials, moves: state.moves }),
+    load(config, raw, state) {
+      const d = JSON.parse(raw);
+      const st = config.stages[d.stage];
+      if (!st || (d.dials && (!Array.isArray(d.dials) || d.dials.length !== config.dials.length))) return state;
+      return { ...state, stage: d.stage, dials: d.dials ?? null, moves: Math.min(Number(d.moves) || 0, st.max ?? Infinity) };
+    },
+  },
+};
+
+/* ── contradict (Phase 04): find the claim each witness got wrong, and the fact that proves it ──
+ * config: { evidence: [{ id, label, note, icon }],
+ *           stages: [{ who, icon, claims: [text…], answer: { claim: index | -1, evidence?: id | [ids] }, explain }] }
+ * (several ids: each of them alone proves it).
+ * claim -1 means «ما بيها تناقض»: every claim fits the facts. A wrong pair only says it does
+ * not prove anything (no count, no "warmer"), and keeps what she picked. */
+export const contradict = {
+  init: () => ({ stage: 0, claim: null, evidence: null, mistakes: 0 }),
+  pickClaim(config, state, i) {
+    const n = config.stages[state.stage].claims.length;
+    if (!Number.isInteger(i) || i < -1 || i >= n) return { state, outcome: 'noop' };
+    return { state: { ...state, claim: state.claim === i ? null : i }, outcome: 'progress' };
+  },
+  pickEvidence(config, state, id) {
+    if (!config.evidence.some((e) => e.id === id)) return { state, outcome: 'noop' };
+    return { state: { ...state, evidence: state.evidence === id ? null : id }, outcome: 'progress' };
+  },
+  submit(config, state) {
+    const stage = config.stages[state.stage];
+    if (state.claim == null || (state.claim >= 0 && !state.evidence)) return { state, outcome: 'noop' };
+    const { claim, evidence } = stage.answer;
+    const ok = state.claim === claim && (claim === -1 || [].concat(evidence).includes(state.evidence));
+    if (!ok) {
+      const message =
+        state.claim === -1 ? config.messages?.none ?? 'لا… أكو دليل يناقض وحدة من هالجمل.' : config.messages?.wrong ?? 'هالدليل ما يثبت إن هالجملة غلط.';
+      return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong', message };
+    }
+    const next = state.stage + 1;
+    if (next >= config.stages.length) return { state, outcome: 'solved' };
+    return {
+      state: { ...state, stage: next, claim: null, evidence: null },
+      outcome: 'progress',
+      message: `✓ ${stage.explain} — الشهادة ${next + 1} من ${config.stages.length}.`,
+    };
+  },
+};
+
+/* ── logicgrid (Phase 04): put together pieces of evidence found in different places ──
+ * config: { rows: [{ id, label, icon }], cols: [{ id, label, options: [{ id, label }] }],
+ *           clues: [{ text, rule }] }
+ * Rules: { is: [row, col, opt] }, { notIn: [row, col, [opt…]] }, { next: [rowA, rowB, col] }
+ * (rowB's option is the one right after rowA's), { distinct: col }. Checking never counts
+ * right cells: it names the first clue the grid breaks, so every answer is argued from the
+ * clues, and the clues have exactly one solution, each of them needed (tested). */
+const optIndex = (config, col, opt) => config.cols.find((c) => c.id === col).options.findIndex((o) => o.id === opt);
+export function clueHolds(config, cells, rule) {
+  const val = (row, col) => cells[row]?.[col] ?? null;
+  if (rule.is) return val(rule.is[0], rule.is[1]) === rule.is[2];
+  if (rule.notIn) return !rule.notIn[2].includes(val(rule.notIn[0], rule.notIn[1]));
+  if (rule.next) {
+    const [a, b, col] = rule.next;
+    return optIndex(config, col, val(b, col)) === optIndex(config, col, val(a, col)) + 1;
+  }
+  if (rule.distinct) {
+    const vals = config.rows.map((r) => val(r.id, rule.distinct));
+    return new Set(vals).size === vals.length;
+  }
+  throw new Error(`Unknown clue rule ${JSON.stringify(rule)}`);
+}
+export const logicgrid = {
+  init: () => ({ cells: {}, broken: null, mistakes: 0 }),
+  cycle(config, state, row, col, dir = 1) {
+    const c = config.cols.find((x) => x.id === col);
+    if (!c || !config.rows.some((r) => r.id === row)) return { state, outcome: 'noop' };
+    const n = c.options.length;
+    const cur = optIndex(config, col, state.cells[row]?.[col]);
+    const nextIdx = cur < 0 ? (dir > 0 ? 0 : n - 1) : (((cur + dir) % n) + n) % n;
+    const cells = { ...state.cells, [row]: { ...state.cells[row], [col]: c.options[nextIdx].id } };
+    return { state: { ...state, cells, broken: null }, outcome: 'progress' };
+  },
+  check(config, state) {
+    const empty = config.rows.some((r) => config.cols.some((c) => state.cells[r.id]?.[c.id] == null));
+    if (empty) return { state, outcome: 'noop', message: 'بعد أكو خانات فارغة.' };
+    const broken = config.clues.findIndex((cl) => !clueHolds(config, state.cells, cl.rule));
+    if (broken < 0) return { state: { ...state, broken: null }, outcome: 'solved' };
+    return {
+      state: { ...state, broken, mistakes: state.mistakes + 1 },
+      outcome: 'wrong',
+      message: `الدليل ${broken + 1} ما ينطبق: «${config.clues[broken].text}»`,
+    };
+  },
+  draft: {
+    save: (state) => JSON.stringify(state.cells),
+    load(config, raw, state) {
+      const saved = JSON.parse(raw);
+      const cells = {};
+      for (const r of config.rows) {
+        for (const c of config.cols) {
+          const v = saved?.[r.id]?.[c.id];
+          if (c.options.some((o) => o.id === v)) cells[r.id] = { ...cells[r.id], [c.id]: v };
+        }
+      }
+      return { ...state, cells };
+    },
+  },
+};
+/** Every grid that satisfies all the clues (content tests: exactly one, and every clue needed). */
+export function logicgridSolutions(config, clues = config.clues) {
+  // options may repeat in a column unless a clue says otherwise: search every combination
+  const colCombos = config.cols.map((c) => {
+    const ids = c.options.map((o) => o.id);
+    const out = [];
+    const rec = (acc) => (acc.length === config.rows.length ? out.push(acc) : ids.forEach((id) => rec([...acc, id])));
+    rec([]);
+    return out;
+  });
+  const found = [];
+  const rec = (k, cells) => {
+    if (k === config.cols.length) {
+      if (clues.every((cl) => clueHolds(config, cells, cl.rule))) found.push(cells);
+      return;
+    }
+    for (const combo of colCombos[k]) {
+      const next = Object.fromEntries(config.rows.map((r, i) => [r.id, { ...cells[r.id], [config.cols[k].id]: combo[i] }]));
+      rec(k + 1, next);
+    }
+  };
+  rec(0, {});
+  return found;
+}
+
+export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series, machine, contradict, logicgrid };
 
 /** Next hint to show (hints are revealed one by one, never skipped). */
 export function nextHint(hints, used) {
@@ -350,23 +578,25 @@ function lightsSolution(on, flip) {
   return best;
 }
 
-/** Shortest command list for one program stage (BFS over x, y, dir). */
-export function programSolution(stage) {
-  const key = (s) => `${s.x},${s.y},${s.dir}`;
+/** Shortest command list for one program stage (BFS over x, y, dir and the keys she holds). */
+export function programSolution(stage, commands = ['F', 'L', 'R']) {
+  // with root gates, the beat's parity is part of the state
+  const gates = stage.grid.some((r) => /[12]/.test(r));
+  const key = (s, n) => `${s.x},${s.y},${s.dir},${s.keys || ''}${gates ? `,${n % 2}` : ''}`;
   const queue = [[stage.start, []]];
-  const seen = new Set([key(stage.start)]);
+  const seen = new Set([key(stage.start, 0)]);
   while (queue.length) {
     const [s, prog] = queue.shift();
     if (prog.length >= stage.max) continue;
-    for (const c of ['F', 'L', 'R']) {
+    for (const c of commands) {
       const p = [...prog, c];
       const res = runProgram(stage, p);
       if (res.ok) return p;
       if (res.crash) continue;
       const end = res.trace[res.trace.length - 1];
-      if (seen.has(key(end))) continue;
-      seen.add(key(end));
-      queue.push([{ x: end.x, y: end.y, dir: end.dir }, p]);
+      if (seen.has(key(end, p.length))) continue;
+      seen.add(key(end, p.length));
+      queue.push([{ x: end.x, y: end.y, dir: end.dir, keys: end.keys }, p]);
     }
   }
   return null;
@@ -418,7 +648,7 @@ const SOLVE = {
   program: (c, s) => {
     const moves = [];
     for (let k = s.stage; k < c.stages.length; k++) {
-      const p = programSolution(c.stages[k]);
+      const p = programSolution(c.stages[k], programCommands(c));
       if (!p) return null;
       if (k === s.stage && s.prog.length) moves.push(['clear']);
       moves.push(...p.map((cmd) => ['add', cmd]), ['run']);
@@ -469,8 +699,64 @@ const SOLVE = {
     }
     return [...moves, ['submit']];
   },
+  series: (c, s) => c.stages.slice(s.stage).map((st) => ['pick', st.answer]),
   deduction: (c) => [['pickSuspect', c.answer.suspect], ...c.answer.evidence.slice(0, c.need || 2).map((e) => ['toggleEvidence', e]), ['submit']],
+  machine: (c, s) => {
+    const moves = [];
+    for (let k = s.stage; k < c.stages.length; k++) {
+      const st = c.stages[k];
+      const fresh = k !== s.stage || !s.moves;
+      if (!fresh) moves.push(['reset']);
+      const pulls = machineSolution(c, st.start, st.target, st.max);
+      if (!pulls) return null;
+      moves.push(...pulls.map((id) => ['pull', id]), ['run']);
+    }
+    return moves;
+  },
+  contradict: (c, s) =>
+    c.stages.slice(s.stage).flatMap((st, k) => {
+      const { claim, evidence } = st.answer;
+      const cur = k === 0 ? s : { claim: null, evidence: null };
+      const proof = [].concat(evidence)[0];
+      const moves = cur.claim === claim ? [] : [['pickClaim', claim]];
+      if (claim >= 0 && cur.evidence !== proof) moves.push(['pickEvidence', proof]);
+      return [...moves, ['submit']];
+    }),
+  logicgrid: (c, s) => {
+    const [sol] = logicgridSolutions(c);
+    if (!sol) return null;
+    const moves = [];
+    for (const r of c.rows) {
+      for (const col of c.cols) {
+        const n = col.options.length;
+        const cur = optIndex(c, col.id, s.cells[r.id]?.[col.id]);
+        const want = optIndex(c, col.id, sol[r.id][col.id]);
+        const steps = cur < 0 ? want + 1 : (want - cur + n) % n;
+        for (let i = 0; i < steps; i++) moves.push(['cycle', r.id, col.id, 1]);
+      }
+    }
+    return [...moves, ['check']];
+  },
 };
+
+/** Fewest lever pulls from `start` to `target` (BFS: the machines have a few dozen states). */
+export function machineSolution(config, start, target, max = Infinity) {
+  const key = (d) => d.join(',');
+  const queue = [[start, []]];
+  const seen = new Set([key(start)]);
+  while (queue.length) {
+    const [d, pulls] = queue.shift();
+    if (key(d) === key(target)) return pulls;
+    if (pulls.length >= max) continue;
+    for (const l of config.levers) {
+      const n = machinePull(config, d, l.id);
+      if (seen.has(key(n))) continue;
+      seen.add(key(n));
+      queue.push([n, [...pulls, l.id]]);
+    }
+  }
+  return null;
+}
 
 /** Moves that finish the puzzle from `state` (default: the start). */
 export function solve(type, config, state = RULES[type].init(config)) {

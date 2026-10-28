@@ -160,6 +160,9 @@ export const ACT78 = {
     { s: 'snooki', e: 'proud', t: 'وأي مكان بيه عظم، هو مكاني.' },
   ],
   'a8.ryan-idle': [
+    // Phase 05: the way into the deep garden, once the ending is over (never a must)
+    { if: '!flag:dg-box', s: 'ryan', e: 'turn', t: 'بالورشة علبة صغيرة إلچ، على الطاولة جنب الماكينة. افتحيها وقت ما تحبين… ماكو عجلة.' },
+    { if: ['flag:dg-done', '!flag:dg-planted'], s: 'ryan', e: 'turn', t: 'شايفچ مبتسمة. شنو مخبية بإيدچ؟' },
     { s: 'ryan', e: 'turn', t: 'الوردة اللي زرعناها كبرت شوية. الحديقة تكبر لمن نهتم بيها… سوا.' },
     { s: 'snooki', e: 'smug', t: 'وآني أسقيها. بطريقتي. لا تسألون.' },
   ],

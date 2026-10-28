@@ -9,7 +9,12 @@
 import { check } from '../core/conditions.js';
 import { SCENES } from '../data/scenes/index.js';
 import { WORLDS } from '../data/worlds.js';
-import { PACKS } from '../data/missions-sp1.js';
+import { PACKS as PACKS_SP1 } from '../data/missions-sp1.js';
+import { PACKS_SP2 } from '../data/missions-sp2.js';
+import { PACKS_DEEP } from '../data/missions-deep.js';
+
+// one at a time, in this order; the deep garden's comes after Story Pack 01's (both after the ending)
+const PACKS = [...PACKS_SP2, ...PACKS_SP1, ...PACKS_DEEP];
 import { h, esc } from './dom.js';
 
 export const noticeFlag = (pack) => `notice:${pack.id}`;

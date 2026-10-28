@@ -450,7 +450,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         else if (moving) anim = Math.abs(a.vx) > 175 && frames[a.kind].run ? 'run' : 'walk';
         else if (a === snooki && idleTime > 16 && frames.snooki.sleep) anim = 'sleep';
         else if (a === snooki && idleTime > 5) anim = Math.floor(idleTime / 4) % 3 === 2 && frames.snooki.wag ? 'wag' : 'sit';
-        else anim = 'idle';
+        else anim = a.def?.view && frames[a.kind][a.def.view] ? a.def.view : 'idle'; // e.g. Ryan waiting with his back turned
       }
       if (anim !== a.anim) {
         a.anim = anim;

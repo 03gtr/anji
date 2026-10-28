@@ -65,6 +65,11 @@ Dev shortcut for the games room: `/?scene=gameroom&flags=house-entered,intro-don
 story chapters, a white husky she names herself, three puzzles and a silent
 cinematic. Design, storyboards and save notes: `docs/STORY_PACK_01.md`.
 
+**Story Pack 02 «أرشيف الأسرار»** (main story, Acts V–VI, before the ending): a
+hidden archive, a deduction, a key-and-door maze, a sequence machine, missing
+letters and the plan of «بوابة الغد»; plus a numbered, filterable mission list
+with a map focus. Design and save notes: `docs/STORY_PACK_02.md`.
+
 ## What is in the game
 
 Eight acts, twelve explorable locations, a world map, and these activities:

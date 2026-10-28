@@ -32,3 +32,6 @@ import { SP1_SCENES } from '../src/game/art/sp1-scenes.js';
 section('Pack husky', ['idle', 'walk', 'sit', 'excited', 'wag', 'celebrate'].map((p) => [p, snookiSprite({ ...HUSKY_LOOK, pose: p, t: 0.25 }), 130]));
 const cosmeticsOnly = { state: { cosmetics: {} } };
 section('Pack shots', Object.entries(SP1_SCENES).map(([k, draw], i) => [k, draw(cosmeticsOnly, `dev${i}`), 360]));
+
+// Ryan in profile (walk / stand) next to his back view (?only=ryan, ?zoom=3)
+if (cast.ryanSide) section('Ryan profile', [['idle', cast.ryanSide({})], ...[0, 0.25, 0.5, 0.75].map((t) => [`walk ${t}`, cast.ryanSide({ pose: 'walk', t })]), ['back', cast.ryanSprite({})]]);

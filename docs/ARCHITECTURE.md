@@ -93,6 +93,16 @@ cinematic shots may be `silent` (no tap prompt) or `quick` (kept short with redu
 motion), the `program` puzzle accepts `look`/`messages`, and after the ending the HUD
 objective shows the active story chapter. No save schema change (`SAVE_VERSION` 3).
 
+## Story Pack 02 additions (main story)
+
+See `docs/STORY_PACK_02.md`. `data/missions-sp2.js` (`SP2_GATE` guards Act VII),
+`data/scenes/sp2.js` (the archive + `SP2_EXTRAS`, merged into existing scenes by
+`data/scenes/index.js`), `data/dialogue/sp2.js`, `data/puzzles-sp2.js`;
+`puzzles/rules.js` adds keys/doors to `program` and a new `series` type;
+`puzzles/host.js` resumes multi-stage puzzles (`pstage:<id>`);
+`progression/journal-index.js` builds the numbered, filterable mission list;
+`ui/menus.js` renders it and `openMap(app, { focus })` + `mapPath()`.
+
 ## Content flow
 
 ```

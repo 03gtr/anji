@@ -16,8 +16,10 @@
 import { PIECES } from '../minigames/garden-logic.js';
 import { check } from '../core/conditions.js';
 import { MISSIONS_SP1 } from './missions-sp1.js';
+import { MISSIONS_SP2 } from './missions-sp2.js';
+import { MISSIONS_DEEP } from './missions-deep.js';
 
-export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية' };
+export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية', puzzle: 'لغز' };
 
 const special = Object.entries(PIECES).filter(([, p]) => p.special);
 
@@ -209,6 +211,10 @@ export const MISSIONS = [
   },
   // Story Pack 01 «الطرق اللي تتذكر» (post-game story chapters + optional activities)
   ...MISSIONS_SP1,
+  // Story Pack 02 «أرشيف الأسرار» (main story, between Act IV and Act VII)
+  ...MISSIONS_SP2,
+  // Phase 04 «الحديقة العميقة» (appended: older display numbers never move)
+  ...MISSIONS_DEEP,
 ];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);

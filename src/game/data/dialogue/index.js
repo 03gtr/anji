@@ -8,6 +8,8 @@ import { ACT6 } from './act6.js';
 import { ACT78 } from './act78.js';
 import { SIDE } from './side.js';
 import { SP1 } from './sp1.js';
+import { SP2 } from './sp2.js';
+import { DEEP } from './deep.js';
 
 export const DIALOGUE = {
   ...ACT1,
@@ -19,4 +21,6 @@ export const DIALOGUE = {
   ...ACT78,
   ...SIDE,
   ...SP1,
+  ...SP2,
+  ...DEEP,
 };

@@ -83,9 +83,9 @@ export const ROADS = {
   blockers: [{ x: PATH, w: 40, if: '!flag:sp1-gift-open' }],
   items: [{ id: 'star.roads.1', x: CLIMB + 120, y: 30 }],
   actors: [
-    { id: 'husky', kind: 'husky', x: 1600, facing: -1, if: 'flag:husky-name' },
+    { id: 'husky', kind: 'husky', x: 1600, facing: -1, if: 'flag:sp1-husky-met' },
     // Ryan waits at the new path facing the gate — his back to her, as on the first day
-    { id: 'ryan', kind: 'ryan', x: 2160, facing: 1, if: 'flag:sp1-gift-open' },
+    { id: 'ryan', kind: 'ryan', x: 2160, facing: 1, view: 'back', if: 'flag:sp1-gift-open' },
   ],
   dynamic: [
     // Ryan's car is part of the memory; afterwards it waits by the new path
@@ -95,7 +95,7 @@ export const ROADS = {
       // the unsigned gift, beside her car
       x: ANJI_CAR + 50,
       reach: 40,
-      if: ['flag:husky-name', '!flag:sp1-gift-open'],
+      if: ['flag:sp1-husky-met', '!flag:sp1-gift-open'],
       draw(ctx, { P, t, world }) {
         const x = ANJI_CAR + 50;
         ctx.fillStyle = '#7a2a4a';
@@ -170,7 +170,7 @@ export const ROADS = {
       h: 40,
       label: 'صندوق بلا توقيع',
       icon: '🎁',
-      if: ['flag:husky-name', '!flag:sp1-gift-open'],
+      if: ['flag:sp1-husky-met', '!flag:sp1-gift-open'],
       cases: [
         { if: '!flag:sp1-gift-box', run: [{ say: 'sp1.gift-box' }, { fx: ['flag:sp1-gift-box', 'journal:sp1-clues'] }] },
         {
@@ -208,7 +208,7 @@ export const ROADS = {
       h: 60,
       label: '{husky}',
       icon: '🐾',
-      if: 'flag:husky-name',
+      if: 'flag:sp1-husky-met',
       cases: [
         {
           // the shortcut: she fetches the high note instead of the climb (teamwork)
@@ -294,7 +294,7 @@ export const ROSE_CLINIC = {
   ],
   actors: [
     { id: 'ryan', kind: 'ryan', x: 790, facing: -1, if: 'flag:sp1-visit-done' },
-    { id: 'husky', kind: 'husky', x: 880, facing: -1, if: 'flag:husky-name' },
+    { id: 'husky', kind: 'husky', x: 880, facing: -1, if: 'flag:sp1-husky-met' },
   ],
   dynamic: [
     {
@@ -413,6 +413,21 @@ export const ROSE_CLINIC = {
       if: 'flag:sp1-visit-done',
       cases: [
         {
+          // Phase 03: she may already have met (and named) the husky at the sanctuary
+          // before the ending — then this is a reunion: no second introduction, no renaming
+          if: ['!flag:sp1-husky-met', 'flag:sp2-husky-early'],
+          run: [
+            { say: 'sp1.husky-call' },
+            { spawn: { id: 'husky', kind: 'husky', x: 1400, facing: -1 } },
+            { move: 'husky', x: 880, speed: 330 },
+            { face: 'husky', dir: -1 },
+            { pose: 'husky', anim: 'excited', for: 800 },
+            { say: 'sp1.husky-reunion' },
+            { pose: 'husky', anim: 'wag', for: 900 },
+            { fx: ['flag:sp1-husky-met', 'journal:sp1-husky'] },
+          ],
+        },
+        {
           // Mission 03: a name only she knows
           if: '!flag:sp1-husky-met',
           run: [
@@ -510,6 +525,6 @@ export const ROSE_CLINIC = {
   ambient: [
     { t: 'عيادة للورد. أخيراً مكان يفهم مشاكلي.' },
     { t: 'ريحة حلاوة بالهوا. آني ما أكلت شي. التحقيق مستمر.' },
-    { t: '{husky} تنام أكثر مني. هذا تجاوز للصلاحيات.', if: 'flag:husky-name' },
+    { t: '{husky} تنام أكثر مني. هذا تجاوز للصلاحيات.', if: 'flag:sp1-husky-met' },
   ],
 };

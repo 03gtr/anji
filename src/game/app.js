@@ -20,6 +20,7 @@ import { createToasts } from './ui/toast.js';
 import { playDialogue } from './ui/dialogue-box.js';
 import { playCinematic } from './ui/cinematic.js';
 import { chapterCard, openJournal, openMap, openSettings, openHelp } from './ui/menus.js';
+import { worldOfScene, regionOf } from './data/worlds.js';
 import { openPuzzle } from './puzzles/host.js';
 import { openMinigame } from './minigames/host.js';
 import { createTitle } from './scenes/title.js';
@@ -35,6 +36,7 @@ import { syncMissions } from './progression/missions.js';
 import { createTips } from './ui/tips.js';
 import { openDrawing } from './ui/drawing.js';
 import { askName } from './ui/name-picker.js';
+import { showGuide } from './ui/guide.js';
 import { COLLECTIBLES } from './data/items.js';
 import { groupOf } from './core/game.js';
 import { h } from './ui/dom.js';
@@ -147,7 +149,7 @@ export function createGameApp(root, opts = {}) {
       chapter: (card) => chapterCard(app, card),
       toast: (text, kind) => toasts.toast(text, kind),
       announce: (changes) => toasts.announce(changes),
-      openMap: () => openMap(app),
+      openMap: (opts) => openMap(app, opts),
       openJournal: (tab) => openJournal(app, tab),
       openSettings: () => openSettings(app),
       openHelp: () => openHelp(app),
@@ -196,6 +198,9 @@ export function createGameApp(root, opts = {}) {
       return;
     }
     await show((a) => createExplore(a, scene, { spawnX }), id);
+    // Phase 04: the deep garden's map marks places she has not been to yet (garden places
+    // keep no such mark: older saves never recorded visits, so they would all look new)
+    if (regionOf(worldOfScene(id)) === 'deep' && !game.flag(`visited:${id}`)) game.setFlag(`visited:${id}`);
   }
 
   function toTitle({ message } = {}) {
@@ -224,8 +229,15 @@ export function createGameApp(root, opts = {}) {
       if (missions.unlocked.length > 2) toasts.toast(`🧭 انفتحت ${missions.unlocked.length} مهمات جديدة بالدفتر`, 'hint');
       else for (const m of missions.unlocked) toasts.toast(`🧭 مهمة جديدة: ${m.title}`, 'hint');
       if (missions.unlocked.length) tips.show('missions');
+      // a finished mission gets one notice: the next-objective card in the world (it names
+      // what was finished), or a toast elsewhere — never both
+      const guided =
+        missions.completed.length > 0 &&
+        sceneId &&
+        sceneId !== 'title' &&
+        showGuide(app, { finished: missions.completed.map((m) => m.title), host: current?.screen?.el, sceneId });
       for (const m of missions.completed) {
-        toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
+        if (!guided) toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
         toasts.announce(m.changes);
       }
       for (const a of syncAchievements(game)) {

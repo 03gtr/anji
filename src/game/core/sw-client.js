@@ -21,7 +21,10 @@ export function createOfflineStatus({ enabled, swUrl = './sw.js' }) {
     if (!sw) return set({ status: 'unsupported' });
     sw.addEventListener('message', (e) => {
       const m = e.data || {};
-      if (m.type === 'precache-progress') set({ status: info.status === 'ready' && !waiting ? 'ready' : 'installing', done: m.done, total: m.total });
+      // only the first install reports 'installing': a new version precaching in the background
+      // (one already controls the page) must not turn 'ready' or 'update' back into it — its last
+      // progress messages can arrive after it is already installed and waiting
+      if (m.type === 'precache-progress') set(sw.controller ? { done: m.done, total: m.total } : { status: 'installing', done: m.done, total: m.total });
       if (m.type === 'precache-complete') set({ done: m.total, total: m.total });
       if (m.type === 'version') set({ version: m.version, total: m.total });
     });

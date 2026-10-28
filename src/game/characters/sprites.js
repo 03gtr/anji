@@ -5,7 +5,7 @@
  */
 import { anjiSprite } from './anji.js';
 import { snookiSprite } from './snooki.js';
-import { ryanSprite, needleSvg } from './cast.js';
+import { ryanSprite, ryanSide, needleSvg } from './cast.js';
 
 const svgUrl = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -99,9 +99,11 @@ export function frameTable(kind, cos = {}) {
       };
     }
     case 'ryan':
+      // profile when he walks or stands; `back` for scripted back-turned moments (actor `view: 'back'`)
       return {
-        idle: [ryanSprite({})],
-        walk: WALK.map((t) => ryanSprite({ pose: 'walk', t })),
+        idle: [ryanSide({})],
+        walk: WALK.map((t) => ryanSide({ pose: 'walk', t })),
+        back: [ryanSprite({})],
       };
     case 'shadow':
       return {

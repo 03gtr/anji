@@ -31,7 +31,7 @@ export function playDialogue(app, script, { id } = {}) {
             </div>
             <p class="dlg-text" aria-live="polite"></p>
             <div class="dlg-choices" role="group"></div>
-            <span class="dlg-next" aria-hidden="true">▾</span>
+            <button type="button" class="dlg-nextbtn" aria-label="التالي">التالي <span aria-hidden="true">◂</span></button>
           </div>
         </div>`;
       const root = el.querySelector('.dlg');
@@ -155,7 +155,12 @@ export function playDialogue(app, script, { id } = {}) {
       }
 
       scope.on(box, 'click', (e) => {
-        if (e.target.closest('.dlg-skip, .btn-choice')) return;
+        if (e.target.closest('.dlg-skip, .btn-choice, .dlg-nextbtn')) return;
+        onTap();
+      });
+      // «التالي»: completes the line being typed, then advances; never picks a choice
+      scope.on(el.querySelector('.dlg-nextbtn'), 'click', (e) => {
+        e.stopPropagation();
         onTap();
       });
       scope.on(el.querySelector('.dlg-skip'), 'click', (e) => {

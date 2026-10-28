@@ -14,6 +14,7 @@
 import { RULES, nextHint } from './rules.js';
 import { VIEWS } from './views.js';
 import { applyEffects } from '../core/effects.js';
+import { check } from '../core/conditions.js';
 import { h, esc, tx, ICONS } from '../ui/dom.js';
 import { confirmBox } from '../ui/menus.js';
 import { fillNames } from '../core/names.js';
@@ -36,10 +37,27 @@ export function openPuzzle(app, def) {
   return app.overlays.open(
     (el, { close, scope }) => {
       let state = rules.init(def.config);
+      // multi-stage puzzles resume at the stage she reached (a number flag: no save-schema change)
+      const stageFlag = `pstage:${def.id}`;
+      const resumable = Array.isArray(def.config?.stages) && 'stage' in state && !game.record(`puzzle:${def.id}`)?.completed;
+      const savedStage = resumable ? game.flag(stageFlag) : null;
+      if (Number.isInteger(savedStage) && savedStage > 0 && savedStage < def.config.stages.length) state = { ...state, stage: savedStage };
+      // Phase 04: puzzles with a draft (a logic grid, a machine's dials) keep what she set, too
+      const draftFlag = `pdraft:${def.id}`;
+      const drafted = Boolean(rules.draft) && !game.record(`puzzle:${def.id}`)?.completed;
+      const savedDraft = drafted ? game.flag(draftFlag) : null;
+      if (typeof savedDraft === 'string') {
+        try {
+          state = rules.draft.load(def.config, savedDraft, state);
+        } catch {
+          game.setFlag(draftFlag, false); // an unreadable draft is dropped, never fatal
+        }
+      }
       let hintsUsed = 0;
       let solved = false;
       let showSolution = Boolean(def.guided); // guided: the next step simply glows
       let mistakes = 0;
+      let hintArmed = false; // the first hint asks once: think first, help is a choice
       el.append(
         h(`<section class="panel puzzle puzzle-${def.type}">
           <header class="panel-head">
@@ -71,7 +89,7 @@ export function openPuzzle(app, def) {
       const updateButtons = () => {
         const hintsOn = settings.get().hints;
         const left = (def.hints?.length || 0) - hintsUsed;
-        hintBtn.querySelector('span').textContent = left > 0 ? `تلميح (${left})` : 'خلصت التلميحات';
+        hintBtn.querySelector('span').textContent = left <= 0 ? 'خلصت التلميحات' : hintArmed ? 'متأكدة؟ المسي مرة ثانية' : `تلميح (${left})`;
         hintBtn.disabled = left <= 0 || solved;
         hintBtn.hidden = !hintsOn || !def.hints?.length || solved;
         solBtn.hidden = solved || showSolution || !hasSolution || !(hintsOn && left <= 0);
@@ -92,6 +110,8 @@ export function openPuzzle(app, def) {
         const score = mistakes + hintsUsed * 2 + (showSolution ? 10 : 0);
         const r = game.recordResult(`puzzle:${def.id}`, { completed: true, score, lowerIsBetter: true });
         if (skipped) game.setFlag(`skipped:${def.id}`);
+        if (resumable) game.setFlag(stageFlag, false);
+        if (drafted) game.setFlag(draftFlag, false);
         const changes = r.firstClear ? applyEffects(def.reward, game) : [];
         app.ui.announce?.(changes);
         const done = h('<button type="button" class="btn btn-primary btn-big" data-autofocus>كمّلي ✨</button>');
@@ -115,7 +135,10 @@ export function openPuzzle(app, def) {
         act(action, ...args) {
           if (solved) return 'noop';
           const res = rules[action](def.config, state, ...args);
+          const stageBefore = state.stage;
           state = res.state;
+          if (resumable && res.outcome === 'progress' && state.stage !== stageBefore) game.setFlag(stageFlag, state.stage);
+          if (drafted && res.outcome !== 'solved' && res.outcome !== 'noop') game.setFlag(draftFlag, rules.draft.save(state));
           if (res.outcome === 'wrong') {
             mistakes += 1;
             audio.play('fail');
@@ -129,6 +152,8 @@ export function openPuzzle(app, def) {
           } else if (res.outcome === 'progress') {
             audio.play('tap');
             say(res.message || '', res.message ? 'good' : '');
+          } else if (res.message) {
+            say(res.message, 'bad'); // a refused move says why (empty cells, no moves left)
           }
           view.render(body, api);
           if (res.outcome === 'solved') finish();
@@ -137,12 +162,20 @@ export function openPuzzle(app, def) {
         },
         say,
         reduced: app.reduced,
+        /** Whether she has something (views list only the evidence she has found). */
+        has: (cond) => check(cond, game),
       };
 
       scope.on(el.querySelector('[data-act="close"]'), 'click', () => close({ solved, hintsUsed }));
       scope.on(hintBtn, 'click', () => {
         const next = nextHint(def.hints || [], hintsUsed);
         if (!next) return;
+        if (hintsUsed === 0 && !hintArmed) {
+          hintArmed = true;
+          updateButtons();
+          return;
+        }
+        hintArmed = false;
         hintsUsed = next.used;
         hintsEl.hidden = false;
         hintsEl.append(h(`<li>${esc(tx(next.text))}</li>`));
@@ -175,6 +208,8 @@ export function openPuzzle(app, def) {
 
       updateButtons();
       view.render(body, api);
+      if (state.stage > 0 && resumable) say(`رجعتي للمستوى ${state.stage + 1} — اللي حلّيتيه محفوظ.`, 'good');
+      else if (typeof savedDraft === 'string') say('رجعتي — اللي ضبطتيه محفوظ.', 'good');
       el.querySelector('h2').focus({ preventScroll: true });
       app.tips?.show('hint');
     },

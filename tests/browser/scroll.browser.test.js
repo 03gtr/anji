@@ -106,6 +106,15 @@ async function open([w, h], query = '', { fill = false } = {}) {
 const metrics = (page, sel) =>
   page.$eval(sel, (el) => ({ st: Math.round(el.scrollTop), max: el.scrollHeight - el.clientHeight, sh: el.scrollHeight, ch: el.clientHeight }));
 
+/**
+ * "Scrolled to the end": within 1 px of scrollHeight − clientHeight. Those two are
+ * whole numbers but the box can be fractional, so the true end can sit just under
+ * the computed one: a long journal at 390×844 has a 720.297 px tall box, its real
+ * end is ≈7826.7, the wheel stops on whole pixels at 7826, an instant jump rounds
+ * to 7827. Anything more than 1 px short still fails.
+ */
+const atEnd = (st, max) => st >= max - 1 && st <= max;
+
 /** Wheel over the element's centre until it stops moving; returns the scrollTop trail. */
 /**
  * After a wheel/key input, wait for the scroll it caused: poll scrollTop until
@@ -203,10 +212,11 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         overflowed++;
         const trail = await wheelToEnd(page, sel);
         expect(trail[1], `${view} first wheel moves`).toBeGreaterThan(0);
-        expect(trail[trail.length - 1], `${view} wheel`).toBe(m.max);
+        expect(atEnd(trail[trail.length - 1], m.max), `${view} wheel → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
         // keyboard: focus is on the first action; Home / End move the page
         expect(await pressAndSettle(page, sel, 'Home'), `${view} Home`).toBe(0);
-        expect(await pressAndSettle(page, sel, 'End'), `${view} End`).toBe(m.max);
+        const end = await pressAndSettle(page, sel, 'End');
+        expect(atEnd(end, m.max), `${view} End → ${end} of ${m.max}`).toBe(true);
       }
       // whether it overflows or not, the actions can be reached
       expect((await lastVisible(page, sel, '.title-actions .btn')).visible, `${view} actions`).toBe(true);
@@ -226,14 +236,14 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
       expect(m.max, `${view} journal overflows`).toBeGreaterThan(200);
       const trail = await wheelToEnd(page, sel);
       expect(trail[1], `${view} first wheel moves`).toBeGreaterThan(0);
-      expect(trail[trail.length - 1], `${view} wheel reaches end`).toBe(m.max);
+      expect(atEnd(trail[trail.length - 1], m.max), `${view} wheel reaches end → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
       expect((await lastVisible(page, sel, ':scope > *')).visible, `${view} last entry`).toBe(true);
       // keyboard on the focused list region
       await page.focus(sel);
       for (const [key, check] of [
         ['Home', (st) => st === 0],
         ['PageDown', (st) => st > 0],
-        ['End', (st) => st === m.max],
+        ['End', (st) => atEnd(st, m.max)],
         ['Home', (st) => st === 0],
         ['ArrowDown', (st) => st > 0],
       ]) {
@@ -274,7 +284,7 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
         const m = await metrics(page, sel);
         if (m.max > 0) {
           const trail = await wheelToEnd(page, sel);
-          expect(trail[trail.length - 1], `${view} ${name}`).toBe(m.max);
+          expect(atEnd(trail[trail.length - 1], m.max), `${view} ${name} → ${trail[trail.length - 1]} of ${m.max}`).toBe(true);
         }
         // overflowing or not, every item can be brought into view
         expect((await lastVisible(page, sel, item)).visible, `${view} ${name} last item`).toBe(true);
@@ -432,6 +442,54 @@ suite(unavailable && !browser ? `real-browser scrolling (skipped: ${unavailable}
       const t = await open(view);
       expect(await noSideScroll(t.page), `${view} title`).toBe(true);
       await t.ctx.close();
+    }
+  }, 120000);
+
+  // Phase 03: with every place open, no place name overlaps another place's name or icon,
+  // and nothing sits outside the board — on a small phone, a phone, landscape and desktop
+  it('map: no overlapping labels or icons, nothing off the board, at every viewport', async () => {
+    for (const view of VIEWS) {
+      const { page, ctx, errors } = await open(view, WORLD);
+      const res = await page.evaluate(async () => {
+        // the flags that open every place on the map (see data/worlds.js), both pages (Phase 04)
+        window.__game.game.setFlags(['maze-done', 'act1-done', 'house-entered', 'garage-open', 'act3-done', 'case-open', 'act4-done', 'library-open', 'act5-done', 'act6-done', 'workshop-entered', 'kitten-tracks', 'act7-done', 'final-entered', 'game-complete', 'sp1-embrace', 'notice:sp1', 'notice:sp2']);
+        window.__game.game.setFlags(['sp2-final-done', 'dg-box', 'dg-timeline', 'dg-trails', 'dg-pattern', 'dg-hypo', 'dg-wheel', 'dg-roots-maze', 'dg-hedge', 'dg-bridge', 'dg-awake']);
+        window.__game.ui.openMap();
+        await new Promise((r) => setTimeout(r, 400));
+        const measure = () => {
+          const board = document.querySelector('.map-board').getBoundingClientRect();
+          const boxes = [];
+          for (const n of document.querySelectorAll('.map-node')) for (const p of n.querySelectorAll('.map-name, .map-icon')) boxes.push({ w: n.dataset.world, name: p.classList.contains('map-name'), r: p.getBoundingClientRect() });
+          const hits = [];
+          for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+            const a = boxes[i];
+            const b = boxes[j];
+            if (a.w === b.w || !(a.name || b.name)) continue;
+            const ov = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
+            const oh = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
+            if (ov > 2 && oh > 2) hits.push(`${a.w}×${b.w}`);
+          }
+          const outside = boxes.filter((b) => b.r.left < board.left - 2 || b.r.right > board.right + 2 || b.r.top < board.top - 2 || b.r.bottom > board.bottom + 2).map((b) => b.w);
+          return { open: document.querySelectorAll('.map-node.is-open').length, hits, outside };
+        };
+        const pages = {};
+        for (const region of ['garden', 'deep']) {
+          document.querySelector(`[data-region="${region}"]`).click();
+          await new Promise((r) => setTimeout(r, 150));
+          pages[region] = measure();
+        }
+        const close = document.querySelector('.map [data-close]').getBoundingClientRect();
+        return { pages, closeVisible: close.top >= 0 && close.right <= innerWidth + 1 && close.width > 20 };
+      });
+      expect(res.pages.garden.open, `${view} places open`).toBeGreaterThan(15);
+      expect(res.pages.deep.open, `${view} deep places open`).toBe(14);
+      for (const [region, r] of Object.entries(res.pages)) {
+        expect(r.hits, `${view} ${region} overlaps`).toEqual([]);
+        expect(r.outside, `${view} ${region} off the board`).toEqual([]);
+      }
+      expect(res.closeVisible, `${view} close button reachable`).toBe(true);
+      expect(errors).toEqual([]);
+      await ctx.close();
     }
   }, 120000);
 });
