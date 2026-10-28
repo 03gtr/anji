@@ -5,12 +5,14 @@
  * as rivals and slowly become a team (tu-dogs-1 → tu-dogs-2). Invented scenes for the game, not
  * real memories. Every rule of a puzzle is said out loud at a stop, by whoever noticed it.
  */
+import { HUSKY_MET } from '../missions-sp2.js';
+
 export const TEAM = {
   'tu.later': [{ s: 'anji', e: 'smile', t: 'نفكر بيها شوية. الآثار ما راح تهرب.' }],
 
   /* ── Anji's plan notebook (the hidden garden) ── */
   'tu.plan-first': [
-    { s: 'anji', e: 'smirk', t: 'دفتر خططي. أول صفحة: «مشية العصر — ويّا لعبة».' },
+    { s: 'anji', e: 'smirk', t: 'أول صفحة: «مشية العصر — ويّا لعبة».' },
     { s: 'ryan', e: 'turn', t: 'لعبة؟ يعني أكو فخ.' },
     { s: 'anji', e: 'smile', t: 'يعني أكو سلة أكل مخبية بآخر الطريق، وثلاث آثار. وإنت تلگاها… بمساعدة الكلاب.' },
     { s: 'snooki', e: 'happy', t: 'سمعت «أكل». آني بالفريق.' },
@@ -50,7 +52,7 @@ export const TEAM = {
     { s: 'anji', e: 'smirk', t: 'ما أگول. بس جيب جوعك.' },
   ],
   'tu.plan-done': [
-    { s: 'anji', e: 'soft', t: 'مشينا الطريقين. الدفتر بعد بيه صفحات فاضية… هاي نكتبها سوا.' },
+    { s: 'anji', e: 'soft', t: 'كل الخطط اللي بالدفتر سوّيناها. بعد بيه صفحات فاضية… هاي نكتبها سوا.' },
     { s: 'ryan', e: 'turn', t: 'وأگدر أكتب وحدة آني؟' },
     { s: 'anji', e: 'smirk', t: 'إذا تكتبها زين.' },
   ],
@@ -106,7 +108,7 @@ export const TEAM = {
     { s: 'anji', e: 'smile', t: 'وكل اللي تحتاجه شفته بالطريق. بس رتّبه.' },
   ],
   'tu.trail-done': [
-    { s: 'ryan', e: 'turn', t: 'لگيته! … لا، إنتي لگيتيه. آني بس مشيت وراه.' },
+    { s: 'ryan', e: 'smile', t: 'لگيته! … لا، إنتي لگيتيه. آني بس مشيت وراه.' },
     { s: 'anji', e: 'smirk', t: 'لگيناه. يلا للسلة قبل ما يوصلها سنوكي.' },
     { s: 'snooki', e: 'smug', t: '(من بعيد) متأخرين.' },
   ],
@@ -133,10 +135,84 @@ export const TEAM = {
   ],
   'tu.picnic-quiet': [
     { s: 'narrator', t: 'گعدوا على البطانية. الكلبين ناموا بالظل، واحد يم الثاني، وكل واحد يدّعي إنه مو نايم.' },
-    { s: 'ryan', e: 'turn', t: 'حلوة هالمشية.' },
+    { s: 'ryan', e: 'smile', t: 'حلوة هالمشية.' },
     { s: 'anji', e: 'soft', t: 'المرة الجاية إنت تخطط.' },
     { s: 'ryan', e: 'turn', t: 'حتى تغلبيني بلعبتي آني؟' },
     { s: 'anji', e: 'smirk', t: 'أكيد.' },
   ],
   'tu.picnic-again': [{ s: 'anji', e: 'soft', t: 'بقايا النزهة… والكلبين نايمين بالظل.' }],
+
+  /* ── the notebook: her plans, the ones that are possible today ── */
+  'tu.plan-menu': [
+    { s: 'anji', e: 'thinking', t: 'دفتر خططي. شنو نسوي اليوم؟' },
+    {
+      s: 'anji',
+      e: 'smirk',
+      choice: [
+        { t: 'مشية العصر 🐾', if: [HUSKY_MET, { not: ['flag:tu-walk-river', 'flag:tu-walk-orchard'] }], then: [{ s: 'anji', e: 'smile', t: 'مشية. ويّا لعبة طبعاً.' }, { do: ['flag:tu-pick-walk', '!flag:tu-pick-train'] }] },
+        { t: 'تمرين سوا 💪', if: '!flag:tu-train-done', then: [{ s: 'anji', e: 'smirk', t: 'تمرين. بقواعدي.' }, { do: ['flag:tu-pick-train', '!flag:tu-pick-walk'] }] },
+        { t: 'بعدين', then: [{ s: 'anji', e: 'soft', t: 'الدفتر يصبر.' }, { do: ['!flag:tu-pick-walk', '!flag:tu-pick-train'] }] },
+      ],
+    },
+  ],
+  'tu.plan-later': [{ s: 'ryan', e: 'smile', t: 'لمن تقررين، آني هنا.' }],
+
+  /* ── «تمرين سوا»: the training yard ── */
+  'tu.train-plan': [
+    { s: 'anji', e: 'smirk', t: 'صفحة ثانية: «تمرين سوا — بقواعدي».' },
+    { s: 'ryan', e: 'turn', t: 'قواعدچ؟ … هذا يخوّف أكثر من التمرين.' },
+    { s: 'snooki', e: 'proud', t: 'آني أعدّ العدّات. للأمانة: أعرف لحد خمسة.' },
+    { s: 'anji', e: 'smile', t: 'يلا للصالة.' },
+  ],
+  'tu.train-again': [{ s: 'anji', e: 'smirk', t: 'الصالة تنتظر. والصافرة وياي.' }],
+  'tu.train-enter': [
+    { s: 'narrator', t: 'صالة صغيرة ورا البيت الزجاجي: أربع محطات، سبورة، ومصطبة.' },
+    { s: 'anji', e: 'smirk', t: 'ريان، القواعد على السبورة. اقراها… زين.' },
+  ],
+  'tu.st-squats': [
+    { s: 'note', t: '«السكوات — دمبل وحدة.»' },
+    { s: 'snooki', e: 'smug', t: 'سكوات؟ آني أسويها طول اليوم. اسمها گعدة.' },
+  ],
+  'tu.st-rope': [
+    { s: 'note', t: '«الحبل — دمبلين.»' },
+    { if: HUSKY_MET, s: 'narrator', t: '{husky} تحاول تلزم الحبل بحلگها… تقريباً نجحت.' },
+  ],
+  'tu.st-plank': [
+    { s: 'note', t: '«البلانك — دمبلين.»' },
+    { s: 'ryan', e: 'turn', t: 'البلانك؟ … أكرهه بصراحة. دقيقة كاملة وآني أفكر بقراراتي بالحياة.' },
+    { s: 'anji', e: 'smirk', t: 'سجّلتها.' },
+  ],
+  'tu.st-pushups': [
+    { s: 'note', t: '«الضغط — ثلاث دمبلات.»' },
+    { s: 'ryan', e: 'smile', t: 'هذا مالتي.' },
+  ],
+  'tu.st-board': [
+    { s: 'note', t: '«إحماء أنجي: من الأخف للأثقل. وإذا تساوى وزنين: اللي ريان يكرهه أول. — أ»' },
+    { s: 'ryan', e: 'turn', t: '…هاي القاعدة الأخيرة شخصية.' },
+    { s: 'anji', e: 'smirk', t: 'كل القواعد شخصية.' },
+  ],
+  'tu.st-again': [{ s: 'anji', e: 'soft', t: 'قريتها. محفوظة بالدفتر.' }],
+  'tu.warmup-wait': [{ s: 'anji', e: 'thinking', t: 'أول شي نقرا السبورة والمحطات كلها.' }],
+  'tu.warmup-done': [
+    { s: 'ryan', e: 'turn', t: 'البلانك بالثاني… عرفت إنها لعبة ضدي.' },
+    { s: 'anji', e: 'smile', t: 'مو ضدك. ويّاك. فرق.' },
+  ],
+  'tu.warmup-again': [{ s: 'anji', e: 'soft', t: 'الإحماء خلص. الجاي: سلّم العدّات.' }],
+  'tu.ladder-wait': [{ s: 'anji', e: 'thinking', t: 'بعد الإحماء. ما نقفز خطوات.' }],
+  'tu.ladder-done': [
+    { s: 'ryan', e: 'turn', t: 'غيّرتي القاعدة بالنص!' },
+    { s: 'anji', e: 'smirk', t: 'وصفّرت. مرتين. القواعد تتغير، يا كابتن.' },
+    { s: 'snooki', e: 'proud', t: 'آني عدّيت كلشي. الجواب: خمسة.' },
+  ],
+  'tu.ladder-again': [{ s: 'anji', e: 'soft', t: 'السلّم خلص. باقي الاستراحة.' }],
+  'tu.cooldown-wait': [{ s: 'anji', e: 'smile', t: 'الاستراحة بعد ما نخلّص. مو قبل.' }],
+  'tu.cooldown': [
+    { s: 'narrator', t: 'گعدوا على المصطبة يتنفسون.' },
+    { s: 'ryan', e: 'smile', t: 'آني هم عندي مفاجأة.' },
+    { s: 'narrator', t: 'طلّع من شنطته قنينتين عصير بارد. الثانية عليها ملصق بخطه: «للمدرّبة».' },
+    { s: 'anji', e: 'surprised', t: 'من وكت محضّرها؟' },
+    { s: 'ryan', e: 'turn', t: 'من وكت ما گلتي «بقواعدي». عرفت راح أحتاجها.' },
+    { if: HUSKY_MET, s: 'narrator', t: '{husky} تشرب من صحن الماي، وسنوكي يراقب من يم ريان كأنه هو الحَكَم.' },
+  ],
+  'tu.cooldown-again': [{ s: 'anji', e: 'soft', t: 'المصطبة… والعصير خلص.' }],
 };

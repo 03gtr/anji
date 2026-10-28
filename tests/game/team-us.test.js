@@ -75,6 +75,34 @@ function sayDo(key, g, pick = 0) {
   }
 }
 const OBS = (route) => [1, 2, 3].map((n) => `tu-obs-${route}-${n}`);
+/**
+ * Play an action list like a player: dialogue keys are said (their `do` lines applied), a choice
+ * takes the option whose text is given in `picks` (only options whose `if` holds are offered),
+ * `if/then/else` branches are followed, effects applied, gotos collected.
+ */
+function play(actions, g, picks = {}, out = { said: [], goto: [], offered: {} }) {
+  for (const a of actions) {
+    if (a.say) {
+      out.said.push(a.say);
+      for (const line of DIALOGUE[a.say]) {
+        if (line.do) applyEffects(line.do, g);
+        if (line.choice) {
+          const options = line.choice.filter((o) => !('if' in o) || check(o.if, g));
+          out.offered[a.say] = options.map((o) => o.t);
+          const chosen = options.find((o) => o.t === picks[a.say]) ?? options[0];
+          for (const l of chosen.then) if (l.do) applyEffects(l.do, g);
+        }
+      }
+    }
+    if (a.fx) applyEffects(a.fx, g);
+    if (a.goto) out.goto.push(a.goto);
+    if (a.if !== undefined && (a.then || a.else)) play(check(a.if, g) ? a.then ?? [] : a.else ?? [], g, picks, out);
+  }
+  return out;
+}
+const WALK = 'مشية العصر 🐾';
+const TRAIN = 'تمرين سوا 💪';
+const openNotebook = (g, picks) => play(caseFor(notebook(), g).run, g, picks);
 
 describe('who can start it, and when', () => {
   it('only after the ending, and only once she has met the husky', () => {
@@ -113,18 +141,34 @@ describe('who can start it, and when', () => {
 describe('Anji plans it', () => {
   it('the notebook: her plan, a route she chooses, then the walk; each route clears the other', () => {
     const g = finished();
-    const first = caseFor(notebook(), g);
-    expect(run(first.run.filter((a) => !a.goto && !a.fade), game())).toEqual(['tu.plan-first', 'tu.plan-route', 'tu.plan-go']);
-    expect(first.run.some((a) => a.goto === 'dogwalk')).toBe(true);
     expect(check(worldById('dogwalk').unlock, g)).toBe(false); // the place appears when she plans it
-    run(first.run.filter((a) => a.fx), g);
-    sayDo('tu.plan-route', g, 0);
+    const first = openNotebook(g, { 'tu.plan-menu': WALK, 'tu.plan-route': 'طريق النهر' });
+    expect(first.offered['tu.plan-menu']).toEqual([WALK, TRAIN, 'بعدين']); // her plans, today's
+    expect(first.said).toEqual(['tu.plan-menu', 'tu.plan-first', 'tu.plan-route', 'tu.plan-go']);
+    expect(first.goto).toEqual(['dogwalk']);
     expect([Boolean(g.flag('tu-route-river')), Boolean(g.flag('tu-route-orchard'))]).toEqual([true, false]);
     expect(check(worldById('dogwalk').unlock, g)).toBe(true);
     expect(missionState(walk, g).step).toBe(1);
     sayDo('tu.plan-route', g, 1); // she changes her mind: the other route
     expect([Boolean(g.flag('tu-route-river')), Boolean(g.flag('tu-route-orchard'))]).toEqual([false, true]);
-    expect(run(caseFor(notebook(), g).run.filter((a) => !a.goto && !a.fade), game())).toEqual(['tu.plan-again', 'tu.plan-route', 'tu.plan-go']);
+    expect(openNotebook(g, { 'tu.plan-menu': WALK, 'tu.plan-route': 'طريق البستان' }).said).toEqual(['tu.plan-menu', 'tu.plan-again', 'tu.plan-route', 'tu.plan-go']);
+    // «بعدين»: nothing starts, nothing is set
+    const before = JSON.stringify(g.state.flags);
+    const later = openNotebook(g, { 'tu.plan-menu': 'بعدين' });
+    expect(later.said).toEqual(['tu.plan-menu', 'tu.plan-later']);
+    expect(later.goto).toEqual([]);
+    expect(Object.keys(g.state.flags).filter((k) => !k.startsWith('tu-pick')).sort()).toEqual(Object.keys(JSON.parse(before)).filter((k) => !k.startsWith('tu-pick')).sort());
+  });
+
+  it('without her husky the notebook still offers the workout, never the walk', () => {
+    const g = throughAct(8, game());
+    g.setFlags(['workshop-entered', 'final-entered']);
+    expect(visible(notebook(), g)).toBe(true);
+    const out = openNotebook(g, { 'tu.plan-menu': TRAIN });
+    expect(out.offered['tu.plan-menu']).toEqual([TRAIN, 'بعدين']);
+    expect(out.said).toEqual(['tu.plan-menu', 'tu.train-plan']);
+    expect(out.goto).toEqual(['trainyard']);
+    expect(g.flag('tu-train-plan')).toBe(true);
   });
 });
 
@@ -200,14 +244,16 @@ describe('the walk', () => {
     expect(syncMissions(g).completed.map((m) => m.id)).toEqual(['tu-walk']);
     expect(run(caseFor(basket, g).run, g)).toEqual(['tu.picnic-again']);
     // the second walk, the other route
-    expect(run(caseFor(notebook(), g).run.filter((a) => !a.goto && !a.fade), game())[0]).toBe('tu.plan-second');
-    sayDo('tu.plan-route', g, 1);
+    expect(openNotebook(g, { 'tu.plan-menu': WALK, 'tu.plan-route': 'طريق البستان' }).said.slice(0, 2)).toEqual(['tu.plan-menu', 'tu.plan-second']);
     g.setFlags([...OBS('orchard'), 'tu-trail-orchard']);
     expect(run(caseFor(inWalk('basket-orchard'), g).run, g)).toEqual(['tu.picnic-orchard', 'tu.dogs-second', 'tu.picnic-quiet']);
     expect(g.flag('tu-dogs-2')).toBe(true);
     expect(g.has('keepsake.walk.orchard')).toBe(true);
     expect(syncMissions(g).completed).toEqual([]); // nothing paid twice
-    expect(run(caseFor(notebook(), g).run, game())).toEqual(['tu.plan-done']);
+    // the walk is no longer offered once both routes are walked; with the workout done too, the notebook is full
+    expect(openNotebook(g, {}).offered['tu.plan-menu']).toEqual([TRAIN, 'بعدين']);
+    g.setFlag('tu-train-done');
+    expect(openNotebook(g, {}).said).toEqual(['tu.plan-done']);
     for (const k of ['keepsake.walk.river', 'keepsake.walk.orchard']) expect(COLLECTIBLES[k] ?? JOURNAL[k] ?? k).toBeTruthy();
   });
 });
@@ -318,5 +364,72 @@ describe('in the app', () => {
     app.ui.puzzle('tu-trail-river');
     await until(() => $('.puzzle .lg-cell'));
     expect($('.puzzle .lg-cell').textContent.trim()).not.toBe('');
+  });
+});
+
+describe('«تمرين سوا»: Anji trains with Ryan, by her rules', () => {
+  const yard = (id) => SCENES.trainyard.interact.find((i) => i.id === id);
+  const atYard = () => {
+    const g = finished();
+    g.setFlags(['tu-train-plan']);
+    return g;
+  };
+
+  it('the warm-up waits for the board and the four cards; its order follows from them alone', () => {
+    const g = atYard();
+    expect(check(worldById('trainyard').unlock, g)).toBe(true);
+    expect(caseFor(yard('warmup'), g).run).toEqual([{ say: 'tu.warmup-wait' }]);
+    for (const id of ['st-board', 'st-squats', 'st-rope', 'st-plank', 'st-pushups']) run(caseFor(yard(id), g).run, g);
+    expect(caseFor(yard('warmup'), g).run[0].puzzle).toBe('tu-warmup');
+    // from the journal facts: weights in dumbbells, and the tie rule (the one Ryan hates first)
+    const weight = (id) => ({ 'دمبل وحدة': 1, 'دمبلين': 2, 'ثلاث دمبلات': 3 })[JOURNAL[`tu-st-${id}`].text.match(/— ([^.»]+)/)[1]];
+    const hates = (id) => /أكرهه/.test(JOURNAL[`tu-st-${id}`].text);
+    expect(JOURNAL['tu-st-board'].text).toMatch(/الأخف للأثقل/);
+    const derived = ['squats', 'rope', 'plank', 'pushups'].sort((a, b) => weight(a) - weight(b) || Number(hates(b)) - Number(hates(a)));
+    expect(PUZZLES['tu-warmup'].config.answer).toEqual(derived);
+    // a different order is wrong, and the try starts again (nothing lost but the taps)
+    const cfg = PUZZLES['tu-warmup'].config;
+    let st = RULES.sequence.init(cfg);
+    st = RULES.sequence.press(cfg, st, 'squats').state;
+    const res = RULES.sequence.press(cfg, st, 'rope');
+    expect(res.outcome).toBe('wrong');
+  });
+
+  it('the rep ladder: each stage has one answer by its rule; the last stage shows her new rule on screen', () => {
+    const stages = PUZZLES['tu-ladder'].config.stages;
+    const rules = [(a, i) => a[0] - 2 * i, (a, i) => a[0] * (i + 1), null];
+    const next = [(row) => row[row.length - 2] - 2, (row) => row[0] * row.length, (row) => row[row.length - 2] * 2 - 1];
+    for (const [k, st] of stages.entries()) {
+      for (const ex of st.examples) expect(next[k](ex), `stage ${k + 1} example`).toBe(ex[ex.length - 1]);
+      const q = [...st.question];
+      expect(st.options.filter((o) => next[k]([...q.slice(0, -1), o]) === o)).toEqual([st.answer]);
+      if (rules[k]) for (const ex of st.examples) expect(ex.every((v, i) => v === rules[k](ex, i))).toBe(true);
+    }
+    expect(stages[2].note).toMatch(/قاعدة جديدة/);
+    expect(stages.slice(0, 2).every((s) => !s.note)).toBe(true);
+    // the old rule (+ the last difference) would not give the right answer: she really changed it
+    const [a, b, c] = stages[2].question;
+    expect(c + (c - b)).not.toBe(stages[2].answer);
+    expect(a).toBeLessThan(b);
+  });
+
+  it('the cool-down: once, a keepsake once, the mission complete; Ryan is there and Snooki with him', () => {
+    const g = atYard();
+    g.setFlags(['tu-st-board', 'tu-st-squats', 'tu-st-rope', 'tu-st-plank', 'tu-st-pushups']);
+    expect(caseFor(yard('ladder'), g).run).toEqual([{ say: 'tu.ladder-wait' }]);
+    g.setFlags(['tu-train-warmup', 'tu-train-ladder']);
+    expect(run(caseFor(yard('cooldown'), g).run, g)).toEqual(['tu.cooldown']);
+    expect(g.has('keepsake.train.1')).toBe(true);
+    expect(syncMissions(g).completed.map((m) => m.id)).toContain('tu-train');
+    expect(run(caseFor(yard('cooldown'), g).run, g)).toEqual(['tu.cooldown-again']);
+    expect(syncMissions(g).completed).toEqual([]);
+    expect(SCENES.trainyard.actors.some((x) => x.kind === 'ryan')).toBe(true);
+  });
+
+  it('no real exercise, timing or health tracking; no wedding words', () => {
+    const text = JSON.stringify([Object.entries(DIALOGUE).filter(([k]) => /^tu\.(st|train|warmup|ladder|cooldown)/.test(k)), PUZZLES['tu-warmup'], PUZZLES['tu-ladder'], MISSIONS.find((m) => m.id === 'tu-train')]);
+    expect(text).not.toMatch(/سعرات|كالوري|calorie|نبض|heart rate|وزنچ|خسارة الوزن|حمية/i);
+    expect(text).not.toMatch(/زفاف|عرس|زواج|wedding|marri/i);
+    expect(PUZZLES['tu-ladder'].config.timer ?? PUZZLES['tu-warmup'].config.timer).toBeUndefined();
   });
 });

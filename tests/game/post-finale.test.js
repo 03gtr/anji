@@ -98,12 +98,13 @@ describe('a new save: the original ending, then the continuation', () => {
     expect(check(meet.if, g)).toBe(false); // the ending never replays
     expect(missionState(mission('dg-night'), g)).toMatchObject({ status: 'active', step: 0 });
     expect(dueNotice(g, 'garden')?.id).toBe(PACKS_DEEP[0].id);
-    expect(dueNotice(g, 'workshop')).toBeNull(); // not while she is already there
+    expect(dueNotice(g, 'workshop')?.id ?? null).not.toBe('deep'); // not while she is already there
     expect(visible('workshop', 'dg-seedbox', g)).toBe(true);
     const hook = DIALOGUE['a8.ryan-idle'].find((l) => /علبة/.test(l.t));
     expect(check(hook.if, g)).toBe(true);
     g.setFlag('notice:deep');
-    expect(dueNotice(g, 'garden')).toBeNull(); // once
+    // once; (Team Us adds its own notice after this one, also after the ending)
+    expect(dueNotice(g, 'garden')?.id ?? null).not.toBe('deep');
     for (const m of MISSIONS_DEEP) expect(missionState(m, g).status, m.id).not.toBe('complete');
   });
 });

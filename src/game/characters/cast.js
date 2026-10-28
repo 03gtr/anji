@@ -90,9 +90,9 @@ export function ryanSide({ pose = 'idle', t = 0 } = {}) {
       <path d="M42 182 H58 C63 182 66 186 66 190 L66 194 H42Z" fill="${shoe}"/><path d="M42 191 H66 V194.5 H42Z" fill="#e9e9ef"/>
     </g>`;
   const arm = (angle, sleeve, near) => `<g transform="rotate(${angle.toFixed(1)} 50 66)">
-      <path d="M43 62 C52 60 58 66 58 74 L57 102 L45 102 L43 74Z" fill="${sleeve}"/>
-      <path d="M45.5 100 L56.5 100 L57.5 105 L45 105Z" fill="${R.hoodieShade}"/>
-      <path d="M46 104 C46 114 47 124 49 131 L56 131 C57 122 57 112 56.5 104Z" fill="${near ? R.skin : R.skinShade}"/>
+      <path d="M41.5 61 C53 58.5 60.5 65 60.5 75 L58.5 102 L44.5 102 L41.5 75Z" fill="${sleeve}"/>
+      <path d="M44.5 100 L58.5 100 L59 105 L44.5 105Z" fill="${R.hoodieShade}"/>
+      <path d="M45.5 104 C45 114 46.5 124 48.5 131 L57 131 C58.5 122 58.5 112 58 104Z" fill="${near ? R.skin : R.skinShade}"/>
       <ellipse cx="52.5" cy="134" rx="5.2" ry="5.6" fill="${near ? R.skin : R.skinShade}"/>
     </g>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
@@ -101,7 +101,7 @@ export function ryanSide({ pose = 'idle', t = 0 } = {}) {
       ${leg(-legA, '#33507a', '#1c1d23')}
       ${arm(-armA, R.hoodieShade, false)}
       <rect x="20" y="70" width="18" height="54" rx="7" fill="${R.pack}"/>
-      <path d="M37 62 C44 57 58 57 63 61 C69 67 70 80 67 96 L66 140 L35 140 L34 100 C32 86 32 70 37 62Z" fill="${R.hoodie}"/>
+      <path d="M35 61 C43 56 59 56 65 60 C72 66 73 80 69 96 L66 140 L35 140 L34 100 C32 86 32 70 37 62Z" fill="${R.hoodie}"/>
       <path d="M35 132 H66 V141 H35Z" fill="${R.hoodieShade}"/>
       <path d="M50 118 H66 V131 H52Z" fill="${R.hoodieShade}"/>
       <path d="M40 61 C48 63 55 70 57 86" stroke="${R.pack}" stroke-width="4" fill="none"/>
@@ -110,9 +110,9 @@ export function ryanSide({ pose = 'idle', t = 0 } = {}) {
       <path d="M45 46 H57 L58 60 H44Z" fill="${R.skinShade}"/>
       <g transform="translate(0 3.5)">
       <path d="M52 15 C62 15 68 22 68 30 L71.5 37 L68 39.5 C68 46 63 50 56 50 C50 50 45 47 43 41 C41 33 42 17 52 15Z" fill="${R.skin}"/>
-      <path d="M48 37 C51 43 55 48 60 50 C65 50.5 68.5 47 69 41.5 C66 43.5 62 43.5 60 41.5 C56 43.5 51 41.5 48 37Z" fill="${R.beard}"/>
+      <path d="M47.5 37 C50.5 44 55 49.5 60 52 C65.5 52.6 69 48.6 69.2 41.5 C66 43.5 62 43.5 60 41.5 C56 43.5 51 41.5 48 37Z" fill="${R.beard}"/>
       <path d="M62.5 41.2 q3.5 1.2 6.5 0" stroke="${R.beard}" stroke-width="1.6" fill="none"/>
-      <path d="M36 35 C34 20 42 11.5 52 11.5 C62 11.5 68.5 17 67.5 25.5 C62 21.5 56 21.5 52 23.5 C48.5 27 48 33 46.5 39.5 C42.5 43.5 38 42 36 35Z" fill="url(#hf${id})"/>
+      <path d="M36 35 C34.5 21 42 13.6 52 13.6 C61.5 13.6 67.6 18 67.2 24.5 C62 21.5 56 21.5 52 23.5 C48.5 27 48 33 46.5 39.5 C42.5 43.5 38 42 36 35Z" fill="url(#hf${id})"/>
       <ellipse cx="47.5" cy="34" rx="3.2" ry="5" fill="${R.skin}"/><path d="M47.6 31.5 q-1.6 2.5 0 5" stroke="${R.skinShade}" stroke-width="1" fill="none"/>
       <path d="M59.5 27 L67.5 27.6" stroke="#2c211b" stroke-width="1.5" stroke-linecap="round"/>
       <ellipse cx="64.4" cy="31.6" rx="1.3" ry="1.5" fill="#1a1411"/>
@@ -151,6 +151,58 @@ export function ryanPortrait({ expr = 'back' } = {}) {
     ${turn ? profile : ''}
     </g>
     <path d="M136 52 C142 62 142 74 138 82" stroke="#9fd7ff" stroke-width="2.4" fill="none" opacity=".6"/>
+  </svg>`;
+}
+
+/**
+ * Ryan face to face (portrait 200×200): for conversations after he has turned to her, so his
+ * face is finally seen. Drawn from the owner's reference photo as a cartoon in the game's
+ * style: a close crop with a straight hairline, a full dark beard joined to the moustache and
+ * ending in a soft point below the chin, rectangular dark glasses, heavy straight brows, a
+ * calm look, a thick neck and broad, muscular shoulders. `smile`: the same face, warmer.
+ * The back views (ryanSprite, ryanPortrait 'back', ryanView) are untouched: the embrace and
+ * the moments he looks away keep their back-turned composition.
+ */
+export function ryanFace({ expr = 'calm' } = {}) {
+  const id = `rf${++uid}`;
+  const R = RYAN;
+  const smile = expr === 'smile';
+  const eye = (cx) => `<ellipse cx="${cx}" cy="87" rx="5.6" ry="${smile ? 2.8 : 3.4}" fill="#f7f1ea"/>
+      <circle cx="${cx + 0.6}" cy="87.2" r="2.9" fill="#3b2a20"/><circle cx="${cx + 0.6}" cy="87.2" r="1.4" fill="#120c09"/>
+      <circle cx="${cx + 1.8}" cy="85.9" r="0.9" fill="#fff"/>
+      <path d="M${cx - 6.4} ${smile ? 86.4 : 85.6} Q${cx} ${smile ? 82.8 : 82.4} ${cx + 6.4} ${smile ? 86.4 : 85.6}" stroke="#2a1d16" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+      ${smile ? `<path d="M${cx - 5} 89.6 Q${cx} 91.4 ${cx + 5} 89.6" stroke="${R.skinShade}" stroke-width="1.1" fill="none"/>` : ''}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <defs>${lightingDefs(id)}
+      <linearGradient id="crop${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17110e"/><stop offset=".75" stop-color="#241a14"/><stop offset="1" stop-color="#3d2e25" stop-opacity=".85"/></linearGradient>
+      <radialGradient id="skin${id}" cx=".45" cy=".35" r=".75"><stop offset="0" stop-color="#e8c2a4"/><stop offset=".7" stop-color="${R.skin}"/><stop offset="1" stop-color="${R.skinShade}"/></radialGradient>
+    </defs>
+    <path d="M80 128 L120 128 L124 166 C112 172 88 172 76 166Z" fill="${R.skinShade}"/>
+    <g filter="url(#v3d-${id})">
+      <path d="M2 200 C6 172 30 154 70 148 C80 146 90 145 100 145 C110 145 120 146 130 148 C170 154 194 172 198 200Z" fill="${R.hoodie}"/>
+      <path d="M30 168 C44 156 62 151 76 150 L72 166 C58 168 42 176 30 186Z M170 168 C156 156 138 151 124 150 L128 166 C142 168 158 176 170 186Z" fill="${R.hoodieShade}" opacity=".55"/>
+      <path d="M80 147 C86 160 114 160 120 147" stroke="${R.hoodieShade}" stroke-width="5" fill="none"/>
+    </g>
+    <g transform="translate(-20 -16) scale(1.2)">
+    <ellipse cx="63.5" cy="92" rx="6.8" ry="11" fill="${R.skin}"/><ellipse cx="136.5" cy="92" rx="6.8" ry="11" fill="${R.skin}"/>
+    <path d="M62.5 88 q2 4 0 8 M137.5 88 q-2 4 0 8" stroke="${R.skinShade}" stroke-width="1.2" fill="none"/>
+    <path d="M65 84 C63 58 79 42 100 42 C121 42 137 58 135 84 C135 104 129 120 120 128 L80 128 C71 120 65 104 65 84Z" fill="url(#skin${id})"/>
+    <path d="M65.5 80 C64 56 80 41 100 41 C120 41 136 56 134.5 80 C133.5 71 131 64 125.5 57.6 C117 56.6 109 58.2 100 57.8 C91 58.2 83 56.6 74.5 57.6 C69 64 66.5 71 65.5 80Z" fill="url(#crop${id})"/>
+    <path d="M74.5 57.6 C83 56.6 91 58.2 100 57.8 C109 58.2 117 56.6 125.5 57.6" stroke="#4a382d" stroke-width="1" fill="none" opacity=".7"/>
+    <path d="M80 50 l2 -1 M90 46 l2 -1 M104 45.5 l2 -0.6 M114 48 l2 -0.8 M74 56 l1.6 -1.2 M122 54 l1.6 -1" stroke="#5a4436" stroke-width="1" opacity=".5"/>
+    <path d="M65.6 95 C66 114 71 128 80 138 C87 147 94 152 100 152.5 C106 152 113 147 120 138 C129 128 134 114 134.4 95 C132.5 103 129 108.5 124.5 110.5 C118.5 105.5 110 104 100 104.8 C90 104 81.5 105.5 75.5 110.5 C71 108.5 67.5 103 65.6 95Z" fill="${R.beard}"/>
+    <path d="M70 110 C74 122 82 132 92 140 M130 110 C126 122 118 132 108 140" stroke="#3a2b22" stroke-width="1.1" fill="none" opacity=".7"/>
+    <path d="M83.5 113.5 C89 107.6 95.5 107.4 100 109.6 C104.5 107.4 111 107.6 116.5 113.5 C112 116.6 106 116.4 100 115 C94 116.4 88 116.6 83.5 113.5Z" fill="#1c140f"/>
+    ${smile ? `<path d="M90 118.6 Q100 125.4 110 118.6 Q100 122 90 118.6Z" fill="#7a3a34"/><path d="M92.5 119.6 Q100 121.6 107.5 119.6" stroke="#f3e7dc" stroke-width="1.4" fill="none"/>` : `<path d="M91.5 119.4 Q100 121 108.5 119.4" stroke="#5a2c26" stroke-width="2" fill="none" stroke-linecap="round"/>`}
+    <path d="M100 86 C99.2 94 97.6 99.5 95.2 102.2 C98 104.4 102.2 104.4 105 102.4" stroke="${R.skinShade}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M71 76.4 Q81.5 71.4 93 74.6 M107 74.6 Q118.5 71.4 129 76.4" stroke="#1e1510" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+    ${eye(84.5)}${eye(115.5)}
+    <g stroke="${R.frame}" stroke-width="3" fill="rgba(159,215,255,.12)" stroke-linejoin="round">
+      <rect x="71" y="78.5" width="28" height="18.5" rx="4.2"/><rect x="101" y="78.5" width="28" height="18.5" rx="4.2"/>
+    </g>
+    <path d="M99 84.5 Q100 82.6 101 84.5 M71 83.5 L64.5 86.5 M129 83.5 L135.5 86.5" stroke="${R.frame}" stroke-width="2.6" fill="none"/>
+    <path d="M74 81 l6 -1.4 M104 81 l6 -1.4" stroke="#ffffff" stroke-width="1.4" opacity=".55" stroke-linecap="round"/>
+    </g>
   </svg>`;
 }
 
@@ -286,7 +338,8 @@ const glyph = (char, bg) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 
 
 /** speaker id → display name + portrait renderer */
 export const CAST = {
-  ryan: { name: 'ريان', portrait: ({ expr }) => ryanPortrait({ expr }) },
+  // 'back': a recording, or a moment he faces away; otherwise face to face (from the reunion on)
+  ryan: { name: 'ريان', portrait: ({ expr }) => (expr === 'back' ? ryanPortrait({ expr }) : ryanFace({ expr: expr === 'smile' ? 'smile' : 'calm' })) },
   needle: { name: 'الممرضة إبرة', portrait: ({ expr }) => needleSvg({ expr }) },
   munther: { name: 'العم منذر', portrait: ({ expr } = {}) => muntherPortrait(expr) },
   sultan: { name: 'السلطان', portrait: () => sultanPortrait() },

@@ -6,7 +6,7 @@
  * (`tu-route-river` / `tu-route-orchard`): the stops, the fork and the basket follow it.
  */
 import { GROUND } from '../../world/props.js';
-import { TEAM_UNLOCK, WALK_ROUTES } from '../missions-team.js';
+import { TEAM_OPEN, TRAIN_FACTS, WALK_ROUTES } from '../missions-team.js';
 import { HUSKY_MET } from '../missions-sp2.js';
 
 const once = (key) => ({ if: `!seen:${key}`, then: [{ say: key }] });
@@ -130,10 +130,9 @@ export const DOGWALK = {
       },
     },
   ],
-  actors: [
-    { id: 'ryan', kind: 'ryan', x: 300, facing: 1 },
-    { id: 'husky', kind: 'husky', x: 420, facing: 1, if: HUSKY_MET },
-  ],
+  // all four walk together: Snooki and her husky follow her (data/companions.js), Ryan too
+  dogsAfter: { snooki: 'follow' },
+  actors: [{ id: 'ryan', kind: 'ryan', x: 260, facing: 1, companion: true, gap: 178 }],
   interact: [
     {
       id: 'no-plan',
@@ -155,11 +154,117 @@ export const DOGWALK = {
   ],
 };
 
-export const TEAM_SCENES = [DOGWALK];
+/* ── «تمرين سوا»: the training yard ── */
+const YARD = { board: 300, warmup: 430, squats: 560, rope: 800, plank: 1040, pushups: 1280, ladder: 1440, bench: 1590 };
+/** A card to read once (a journal fact), then a short line. */
+const card = (id, x, label, icon, flag, say) => ({
+  id,
+  x,
+  w: 56,
+  h: 100,
+  label,
+  icon,
+  cases: [
+    { if: `!flag:${flag}`, run: [{ say }, { fx: [`flag:${flag}`, `journal:${flag}`] }] },
+    { run: [{ say: 'tu.st-again' }] },
+  ],
+});
+const DUMBBELLS = { squats: 1, rope: 2, plank: 2, pushups: 3 };
+export const TRAINYARD = {
+  id: 'trainyard',
+  title: 'صالة التمرين',
+  theme: 'academy',
+  music: 'warm',
+  width: 1700,
+  spawn: 140,
+  seed: 733,
+  props: [{ type: 'bush', x: 200 }, { type: 'bench', x: YARD.bench }],
+  dynamic: [
+    { x: YARD.board, reach: 80, draw: (ctx, { P }) => P.chalkboard(ctx, YARD.board, GROUND - 60, { title: 'قواعد أنجي', lines: ['الأخف ← الأثقل', 'تساوى؟ اللي يكرهه ريان أول'] }) },
+    ...Object.entries(DUMBBELLS).map(([k, n]) => ({ x: YARD[k], reach: 60, draw: (ctx, { P }) => P.signPost(ctx, YARD[k], GROUND + 2, '🏋'.repeat(n)) })),
+  ],
+  // Ryan trains at the stations; Snooki stays beside him (data/companions.js); her husky follows her
+  actors: [{ id: 'ryan', kind: 'ryan', x: 930, facing: -1 }],
+  interact: [
+    card('st-board', YARD.board, 'السبورة', '📋', 'tu-st-board', 'tu.st-board'),
+    card('st-squats', YARD.squats, 'محطة السكوات', '🦵', 'tu-st-squats', 'tu.st-squats'),
+    card('st-rope', YARD.rope, 'محطة الحبل', '➰', 'tu-st-rope', 'tu.st-rope'),
+    card('st-plank', YARD.plank, 'محطة البلانك', '🧘', 'tu-st-plank', 'tu.st-plank'),
+    card('st-pushups', YARD.pushups, 'محطة الضغط', '💪', 'tu-st-pushups', 'tu.st-pushups'),
+    {
+      id: 'warmup',
+      x: YARD.warmup,
+      w: 60,
+      h: 90,
+      label: 'الإحماء',
+      icon: '📣',
+      cases: [
+        { if: 'flag:tu-train-warmup', run: [{ say: 'tu.warmup-again' }] },
+        { if: { not: TRAIN_FACTS.map((f) => `flag:${f}`) }, run: [{ say: 'tu.warmup-wait' }] },
+        { run: [{ puzzle: 'tu-warmup', then: [{ say: 'tu.warmup-done' }], else: [{ say: 'tu.later' }] }] },
+      ],
+    },
+    {
+      id: 'ladder',
+      x: YARD.ladder,
+      w: 60,
+      h: 90,
+      label: 'سلّم العدّات',
+      icon: '📈',
+      cases: [
+        { if: 'flag:tu-train-ladder', run: [{ say: 'tu.ladder-again' }] },
+        { if: '!flag:tu-train-warmup', run: [{ say: 'tu.ladder-wait' }] },
+        { run: [{ puzzle: 'tu-ladder', then: [{ say: 'tu.ladder-done' }], else: [{ say: 'tu.later' }] }] },
+      ],
+    },
+    {
+      id: 'cooldown',
+      x: YARD.bench,
+      w: 80,
+      h: 80,
+      label: 'المصطبة',
+      icon: '🧃',
+      cases: [
+        { if: 'flag:tu-train-done', run: [{ say: 'tu.cooldown-again' }] },
+        { if: '!flag:tu-train-ladder', run: [{ say: 'tu.cooldown-wait' }] },
+        { run: [{ say: 'tu.cooldown' }, { fx: ['flag:tu-train-done', 'journal:tu-train-cooldown', 'got:keepsake.train.1'] }] },
+      ],
+    },
+  ],
+  triggers: [{ id: 'enter', x1: 140, x2: 320, if: 'flag:tu-train-plan', run: [{ say: 'tu.train-enter' }] }],
+  exits: [{ side: 'left', to: 'garden', spawn: 160 }],
+  ambient: [{ t: 'آني الحَكَم. الحَكَم ما يتمرن. هاي القاعدة.' }],
+};
+
+export const TEAM_SCENES = [DOGWALK, TRAINYARD];
 
 /* ── Anji's plan notebook, in the hidden garden (after the ending) ── */
 const NOTEBOOK = 1760;
 const goWalk = [{ say: 'tu.plan-go' }, { fade: 'out' }, { goto: 'dogwalk', x: 140 }];
+const goTrain = [{ fade: 'out' }, { goto: 'trainyard', x: 140 }];
+/** The walk: the first plan, a second route, or the walk still in progress. */
+const WALK_FLOW = [
+  {
+    if: '!flag:tu-walk-plan',
+    then: [{ say: 'tu.plan-first' }, { say: 'tu.plan-route' }, { fx: ['flag:tu-walk-plan', 'journal:tu-plan'] }, ...goWalk],
+    else: [
+      {
+        if: { any: ['flag:tu-walk-river', 'flag:tu-walk-orchard'] },
+        then: [{ say: 'tu.plan-second' }, { say: 'tu.plan-route' }, ...goWalk],
+        else: [{ say: 'tu.plan-again' }, { say: 'tu.plan-route' }, ...goWalk],
+      },
+    ],
+  },
+];
+const TRAIN_FLOW = [
+  {
+    if: '!flag:tu-train-plan',
+    then: [{ say: 'tu.train-plan' }, { fx: ['flag:tu-train-plan', 'journal:tu-train-plan'] }, ...goTrain],
+    else: [{ say: 'tu.train-again' }, ...goTrain],
+  },
+];
+/** Everything in the notebook that is possible for this save has been done. */
+export const ALL_PLANS_DONE = ['flag:tu-train-done', { any: [{ not: HUSKY_MET }, ['flag:tu-walk-river', 'flag:tu-walk-orchard']] }];
 export const TEAM_EXTRAS = {
   final: {
     interact: [
@@ -170,12 +275,16 @@ export const TEAM_EXTRAS = {
         h: 80,
         label: 'دفتر خطط أنجي',
         icon: '📒',
-        if: TEAM_UNLOCK,
+        if: TEAM_OPEN,
         cases: [
-          { if: ['flag:tu-walk-river', 'flag:tu-walk-orchard'], run: [{ say: 'tu.plan-done' }] },
-          { if: '!flag:tu-walk-plan', run: [{ say: 'tu.plan-first' }, { say: 'tu.plan-route' }, { fx: ['flag:tu-walk-plan', 'journal:tu-plan'] }, ...goWalk] },
-          { if: { any: ['flag:tu-walk-river', 'flag:tu-walk-orchard'] }, run: [{ say: 'tu.plan-second' }, { say: 'tu.plan-route' }, ...goWalk] },
-          { run: [{ say: 'tu.plan-again' }, { say: 'tu.plan-route' }, ...goWalk] },
+          { if: ALL_PLANS_DONE, run: [{ say: 'tu.plan-done' }] },
+          // she picks one of her plans that is possible today (the walk needs her husky)
+          {
+            run: [
+              { say: 'tu.plan-menu' },
+              { if: 'flag:tu-pick-walk', then: WALK_FLOW, else: [{ if: 'flag:tu-pick-train', then: TRAIN_FLOW, else: [{ say: 'tu.plan-later' }] }] },
+            ],
+          },
         ],
       },
     ],
@@ -183,7 +292,7 @@ export const TEAM_EXTRAS = {
       {
         x: NOTEBOOK,
         reach: 60,
-        if: TEAM_UNLOCK,
+        if: TEAM_OPEN,
         draw(ctx, { P, t }) {
           P.bench(ctx, NOTEBOOK, GROUND + 2);
           P.paper(ctx, NOTEBOOK, GROUND - 34, t);

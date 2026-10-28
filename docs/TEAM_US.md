@@ -1,98 +1,146 @@
 # «إحنا فريق» — Team Us (Anji, Ryan, Snooki and her husky)
 
-Branch `feature/team-us`, cut from `78be065`, the head of PR #5 (`feature/story-pack-02`). It
-depends on that PR. It uses the husky meeting (`HUSKY_MET`, Story Pack 02 / 01), the two-page
-map and the logic grid from Phase 04.
+Branch `feature/team-us`, on top of `feature/story-pack-02` (PR #5, Release A, commit `bc33f19`:
+the deep garden after the ending). It depends on that PR: the husky meeting (`HUSKY_MET`), the
+two-page map, the logic grid and the post-ending gate.
 
-- **Not in PR #5. Not merged or deployed.**
-- **The Phase 05 change to PR #5** (the deep garden moved after the ending) is not on this branch yet. Rebase this branch on PR #5 once that change is committed there.
-- Team Us touches only its own files, plus a few appends to registries; no Deep Garden file is shared.
+**Not merged or deployed.** `main` is untouched.
 
-Everything here is fiction made for the game. These are invented outings and games, not real
-memories. The confirmed story elements are untouched: the first meeting by the two tree-lined
-roads, the silent embrace, the clinic visit, the hope of marriage, Snooki as Ryan's companion,
-and her white husky with icy-blue eyes.
+Everything here is fiction made for the game: invented outings and games, not real memories.
+
+The confirmed elements are kept as they were:
+- the first meeting by the two tree-lined roads;
+- the silent embrace (back-turned, unchanged);
+- the clinic visit;
+- the hope of marriage;
+- Snooki as Ryan's companion;
+- her white husky with icy-blue eyes.
 
 ## 1. Goal
 
-After the ending, the world should feel lived in. The two of them, and the two dogs, do things together. Anji is the one with ideas: she plans, sets the games, and plays small harmless tricks. Ryan joins in, jokes, and contributes. Every activity is optional and playable on its own. Some activities connect to others.
+After the ending the world should feel lived in: the two of them and the two dogs do things together.
+- **Anji** is the one with ideas: she plans, sets the games, and changes the rules when she feels like it.
+- **Ryan** joins in, jokes, and has his own surprises.
 
-## 2. The system: Anji initiates
+Every activity is optional and playable on its own.
 
-**Home base: Anji's plan notebook («دفتر خطط أنجي»).** It sits on a bench in the hidden garden, near Ryan, from the moment the ending is over (`game-complete`).
-- There is no meter and no pop-up stream. One notice, shown once, points at the notebook.
-- The notebook lists only activities that are available and actually built. Each one is her plan; the player, as Anji, picks one and makes its choices (route, recipe, rule).
-- An activity's place appears on the map when she plans it, so the map never shows empty nodes.
-- **Data:** a mission of kind `together` (pack `team`), its scene, its puzzles, its dialogue and journal entries.
-  - Missions are appended to the registry, so no display number moves.
-  - State is additive flags (`tu-*`, `pdraft:tu-*`), so `SAVE_VERSION` stays 3.
-- **Map:** shared places carry `together: true`, drawn with a warm rose ring and labelled «(نشاط سوا)» for screen readers. This keeps them apart from the investigation places.
-- **Dogs, a slow friendship:** each shared dog activity moves it one step (`tu-dogs-1`, `tu-dogs-2`, …). The dialogue changes with it: rivals first, then a team. There is nothing to farm, because each step is earned by finishing a different activity or route.
+## 2. Who is where: Snooki is Ryan's, the husky is hers (`data/companions.js`)
 
-## 3. Built and tested: «مشية العصر» (the afternoon walk)
+The owner's correction is applied as one pure rule, `dogsIn(scene, game)`. The engine reads it when a scene starts; nothing is saved.
 
-What the player does:
-1. **Plan.** At the notebook Anji proposes the walk "with a game in it": a hidden basket and three trails.
-   - She chooses the route, river or orchard. The choice sets two boolean flags, one clearing the other, so she can change her mind.
-2. **Walk.** «ممشى العصر» opens on the map, between the garden and the sanctuary. Ryan and the husky walk with her, and Snooki follows.
-3. **Observe.** At three stops on her route, each dog notices something different.
-   - Snooki reads the ground with his nose and only follows food. Soap scares him.
-   - The husky follows anything that moves or flies.
-   - Anji's own rules are on a card; Ryan adds what he sees (a wet rock).
-   - Each stop becomes a journal fact, given once.
-4. **Deduce.** The fork waits until all three stops of that route are seen. Then a 3×2 logic grid: where each trail leads, and which dog follows it.
-   - It uses a new additive clue rule, `pair` ("whoever has A has B"), for "Snooki only follows food".
-   - A wrong check names the first broken rule, never a count of correct cells. Hints come only on request (3 levels). A half-set grid survives closing.
-5. **Picnic, a quiet moment.** The basket plays once per route: Anji's planning revealed, a dogs beat, and a short scene on the blanket ("next time you plan" / "so you can beat me at my own game?" / "of course").
-   - It gives a keepsake (a pebble from the stream, or an apple leaf) and the dogs' first step.
-6. **Again, the other way.** The notebook offers the other route. Different stops, a harder grid (no starting rule), and the dogs move on to working as a team (`tu-dogs-2`) with a second keepsake.
+| Story state | Snooki | Her husky |
+| --- | --- | --- |
+| Before the ending (every save that has not finished it) | walks with Anji (Ryan sent him: the original story, unchanged) | only where a scene places her |
+| After the ending, Ryan in the scene | **beside Ryan** | follows Anji (once met) |
+| After the ending, no Ryan, no story for Snooki | **away, with Ryan** (not drawn, no remarks, no taps) | follows Anji |
+| After the ending, a story he is part of is open (`SNOOKI_JOINS`: Story Pack 01's roads, Story Pack 02's archive if played late, the deep garden's case until the second rose) | joins Anji | follows Anji |
+| A scene that brings all four (`dogsAfter`: the walk) | follows | follows (Ryan walks too) |
 
-Why it needs thinking: no stop gives the answer. Only the three stops together decide each grid.
-- This is tested: exactly one solution, and removing any non-structural rule allows more.
-- Every rule is quoted in a journal fact found on that route, so the grid is fair.
+The rule also guarantees:
+- **She always has a dog:** a finished game that hasn't met the husky yet is never left without one; Snooki stays with her.
+- **No duplicate husky:** a scene that places the husky itself keeps her there.
+- **Deep Garden box beat:** Snooki is shown running in before he speaks.
+- **Names and introductions:** no dog is renamed or reintroduced. The introduction stays guarded by `!flag:husky-name` / `!flag:sp1-husky-met`.
 
-Tests and checks (actual results, this branch):
-- `tests/game/team-us.test.js`: 13 tests covering:
-  - unlock only after the ending and with the husky;
-  - optional everywhere (no act, ending, story mission, other pack or map place needs a `tu-` flag);
-  - plan and route choice; stops per route given once;
-  - fork waiting; grid fairness; the pair rule and its feedback;
-  - the picnic once per route, the dogs' steps and keepsakes once, nothing paid twice;
-  - wiring: every dialogue key and puzzle exists; nothing asks for or writes the husky's name;
-  - the map spot; a synthetic mid-walk save reloading exactly (route, stops, draft);
-  - no wedding words; and an in-app test of the map class and the grid draft.
-- Full suite: 1058/1058 DOM, and 10/10 real-browser tests (map overlap at every viewport, with the new place).
-- Build: OK; offline precache 36 files; private audit clean. Service worker install plus update: 16/16.
-- End-to-end in headless Edge, with real taps on phone, landscape and desktop: 39/39, no page errors.
-  - Steps covered: notice → notebook → route choice → three stops → a wrong check → solving by tapping cells → picnic → no replay → reload keeps it.
-- Not tested: a physical phone, Safari, Firefox, Anji's real save, and real play time. **Not playtested.**
+Tests (`tests/game/companions.test.js`, 11):
+- every scene before the ending;
+- the hidden garden, garden places, Story Pack 01, the deep garden, the archive and the walk;
+- invariants across every scene and six story states (no save writes; name unchanged; Snooki beside Ryan only where Ryan is);
+- no second introduction;
+- two checks in the real engine (who is visible, who follows, where).
 
-## 4. Planned (not built yet): next batches, each one complete before the next
+## 3. Ryan's look (from the owner's reference photo)
 
-| Batch | Activity | Anji's role | Core interaction | Dogs | Connects to |
-| --- | --- | --- | --- | --- | --- |
-| 2 | «تمرين سوا» shared workout | picks the routine, then changes one rule halfway ("now in reverse") | memory or order of a short routine with a tempo; she announces the change and a sign shows it, so it can be noticed | Snooki counts reps (badly), the husky races ahead | unlocks a stretching spot on the walk |
-| 3 | «عشا سوا» cook dinner | chooses the recipe or a surprise | gather from a fixed pantry (one ingredient found on the walk), order steps with real dependencies, one complication (a burnt pan, or a substitute) whose fix changes the dish | Snooki "tastes for safety"; the husky guards the pot | the recipe card from the main story (lunchbox) |
-| 4 | «مفاجأة أنجي» surprise outing | plans and reveals it in pieces | predict the destination from a note, an item and a route clue; a wrong guess still goes, with different lines | both dogs sniff out the picnic basket | a keepsake from the walk |
-| 5 | «تحدي أنجي» the couple's challenge | sets a multi-step observation and memory challenge and changes one rule midway, with a fair visible sign | spot the changed object, rebuild a sequence, a small logic step | the husky "helps" by moving things | uses something seen in batch 2 or 4 |
-| 6 | «مقلب لطيف» a harmless prank | plans it, and Ryan joins the setup or answers it | choices lead to different small outcomes; affectionate, never humiliating | Snooki ruins the timing | none (stands alone) |
-| — | quiet moments | earned after activities: resting while the dogs play, a callback to a keepsake | no puzzle | they sleep side by side | the journal |
+**Built:**
+- **A face-to-face portrait (`ryanFace`, calm and smile)** for every line where he has turned to her (expression `turn`, from the reunion on). Drawn in the game's own style:
+  - a close crop with a slight recession at the temples and a buzz texture;
+  - a full dark beard joined to the moustache, rounded below the chin;
+  - rectangular dark glasses, heavy straight brows, brown eyes, a calm look;
+  - a thick neck and broad shoulders filling the frame.
+- **The in-world side profile (`ryanSide`, what he walks in):** hair kept close to the head, a fuller beard, a broader chest and thicker arms.
 
-Rules for every batch:
-- real interaction, not longer dialogue;
-- no punishment for failure;
-- no health tracking or medical claims;
-- no jealousy, control or pressure presented as romance;
-- Ryan is never made to look incompetent;
-- each activity has its own tests and a browser check before the next starts.
+**Unchanged on purpose:**
+- the back view (`ryanSprite`): the embrace, waiting at the gate;
+- the back portrait (`back`): his recordings in Acts III and V, the roads;
+- the character-sheet views (`ryanView`).
 
-## 5. Future milestone, not in any release: the wedding
+**No photo in the build:** the reference photograph was used only to draw from. It is not stored in the repository or in any build (tested: the portrait contains no image reference).
 
-The wedding is deliberately not built. There is no scene, date, vows or marriage flag; the tests check this.
+**Limits:**
+- This is a careful vector caricature, not a professional likeness. A dedicated illustrator pass would improve the resemblance most.
+- There is no front-facing walking sprite. The side-scrolling world never walks him toward the camera, so a front walk would add nothing.
+- The gym clothes from the photo are not used; he keeps his usual outfit.
 
-When it is built, it should be a narrative payoff, not an achievement or a meter. It would come only after several substantial shared adventures and the resolution of the open story questions:
-- time and presence (Ryan's work);
+## 4. The home base: Anji's plan notebook
+
+The notebook sits on a bench in the hidden garden after the ending (one notice points at it, after the deep garden's).
+
+**What she can pick:**
+- Anji opens it and picks **one of today's possible plans**: «مشية العصر» (only once she has her husky, and while a route is left), «تمرين سوا», or «بعدين».
+- Once everything possible is done, the notebook says so.
+
+**Rules:**
+- Each activity's place appears on the map only when she plans it, as a **shared place**: a warm rose ring, labelled «(نشاط سوا)». Investigation places are never confused with it.
+- **Saves:** additive flags only (`tu-*`, `pdraft:tu-*`), so `SAVE_VERSION` stays 3.
+- **Missions:** kind `together`, appended to the registry, so no older display number moves. They are optional everywhere (tested: no act, ending, story mission, other pack or map place needs a `tu-` flag).
+- **No affection meter,** nothing to farm.
+
+## 5. Built and tested
+
+### «مشية العصر»: a walk, with a game in it
+
+The steps:
+1. **Plan:** in her notebook she proposes the walk and chooses the route, river or orchard (changing her mind clears the other).
+2. **Walk:** all four walk together.
+3. **Three stops per route:** Snooki reads the ground and follows only food (soap scares him); the husky follows what moves or flies. Anji's own card sets the rules, and Ryan notices a wet rock. Each stop becomes a journal fact, given once.
+4. **The fork:** a 3×2 logic grid per route (where each trail leads, who follows it). It has exactly one solution, and every stop's rule is needed (tested).
+   - A wrong check names the first broken rule.
+   - Hints come only on request; a half-set grid survives closing.
+5. **A picnic**, once per route: her planning revealed, a dogs beat, and a quiet scene. It gives a keepsake and moves the dogs' friendship on.
+6. **The other route:** a harder grid. The dogs go from rivals to a team (`tu-dogs-1` → `tu-dogs-2`), with a second keepsake.
+
+### «تمرين سوا»: training together, by her rules
+
+The steps:
+1. **Plan:** she chooses it in the notebook. No husky is needed; it opens with the ending.
+2. **The training hall** («صالة التمرين»): Ryan trains at the stations with Snooki beside him, and her husky follows her.
+3. **Warm-up:**
+   - The chalkboard: «من الأخف للأثقل، وإذا تساوى وزنين: اللي ريان يكرهه أول».
+   - Four station cards give weights in dumbbells.
+   - At the plank Ryan lets slip: «أكرهه بصراحة».
+   - The order (squats, plank, rope, push-ups) follows from those facts alone. A test derives it from the journal text.
+4. **Rep ladder:** Anji's reps, then Ryan's. For the last round she blows the whistle: «قاعدة جديدة!». The rule change is shown on screen, and the old rule would give a wrong answer (tested). A wrong pick keeps her on the round.
+5. **Cool-down:** Ryan's own surprise, two cold drinks, one labelled «للمدرّبة». She gets a keepsake (her whistle), once.
+
+- No real exercise, timing, calories or health tracking (tested).
+
+### Checks (actual results, this branch)
+
+- `npm test`: **DOM 1118/1118 (29 files)**, **real browser 10/10** (map overlap at every viewport, with the new places).
+- `npm run build`: OK, offline precache 36 files, `audit-private` clean. Service worker install plus update: **16/16**.
+- **End-to-end in headless Edge with real taps** (phone, landscape, desktop): **87/87**, no page errors. Covered:
+  - the walk: notice → notebook → route → stops → a wrong check → solving by tapping cells → picnic → no replay → reload;
+  - the workout: notebook menu → hall → five cards → Ryan's face portrait in his live line → warm-up taps → ladder with the visible rule change and a wrong pick → cool-down → no replay → reload;
+  - who stands where in the hidden garden and the hall.
+- **Not tested:** a physical phone, Safari, Firefox, Anji's real save, and play time. **Not playtested.**
+
+## 6. Planned (not built yet), each complete before the next
+
+| Activity | Anji's role | Core interaction | Dogs |
+| --- | --- | --- | --- |
+| «عشا سوا» cook dinner | chooses the recipe or a surprise | gather from a fixed pantry (one ingredient found on the walk), order steps with real dependencies, one complication whose fix changes the dish | Snooki "tastes for safety" (with Ryan); the husky guards the pot |
+| «مفاجأة أنجي» surprise outing | plans and reveals it in pieces | predict the destination from a note, an item and a route clue; a wrong guess still goes, with different lines | both sniff out the basket |
+| «تحدي أنجي» the couple's challenge | sets a multi-step observation and memory challenge and changes one rule, with a fair visible sign | spot the changed object, rebuild a sequence, a small logic step | the husky "helps" by moving things |
+| «مقلب لطيف» a harmless prank | plans it; Ryan joins the setup or answers it | choices lead to different small outcomes; affectionate, never humiliating | Snooki ruins the timing |
+| quiet moments | earned after activities | no puzzle | they sleep side by side |
+
+## 7. Future milestone, not in any release: the wedding
+
+Deliberately not built: no scene, date, vows or marriage flag, and no line that says they are married. The tests check the dialogue, journal and missions.
+
+When it is built, it should be a narrative payoff, not an achievement or a meter. It would come after several substantial shared adventures and the resolution of the open questions:
+- time and presence;
 - the «وعد» card;
 - Anji choosing, freely.
 
-It needs the owner's own direction for tone and content before any design. The existing hope (the «وعد» card, «نكمل لأن إحنا الاثنين نريد») stays exactly as it is until then.
+Its tone and content need the owner's direction first. The existing hope (the «وعد» card, «نكمل لأن إحنا الاثنين نريد») stays exactly as it is.

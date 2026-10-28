@@ -38,6 +38,7 @@ export const WORLDS = [
   { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
   // «إحنا فريق» (after the ending): shared activities, marked as such on the map; it opens when Anji plans it
   { id: 'dogwalk', name: 'ممشى العصر', icon: 'paw', x: 12, y: 55.5, act: 8, scene: 'dogwalk', spawn: 140, unlock: 'flag:tu-walk-plan', ready: true, pack: 'team', together: true, locked: 'ينفتح لمن تخططين المشية بدفتر خططچ (الحديقة المخفية).' },
+  { id: 'trainyard', name: 'صالة التمرين', icon: 'dumbbell', x: 62, y: 86.5, act: 8, scene: 'trainyard', spawn: 140, unlock: 'flag:tu-train-plan', ready: true, pack: 'team', together: true, locked: 'تنفتح لمن تختارين «تمرين سوا» بدفتر خططچ (الحديقة المخفية).' },
   // Phase 04 «الحديقة العميقة» (after the ending since Phase 05): the map's second page (`region: 'deep'`), its own 4 × 6 grid.
   // `from` is the garden place each one is entered from (drawn as «من …» under its name).
   ...[
@@ -76,7 +77,7 @@ export const ROUTES = [
   ['garden', 'roads'], ['roads', 'roseclinic'],
   ['house', 'archives'],
   // «إحنا فريق»
-  ['garden', 'dogwalk'], ['dogwalk', 'sanctuary'],
+  ['garden', 'dogwalk'], ['dogwalk', 'sanctuary'], ['conservatory', 'trainyard'],
   // Phase 04 — the deep garden (each line stays on its own page; entrances are the `from` places)
   ['clockgarden', 'letterhall'], ['clockgarden', 'musicroom'], ['letterhall', 'hyporoom'], ['falsetrails', 'hyporoom'],
   ['sealedroom', 'starchamber'], ['starchamber', 'mirrorhouse'], ['hyporoom', 'starchamber'],
