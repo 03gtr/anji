@@ -135,6 +135,12 @@ describe('in the engine', () => {
       expect(snooki.bubble).toBeFalsy();
     }
     expect(HUSKY_AMBIENT).toContain(heard);
+    // REGRESSION: she said it from her scouting spot, 110 ahead — at the edge of a phone's ~180-wide
+    // view, so it went unseen. Now she comes back to Anji's side while she speaks.
+    expect(husky.x - w.player.x).toBeGreaterThan(90); // (she was scouting ahead when it began)
+    frames(w, 60); // a second later, still speaking
+    expect(husky.bubble?.text).toBe(heard);
+    expect(Math.abs(husky.x - w.player.x)).toBeLessThan(80);
   });
 
   it('before the meeting nothing changes: Snooki walks with her and the scene\'s remarks are his', async () => {
