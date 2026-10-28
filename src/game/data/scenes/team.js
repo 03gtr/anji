@@ -9,7 +9,8 @@ import { GROUND } from '../../world/props.js';
 import { TEAM_OPEN, TRAIN_FACTS, WALK_ROUTES } from '../missions-team.js';
 import { HUSKY_MET } from '../missions-sp2.js';
 
-const once = (key) => ({ if: `!seen:${key}`, then: [{ say: key }] });
+// (the dialogue box records a line it has played as `dlg:<key>`)
+const once = (key) => ({ if: `!seen:dlg:${key}`, then: [{ say: key }] });
 const STOPS = [520, 940, 1360];
 const STOP_LOOK = {
   river: [

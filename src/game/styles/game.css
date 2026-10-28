@@ -576,6 +576,12 @@ svg {
   color: var(--cyan);
 }
 
+/* a place that could not be opened (scenes/explore.js): a way on instead of an endless bar */
+.scene-error {
+  max-width: min(320px, calc(100vw - 32px));
+  color: var(--cream);
+}
+
 .loading-bar {
   width: 200px;
   height: 6px;
@@ -1990,6 +1996,11 @@ svg {
 /* ─── Journal / settings ───────────────────────────────── */
 .tabs {
   display: flex;
+  /* never shrinks: inside a panel (a flex column) a scrolling row's automatic minimum height is 0,
+     so a long journal squeezed the tabs to a 2 px strip; the content below scrolls instead */
+  flex: none;
+  /* all of them in view on a phone too (seven do not fit one line): wrap rather than hide some off-edge */
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
   overflow-x: auto;

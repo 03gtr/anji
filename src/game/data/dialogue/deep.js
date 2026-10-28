@@ -90,7 +90,11 @@ export const DEEP = {
     { s: 'anji', e: 'thinking', t: 'كفوف صغيرة، تروح للبيت الزجاجي. بعضها مبلل… وجنبها فتات.' },
     { s: 'snooki', e: 'guilty', t: 'فتات؟ يمكن… عصفور. عصفور ياكل بسكويت. يصير.' },
   ],
-  'dg.tracks-wait': [{ s: 'anji', e: 'thinking', t: 'قبل ما أحكم، لازم أشوف كل أثر من قريب — وكل شي جنبه.' }],
+  // what is still left to look at (in order along the path), before she judges
+  'dg.tracks-wait-rake': [{ s: 'anji', e: 'thinking', t: 'قبل ما أحكم، لازم أشوف كل شي من قريب. بعدني ما فحصت الگرابة المسنودة عند الباب.' }],
+  'dg.tracks-wait-wide': [{ s: 'anji', e: 'thinking', t: 'قبل ما أحكم، لازم أشوف كل أثر من قريب. بعدني ما فحصت الأثر العريض بأول الطريق.' }],
+  'dg.tracks-wait-even': [{ s: 'anji', e: 'thinking', t: 'قبل ما أحكم، لازم أشوف كل أثر من قريب. بعدني ما فحصت الخطوط المتساوية بنص الطريق.' }],
+  'dg.tracks-wait-paws': [{ s: 'anji', e: 'thinking', t: 'قبل ما أحكم، لازم أشوف كل أثر من قريب. بعدني ما فحصت الكفوف الصغيرة گبل هالمكان.' }],
   'dg.tracks-intro': [{ s: 'anji', e: 'determined', t: 'الأثر الكاذب مو بالضرورة أحد كذب بيه. يمكن بس… مو من البارحة.' }],
   'dg.tracks-done': [{ s: 'snooki', e: 'dramatic', t: 'الكفوف الصغيرة؟ أوه. صدفة غريبة. أكثر صدفة بحياتي. وعندي صدف كثيرة.' }],
   'dg.tracks-again': [{ s: 'anji', e: 'soft', t: 'الأثر الحقيقي يروح للبيت الزجاجي.' }],

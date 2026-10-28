@@ -82,7 +82,7 @@ export const MISSIONS_DEEP = [
     unlock: 'flag:dg-box',
     locked: OPEN_TEXT,
     steps: [
-      { done: 'flag:dg-trails', world: 'falsetrails', text: 'ميّزي الأثر الحقيقي من الآثار الكاذبة.', hint: 'أي أثر انعمل ليلة البارحة؟ وأي أثر يرجع لشي ثاني؟' },
+      { done: 'flag:dg-trails', world: 'falsetrails', text: 'ميّزي الأثر الحقيقي من الآثار الكاذبة.', hint: 'افحصي الآثار الثلاثة والگرابة اللي عند الباب، وبعدين «أي أثر؟» بآخر الطريق. أي أثر انعمل ليلة البارحة؟ وأي أثر يرجع لشي ثاني؟' },
       {
         done: 'flag:dg-hypo',
         world: 'hyporoom',

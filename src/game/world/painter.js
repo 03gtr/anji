@@ -24,6 +24,17 @@ export function each(u0, u1, step, margin, seed, fn) {
   }
 }
 
+/**
+ * Give a canvas's memory back now, not whenever the garbage collector runs: phones (iOS above all)
+ * cap the total canvas memory of a page and close it (a white screen) when a few scenes' worth of
+ * old canvases are still waiting to be collected.
+ */
+export function releaseCanvas(c) {
+  if (!c || typeof c.width !== 'number' || typeof c.getContext !== 'function') return;
+  c.width = 0;
+  c.height = 0;
+}
+
 function makeCanvas(w, h) {
   if (typeof OffscreenCanvas === 'function') return new OffscreenCanvas(Math.max(1, w), Math.max(1, h));
   const c = document.createElement('canvas');
@@ -763,9 +774,17 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
       }
     }
     cache.set(key, canvas);
-    while (cache.size > MAX_CHUNKS) cache.delete(cache.keys().next().value);
+    while (cache.size > MAX_CHUNKS) {
+      const oldest = cache.keys().next().value;
+      releaseCanvas(cache.get(oldest));
+      cache.delete(oldest);
+    }
     return canvas;
   }
+  const clearCache = () => {
+    for (const c of cache.values()) releaseCanvas(c);
+    cache.clear();
+  };
 
   /**
    * Sky from topY down to the ground. The cached sky image covers skyTop…VIEW_H
@@ -792,6 +811,7 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
     const key = `${Math.round(viewW)}:${Math.round(top)}:${Math.round(restTop)}:${scale}`;
     if (key !== skyKey) {
       skyKey = key;
+      releaseCanvas(sky);
       sky = makeCanvas(Math.ceil(viewW * scale), Math.ceil(skyH * scale));
       const c = sky.getContext('2d');
       c.setTransform(scale, 0, 0, scale, 0, -top * scale);
@@ -845,7 +865,7 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
     drawBack(ctx, camX, viewW, pixelScale, topY = 0, skyTop = Math.min(0, topY), restTop = topY) {
       if (pixelScale !== scale) {
         scale = pixelScale;
-        cache.clear();
+        clearCache();
         skyKey = '';
       }
       drawSky(ctx, viewW, topY, skyTop, restTop);
@@ -863,7 +883,8 @@ export function createPainter({ theme: themeId, staticProps = [], seed = 1, prop
       return cache.size;
     },
     dispose() {
-      cache.clear();
+      clearCache();
+      releaseCanvas(sky);
       sky = null;
     },
   };

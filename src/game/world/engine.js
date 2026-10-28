@@ -9,7 +9,7 @@
  */
 import { GROUND, VIEW_H } from './props.js';
 import * as P from './props.js';
-import { createPainter } from './painter.js';
+import { createPainter, releaseCanvas } from './painter.js';
 import { frameCamera, followTop, MIN_TOP } from './camera.js';
 import { stepBody, followVelocity, approach } from './physics.js';
 import { frameTable, rasterize, RASTER_HEIGHT } from '../characters/sprites.js';
@@ -18,6 +18,9 @@ import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
 import { dogsIn } from '../data/companions.js';
+
+/** Release a set of baked sprite frames ({ pose: [canvas…] }). */
+const releaseFrames = (set) => Object.values(set || {}).forEach((list) => list.forEach(releaseCanvas));
 
 /** Prompt text: the game's Arabic font; icons: the platform's colour-emoji font. */
 export const PROMPT_FONT = '700 10px "Baloo Bhaijaan 2", sans-serif';
@@ -51,13 +54,25 @@ export const SNOOKI_RYAN_TAPS = [
   { pose: 'wag', text: 'ريان ما يحچي هواية. آني هم. نفهم بعض.' },
   { pose: 'stubborn', text: 'لا. ما أتحرك. ريان يمكن يحتاجني.' },
 ];
-/** Anji's husky: like her — curious, quick, playful, a little mischievous (she acts more than she talks). */
+/** Anji's husky: like her — curious, quick, playful, a little mischievous, notices everything. */
 export const HUSKY_TAPS = [
-  { pose: 'sniff', text: '👃… ؟', scout: true },
-  { pose: 'excited', text: 'أووو! 🐾' },
-  { pose: 'wag', text: '😏', scout: true },
-  { pose: 'celebrate', text: '✨🦋' },
-  { pose: 'sit', text: '👀' },
+  { pose: 'sniff', text: '👃 أشم شي… هناك! لازم أعرف شنو. هسه.', scout: true },
+  { pose: 'excited', text: 'أووو! لعبة؟ گولي لعبة! 🐾' },
+  { pose: 'wag', text: '😏 لگيت طريق مختصر. لا تگولين لسنوكي.', scout: true },
+  { pose: 'sit', text: '👀 ذاك الشي تحرك. آني شفته. أكيد… تقريباً.' },
+  { pose: 'celebrate', text: '✨ لحگت فراشة! …أو هي لحگتني. نفس الشي.' },
+  { pose: 'bark', text: 'هاو! يعني: «يلا، الدنيا ما راح تستكشف نفسها».', sfx: 'bark' },
+  { pose: 'sniff', text: 'هنا أحد مشى قبل شوية. خطوته صغيرة. آني أعرف هالأشياء.' },
+  { pose: 'wag', text: 'آني أذكى كلبة بالحديقة. سنوكي يگول لا. سنوكي غلطان.' },
+];
+/** Her remarks when Anji stands a while and it is just the two of them (Snooki is with Ryan). */
+export const HUSKY_AMBIENT = [
+  'نوگف؟ زين. آني أروح أشوف ذاك الركن… بسرعة.',
+  'كل مكان بيه سر صغير. آني أشمه قبل ما تشوفينه.',
+  'إذا تحتاجين مساعدة بلغز، آني موجودة. ذيلي يفكر أحسن مني.',
+  'هالمكان ريحته… مغامرة. وشوية تراب.',
+  'سنوكي يمكن مشغول ويا ريان. بس آني هنا. دايماً.',
+  'لاحظتي؟ أكو شي يلمع هناك. لا؟ آني لاحظت.',
 ];
 
 export async function createWorld(host, scene, app, { spawnX, onProgress } = {}) {
@@ -602,6 +617,13 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       snooki.bubble = { text: fillNames(line.t, game), until: t + 3.6 };
       if (line.cue) audio.play(line.cue);
     }
+    // …and when it is just Anji and her husky (Snooki with Ryan), the husky has her own say — her
+    // lines, in turn (the scene's ambient lines are Snooki's voice)
+    const husky = actors.get('husky');
+    if (playing && !snooki.companion && husky?.companion && husky.visible && !husky.bubble && idleTime > 7 && t - lastAmbient > 14) {
+      lastAmbient = t;
+      husky.bubble = { text: HUSKY_AMBIENT[game.nextLine('husky-ambient', HUSKY_AMBIENT.length)], until: t + 3.6 };
+    }
 
     // camera
     let focus = player.x + player.facing * viewW * 0.08;
@@ -851,7 +873,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     /** Re-dress Anji and Snooki after a wardrobe change. */
     async refreshCosmetics() {
       for (const kind of ['anji', 'snooki']) {
+        const old = frames[kind];
         frames[kind] = await rasterize(frameTable(kind, game.state.cosmetics), { height: RASTER_HEIGHT[kind] });
+        releaseFrames(old);
       }
     },
     tick(dt, frames = 1) {
@@ -861,7 +885,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     dispose() {
       loop.stop();
       painter.dispose();
+      // every scene bakes its own sprite frames: hand their memory back now (see releaseCanvas)
+      for (const set of Object.values(frames)) releaseFrames(set);
       canvas.remove();
+      releaseCanvas(canvas);
     },
   };
   scope.add(() => api.dispose());

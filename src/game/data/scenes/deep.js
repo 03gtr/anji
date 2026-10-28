@@ -11,7 +11,8 @@
 import { GROUND } from '../../world/props.js';
 import { DEEP_OPEN, DEEP_UNLOCK } from '../missions-deep.js';
 
-const once = (key) => ({ if: `!seen:${key}`, then: [{ say: key }] });
+// (the dialogue box records a line it has played as `dlg:<key>`)
+const once = (key) => ({ if: `!seen:dlg:${key}`, then: [{ say: key }] });
 /** A door to another place (the same place the map would take her). */
 const door = (id, x, label, to, cond, spawn = 140) => ({ id, x, w: 56, h: 120, label, icon: '🚪', if: cond, run: [{ fade: 'out' }, { goto: to, x: spawn }] });
 /** A fact to read once: it goes to the journal, and the object stays readable from there. */
@@ -185,7 +186,15 @@ export const FALSETRAILS = {
       intro: 'dg.tracks-intro',
       done: 'dg.tracks-done',
       again: 'dg.tracks-again',
-      waits: [[['seen:dg.trail-wide', 'seen:dg.trail-even', 'seen:dg.trail-paws', 'seen:dg.rake'], 'dg.tracks-wait']],
+      // she judges once she has looked at all of it — and is told which one is still left (along the path).
+      // REGRESSION: these asked for `seen:dg.trail-…`, which is never recorded (`dlg:` is), so the board
+      // waited for ever and the investigation could not go on.
+      waits: [
+        ['seen:dlg:dg.rake', 'dg.tracks-wait-rake'],
+        ['seen:dlg:dg.trail-wide', 'dg.tracks-wait-wide'],
+        ['seen:dlg:dg.trail-even', 'dg.tracks-wait-even'],
+        ['seen:dlg:dg.trail-paws', 'dg.tracks-wait-paws'],
+      ],
     }),
   ],
   triggers: enter('falsetrails'),
