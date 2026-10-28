@@ -11,7 +11,8 @@
  *                       away with him, never her companion when she is on her own. Anji walks
  *                       with her own husky once she has met her (before that, on her own). Where
  *                       a scene brings the two of them together and says so (`together: true`,
- *                       e.g. the walk with all four), both dogs come along.
+ *                       e.g. the walk with all four), both dogs come along — each with its own
+ *                       person: Snooki walks with Ryan (`leader: 'ryan'`), the husky with her.
  *   A scene that places the husky itself (an actor) keeps her there, never a second copy.
  *
  * Nothing here is saved: it is read from story flags each time a scene starts, so no save
@@ -29,14 +30,17 @@ export const MET_RYAN = { any: ['flag:t.final.meet', 'flag:game-complete'] };
 const present = (scene, kind, game) => (scene.actors || []).find((a) => a.kind === kind && check(a.if, game)) ?? null;
 
 /**
- * @returns {{ snooki: 'follow'|'ryan'|'away', husky: 'follow'|'placed'|'away', ryanX: number|null }}
+ * @returns {{ snooki: 'follow'|'ryan'|'away', leader?: 'ryan', husky: 'follow'|'placed'|'away', ryanX: number|null }}
+ *   `snooki: 'follow'` without a leader is his mission before the meeting (he walks with Anji);
+ *   with `leader: 'ryan'` he comes along on a shared outing, at Ryan's side.
  */
 export function dogsIn(scene, game) {
   const ryan = present(scene, 'ryan', game);
   const placed = present(scene, 'husky', game) ? 'placed' : 'away';
   if (!check(MET_RYAN, game)) return { snooki: 'follow', husky: placed, ryanX: ryan?.x ?? null };
   const husky = placed === 'placed' ? 'placed' : check(HUSKY_MET, game) ? 'follow' : 'away';
-  // both owners together in this scene (and the scene says they walk as one): both dogs come along
-  if (scene.together && ryan) return { snooki: 'follow', husky, ryanX: ryan.x };
+  // both owners together in this scene (and the scene says they walk as one): both dogs come
+  // along, each with its own person — Snooki at Ryan's side, never glued to her and her husky
+  if (scene.together && ryan) return { snooki: 'follow', leader: 'ryan', husky, ryanX: ryan.x };
   return { snooki: ryan ? 'ryan' : 'away', husky, ryanX: ryan?.x ?? null };
 }

@@ -120,6 +120,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       bubble: null,
       blinkAt: 2 + Math.random() * 3,
       companion: Boolean(def.companion),
+      leader: def.leader ?? null, // whom a companion walks with (an actor id); her, by default
       def,
     };
     actors.set(a.id, a);
@@ -129,17 +130,20 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const snooki = addActor({
     id: 'snooki',
     kind: 'snooki',
-    x: dogs.snooki === 'ryan' ? dogs.ryanX - 58 : player.x - 70,
+    x: dogs.snooki === 'ryan' ? dogs.ryanX - 58 : dogs.leader === 'ryan' ? dogs.ryanX - 50 : player.x - 70,
     companion: dogs.snooki === 'follow',
+    leader: dogs.leader ?? null,
     z: 3,
   });
+  /** Snooki is Ryan's from the meeting on (beside him, or walking with him on a shared outing). */
+  const snookiWithRyan = dogs.snooki === 'ryan' || dogs.leader === 'ryan';
   if (dogs.snooki === 'away' || (scene.snookiHidden && check(scene.snookiHidden, game))) snooki.visible = false;
   if (dogs.snooki === 'ryan') {
     snooki.facing = 1;
     snooki.pose = 'sit';
   }
-  // her own dog walks with her (a little further back when Snooki walks too)
-  if (dogs.husky === 'follow') addActor({ id: 'husky', kind: 'husky', x: player.x - 120, companion: true, gap: dogs.snooki === 'follow' ? 118 : 62, z: 3 });
+  // her own dog walks with her (a little further back when Snooki walks with her too)
+  if (dogs.husky === 'follow') addActor({ id: 'husky', kind: 'husky', x: player.x - 120, companion: true, gap: dogs.snooki === 'follow' && !dogs.leader ? 118 : 62, z: 3 });
   for (const def of scene.actors || []) if (check(def.if, game)) addActor(def);
 
   // ── state ──
@@ -404,7 +408,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     }, 1500);
     return true;
   }
-  const snookiReact = () => dogReact(snooki, dogs.snooki === 'ryan' ? SNOOKI_RYAN_TAPS : SNOOKI_TAPS, dogs.snooki === 'ryan' ? 'snooki-ryan-tap' : 'snooki-tap');
+  const snookiReact = () => dogReact(snooki, snookiWithRyan ? SNOOKI_RYAN_TAPS : SNOOKI_TAPS, snookiWithRyan ? 'snooki-ryan-tap' : 'snooki-tap');
   const huskyReact = () => dogReact(actors.get('husky'), HUSKY_TAPS, 'husky-tap');
   const onDog = (a, p) => a && a.visible && Math.abs(p.x - a.x) < 30 && p.y > a.y - a.h && p.y < a.y + 8;
 
@@ -445,7 +449,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       if (input.down('left')) dir -= 1;
       if (input.down('right')) dir += 1;
       jump = input.take('jump') || input.take('up');
-      if (dir !== 0 || jump) autoWalk = null;
+      // a direction takes over from a tap-to-walk; a jump does not: she jumps on the way and
+      // keeps walking to where she was going (on a phone, tapping «قفزة» while walking used to
+      // stop her dead — the jump went up on the spot)
+      if (dir !== 0) autoWalk = null;
       if (autoWalk) {
         const d = autoWalk.x - player.x;
         if (Math.abs(d) < 6) {
@@ -478,14 +485,16 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
           a.x += a.vx * dt;
           a.facing = Math.sign(d);
         }
-      } else if (a.companion && a.visible && mode === 'play') {
+      } else if (a.companion && a.visible && mode === 'play' && (!a.leader || actors.get(a.leader)?.visible)) {
+        // a companion walks with its own person: her, or (Snooki on a shared outing) Ryan
+        const lead = a.leader ? actors.get(a.leader) : player;
         const scouting = a.id === 'husky' && idleTime > 3;
-        const v = followVelocity(a, player, scouting ? { gap: -110, speed: 230 } : a.def.gap ? { gap: a.def.gap } : undefined);
+        const v = followVelocity(a, lead, scouting ? { gap: -110, speed: 230 } : a.leader ? { gap: 50 } : a.def.gap ? { gap: a.def.gap } : undefined);
         a.vx = approach(a.vx, v, 900 * dt);
         a.x += a.vx * dt;
         if (Math.abs(a.vx) > 8) a.facing = Math.sign(a.vx);
-        else if (Math.abs(player.x - a.x) > 10) a.facing = Math.sign(player.x - a.x);
-        if (Math.abs(player.x - a.x) > 500) a.x = player.x - player.facing * 200; // never lost behind
+        else if (Math.abs(lead.x - a.x) > 10) a.facing = Math.sign(lead.x - a.x);
+        if (Math.abs(lead.x - a.x) > 500) a.x = lead.x - lead.facing * 200; // never lost behind
       } else if (a !== player && !a.moveTo) {
         a.vx = approach(a.vx, 0, 900 * dt);
       }

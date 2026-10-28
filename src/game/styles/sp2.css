@@ -513,6 +513,7 @@
     order: 3;
   }
 
+  .panel.map > .map-explore,
   .panel.map > .map-legend,
   .panel.map > .map-info {
     order: 4;

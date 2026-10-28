@@ -28,14 +28,14 @@ export const WORLDS = [
   // V2 side locations
   { id: 'study', name: 'مكتب ريان', icon: 'note', x: 62, y: 40, act: 2, scene: 'study', spawn: 140, unlock: 'flag:house-entered', ready: true },
   { id: 'gameroom', name: 'صالة الألعاب', icon: 'crown', x: 37, y: 55.5, act: 2, scene: 'gameroom', spawn: 140, unlock: 'flag:house-entered', ready: true },
-  { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 12, y: 24.5, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true },
+  { id: 'meadow', name: 'المرج الخلفي', icon: 'leaf', x: 12, y: 24.5, act: 4, scene: 'meadow', spawn: 140, unlock: 'flag:kitten-tracks', ready: true, locked: 'ينفتح لمن تقرين الآثار الصغيرة جنب سياج محمية الحيوانات.' },
   // Phase 03: the finale is earned — Act VII and «خريطة الغد» (or she has already been there)
   { id: 'final', name: 'الحديقة المخفية', icon: 'mark', x: 62, y: 9, act: 8, scene: 'final', spawn: 140, unlock: ['flag:act7-done', SP2_FINAL_GATE], ready: true, locked: 'تنفتح لمن تكتمل «خريطة الغد» بالورشة.' },
   // Story Pack 01 «الطرق اللي تتذكر» (after the ending)
-  { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 12, y: 86.5, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1' },
+  { id: 'roads', name: 'طريق الذكريات', icon: 'leaf', x: 12, y: 86.5, act: 8, scene: 'roads', spawn: 160, unlock: 'flag:game-complete', ready: true, pack: 'sp1', locked: 'ينفتح بعد نهاية الحكاية.' },
   // Story Pack 02 «أرشيف الأسرار» (main story, after Act IV)
   { id: 'archives', name: 'أرشيف الأسرار', icon: 'map', x: 87, y: 71, act: 5, scene: 'archives', spawn: 140, unlock: 'flag:act4-done', ready: true, pack: 'sp2' },
-  { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1' },
+  { id: 'roseclinic', name: 'عيادة الورد', icon: 'rose', x: 37, y: 86.5, act: 8, scene: 'roseclinic', spawn: 140, unlock: 'flag:sp1-embrace', ready: true, pack: 'sp1', locked: 'تنفتح لمن تمشين بطريق الذكريات لحد السيارتين.' },
   // «إحنا فريق» (after the ending): shared activities, marked as such on the map; it opens when Anji plans it
   { id: 'dogwalk', name: 'ممشى العصر', icon: 'paw', x: 12, y: 55.5, act: 8, scene: 'dogwalk', spawn: 140, unlock: 'flag:tu-walk-plan', ready: true, pack: 'team', together: true, locked: 'ينفتح لمن تخططين المشية بدفتر خططچ (الحديقة المخفية).' },
   { id: 'trainyard', name: 'صالة التمرين', icon: 'dumbbell', x: 62, y: 86.5, act: 8, scene: 'trainyard', spawn: 140, unlock: 'flag:tu-train-plan', ready: true, pack: 'team', together: true, locked: 'تنفتح لمن تختارين «تمرين سوا» بدفتر خططچ (الحديقة المخفية).' },

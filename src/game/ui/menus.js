@@ -18,6 +18,7 @@ import { offlineText } from '../core/sw-client.js';
 import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memories/registry.js';
 import { ACHIEVEMENTS } from '../progression/achievements.js';
 import { journalEntries, filterEntries, displayNo, evidenceView, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
+import { lockedText, exploreText } from '../progression/map-guide.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -552,6 +553,8 @@ export function openMap(app, { focus: asked, place } = {}) {
             ? `🔒 ${focus.locked}`
             : `${focus.status === 'available' ? 'للبدء:' : 'الخطوة الجاية:'} ${fillNames(focus.next, game) ?? ''}`;
       const canGo = target && open(target) && target.ready && target.scene && target.scene !== here;
+      // where to keep exploring: the hidden deep garden, missions left, locked places left, or all done
+      const explore = exploreText(game, entries, current);
       el.innerHTML = `<section class="panel map ${focus ? 'has-focus' : ''}">
         <header class="panel-head"><h2 tabindex="-1">خريطة الحديقة</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
@@ -572,6 +575,7 @@ export function openMap(app, { focus: asked, place } = {}) {
               ).join('')}</div>`
             : ''
         }
+        ${explore ? `<p class="map-explore" role="note">${esc(explore)}</p>` : ''}
         <div class="map-board"></div>
         <p class="map-legend" aria-hidden="true"><span>★ القصة</span><span>◆ جانبية / لغز</span><span>✓ مكتملة</span><span>🔒 مقفول</span><span class="map-legend-deep">● مكان ما زرتيه · ⤒ مدخل من الحديقة</span></p>
         <p class="map-info" aria-live="polite">${focus ? 'المكان المضوي هو وين المهمة. المسي أي مكان مفتوح حتى تسافرين.' : 'اختاري مكان.'}</p></section>`;
@@ -616,7 +620,7 @@ export function openMap(app, { focus: asked, place } = {}) {
       }
       function pick(w) {
         if (!open(w)) {
-          info.textContent = w.locked ? `🔒 مكان مقفول. ${w.locked}` : `مكان مقفول. ينفتح بالفصل ${ORD[w.act - 1]}.`;
+          info.textContent = lockedText(w, game);
           app.audio.play('fail');
           return;
         }
