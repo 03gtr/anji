@@ -279,7 +279,8 @@ export const PUZZLES_SP2 = {
       word: ['ب', 'ي', 'د', 'ي', 'ن'],
       glyphs: ['sym:sun', 'sym:heart', 'sym:key', 'sym:heart', 'sym:moon-crescent'],
       key: [['sym:heart', 'ي'], ['sym:moon-crescent', 'ن']],
-      letters: ['ب', 'د', 'ت', 'ر', 'م', 'ل'],
+      // the known symbols' letters (ي, ن) are on the pad too
+      letters: ['ب', 'ن', 'د', 'ت', 'ي', 'ر', 'م', 'ل'],
     },
     hints: [
       'حطي الرموز المعروفة أول. شوفي شكل الكلمة: ؟ي؟ين.',

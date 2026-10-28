@@ -18,7 +18,8 @@ export const PUZZLES_SP1 = {
       word: ['و', 'ع', 'د'],
       glyphs: ['sym:rose', 'sym:moon-crescent', 'sym:heart'],
       key: [['sym:rose', 'و'], ['sym:heart', 'د']],
-      letters: ['ع', 'غ', 'ن', 'ر', 'س', 'ل'],
+      // the key's letters (و, د) are on the pad too: she places them herself, as the key says
+      letters: ['د', 'ع', 'ن', 'و', 'غ', 'ر', 'س', 'ل'],
     },
     hints: [
       'الوردة والقلب مكتوبين بالمفتاح. بقى القمر.',

@@ -87,7 +87,11 @@ export function createInput({ target = globalThis.window, scope } = {}) {
     /** Make an element behave as a held button for `action`. */
     bindButton(el, action, bscope = scope) {
       const id = (e) => `ptr:${e.pointerId}`;
-      const on = (type, fn) => (bscope ? bscope.on(el, type, fn) : el.addEventListener(type, fn));
+      const on = (type, fn, opts) => (bscope ? bscope.on(el, type, fn, opts) : el.addEventListener(type, fn, opts));
+      // a held button never becomes a page gesture: with a thumb on «يمين», a second finger on
+      // «قفزة» must not start a pinch/scroll that cancels the walk (browsers that ignore
+      // `touch-action: none` on buttons). Pointer events still arrive; only the gesture is stopped.
+      on('touchstart', (e) => e.cancelable && e.preventDefault(), { passive: false });
       on('pointerdown', (e) => {
         if (!enabled) return;
         e.preventDefault();

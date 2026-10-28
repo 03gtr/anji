@@ -1970,6 +1970,15 @@ svg {
   background: rgba(13, 16, 56, 0.75);
 }
 
+/* where to keep exploring (progression/map-guide.js) */
+.map-explore {
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--gold, #ffd76a);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .map-info {
   min-height: 1.6em;
   margin: 8px 0 0;
