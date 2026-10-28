@@ -19,6 +19,24 @@ import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
 import { dogsIn } from '../data/companions.js';
 
+/**
+ * A speech bubble's text, broken at spaces into lines no wider than `maxW` (a single word wider than
+ * that keeps its own line). `measure(text)` gives a text's width in the bubble's font.
+ */
+export function bubbleLines(text, measure, maxW) {
+  const lines = [];
+  let line = '';
+  for (const word of String(text).split(/\s+/).filter(Boolean)) {
+    const next = line ? `${line} ${word}` : word;
+    if (line && measure(next) > maxW) {
+      lines.push(line);
+      line = word;
+    } else line = next;
+  }
+  if (line) lines.push(line);
+  return lines.length ? lines : [''];
+}
+
 /** Release a set of baked sprite frames ({ pose: [canvas…] }). */
 const releaseFrames = (set) => Object.values(set || {}).forEach((list) => list.forEach(releaseCanvas));
 
@@ -692,12 +710,17 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         ctx.save();
         ctx.font = '600 11px "Baloo Bhaijaan 2", sans-serif';
         ctx.direction = 'rtl';
-        const tw = Math.min(200, ctx.measureText(a.bubble.text).width);
+        // as many lines as it takes to stay inside the view (a phone shows only ~180 units)
+        const maxW = Math.min(200, viewW - 40);
+        const lines = bubbleLines(a.bubble.text, (s) => ctx.measureText(s).width, maxW);
+        const tw = Math.min(maxW, Math.max(...lines.map((l) => ctx.measureText(l).width)));
+        const lh = 14;
+        const bh = lines.length * lh + 10;
         const bx = Math.max(camX + tw / 2 + 12, Math.min(camX + viewW - tw / 2 - 12, a.x));
-        const by = head - 16;
+        const by = head - 16; // the bubble's bottom edge sits at by + 10, as it always has
         ctx.fillStyle = 'rgba(255,247,236,.96)';
         ctx.beginPath();
-        ctx.roundRect?.(bx - tw / 2 - 10, by - 14, tw + 20, 24, 10);
+        ctx.roundRect?.(bx - tw / 2 - 10, by + 10 - bh, tw + 20, bh, 10);
         ctx.fill();
         ctx.beginPath();
         ctx.moveTo(a.x - 5, by + 9);
@@ -707,7 +730,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         ctx.fillStyle = '#2b2340';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(a.bubble.text, bx, by - 1, 200);
+        lines.forEach((l, i) => ctx.fillText(l, bx, by + 10 - bh + 5 + lh * (i + 0.5), maxW));
         ctx.restore();
       } else a.bubble = null;
     }

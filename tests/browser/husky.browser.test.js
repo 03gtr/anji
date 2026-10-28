@@ -87,6 +87,25 @@ describe.skipIf(!browser)(`her husky's remarks on a phone${browser ? '' : ` (ski
     expect(seen.speaking).toBe(true);
     expect(seen.x).toBeGreaterThan(20);
     expect(seen.x).toBeLessThan(seen.width - 20); // on screen (REGRESSION: at or past the right edge)
+    // and her words fit the phone's view: measured in the bubble's real font, every one of her lines
+    // is wider than the view on one line (REGRESSION: one line, squeezed and cut at the screen's edges),
+    // and every wrapped line fits (the bubble draws them with bubbleLines)
+    const fit = await page.evaluate(`import('/src/game/world/engine.js').then((m) => {
+      const w = window.__game.screen.world;
+      const c = document.createElement('canvas').getContext('2d');
+      c.font = '600 11px "Baloo Bhaijaan 2", sans-serif';
+      const maxW = Math.min(200, w.viewW - 40);
+      const all = [...m.HUSKY_AMBIENT, ...m.HUSKY_TAPS.map((r) => r.text)];
+      return {
+        viewW: w.viewW,
+        maxW,
+        tooWideOnOneLine: all.filter((t) => c.measureText(t).width > w.viewW - 24).length,
+        widest: Math.max(...all.flatMap((t) => m.bubbleLines(t, (s) => c.measureText(s).width, maxW).map((l) => c.measureText(l).width))),
+      };
+    })`);
+    expect(fit.viewW).toBeLessThan(220); // a phone's narrow view
+    expect(fit.tooWideOnOneLine).toBeGreaterThan(0);
+    expect(fit.widest).toBeLessThanOrEqual(fit.maxW);
     expect(errors).toEqual([]);
   }, 90000);
 });
