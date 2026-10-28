@@ -95,8 +95,6 @@ function pawPrints(x, y = GROUND + 6) {
 }
 
 export const ARCHIVES = {
-  // played after the ending, Snooki still comes along: it is his case too (data/companions.js)
-  dogsAfter: { snooki: 'follow' },
   id: 'archives',
   title: 'أرشيف الأسرار',
   theme: 'library',

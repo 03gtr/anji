@@ -131,7 +131,7 @@ export const DOGWALK = {
     },
   ],
   // all four walk together: Snooki and her husky follow her (data/companions.js), Ryan too
-  dogsAfter: { snooki: 'follow' },
+  together: true,
   actors: [{ id: 'ryan', kind: 'ryan', x: 260, facing: 1, companion: true, gap: 178 }],
   interact: [
     {

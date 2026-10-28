@@ -608,8 +608,19 @@ export const DEEP_EXTRAS = {
         icon: '📦',
         if: DEEP_UNLOCK,
         cases: [
-          // Snooki (with Ryan since the ending) comes running at the word «علبة», and stays for the case
-          { if: '!flag:dg-box', run: [{ place: 'snooki', x: 690, facing: 1 }, { show: 'snooki' }, { say: 'dg.box' }, { fx: ['flag:dg-box', 'journal:dg-box'] }] },
+          // Snooki (with Ryan since the meeting) comes running at the word «علبة», for this beat only
+          {
+            if: '!flag:dg-box',
+            run: [
+              { place: 'snooki', x: 690, facing: 1 },
+              { show: 'snooki' },
+              { say: 'dg.box' },
+              { fx: ['flag:dg-box', 'journal:dg-box'] },
+              // and back to Ryan: out by the stairs (the workshop's only exit, on the left), not the back door
+              { move: 'snooki', x: 20, speed: 380 },
+              { show: 'snooki', visible: false },
+            ],
+          },
           { if: 'flag:dg-done', run: [{ say: 'dg.box-done' }] },
           { run: [{ say: 'dg.box-again' }] },
         ],
