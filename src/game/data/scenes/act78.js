@@ -188,8 +188,17 @@ export const FINAL = {
       id: 'meet',
       x1: 1150,
       x2: 1300,
+      // Not a one-time trigger: the engine saves a one-time trigger's flag BEFORE its actions run,
+      // and every change is written to the save at once, so an ending closed half-way (the app
+      // shut, a reload) left `t.final.meet` set and `game-complete` not — and the meeting never
+      // played again. It is bounded by its own condition instead: it re-arms after leaving the
+      // zone and stops for good once the ending has completed. Replaying from the start is safe:
+      // every effect in it (flags, journal, unlocks) is idempotent.
+      once: false,
       if: ['flag:act7-done', '!flag:game-complete'],
       run: [
+        // the meeting has begun: the canonical turning point (data/companions.js), same moment as before
+        { fx: 'flag:t.final.meet' },
         { camera: 1420, ms: 900 },
         { move: 'snooki', x: 1400, speed: 300 },
         // the meeting: Snooki's mission ends here, he stays with Ryan (data/companions.js)
@@ -209,8 +218,20 @@ export const FINAL = {
         { chapter: { act: 8, end: true } },
         { cine: 'credits' },
         { say: 'a8.after' },
+        // the open ending: this chapter is complete; the next adventures come with later updates
+        { say: 'a8.open' },
         { toast: 'المسي «ازرعي الحديقة» حتى تزرعين البذور اللي جمعتيها 🌱', kind: 'hint' },
       ],
+    },
+    {
+      // the open ending for a game that finished before it existed (or was closed during it):
+      // once, under the rose tree, after the ending; it is "seen" only when it has been read through
+      id: 'open',
+      x1: 1150,
+      x2: 1300,
+      once: false,
+      if: ['flag:game-complete', '!seen:dlg:a8.open'],
+      run: [{ say: 'a8.open' }],
     },
   ],
   exits: [{ side: 'left', to: 'garden', spawn: 1900 }],
