@@ -7,7 +7,7 @@ import { createPainter } from '../world/painter.js';
 import { PROP_DRAWERS } from '../world/prop-drawers.js';
 import { GROUND, VIEW_H } from '../world/props.js';
 import * as P from '../world/props.js';
-import { frameTable, rasterize, RASTER_HEIGHT } from '../characters/sprites.js';
+import { spriteFrames } from '../world/sprite-cache.js';
 import { h } from '../ui/dom.js';
 import { num } from '../ui/format.js';
 import { rng } from '../core/rng.js';
@@ -225,15 +225,8 @@ export function mount(area, { app, scope, options, hud, finish }) {
 
   return {
     async start() {
-      const pick = (kind, names) => {
-        const table = frameTable(kind, app.game.state.cosmetics);
-        return Object.fromEntries(names.map((n) => [n, table[n]]));
-      };
-      const [anji, snooki, needle] = await Promise.all([
-        rasterize(pick('anji', ['run', 'jump']), { height: RASTER_HEIGHT.anji }),
-        rasterize(pick('snooki', ['run', 'jump']), { height: RASTER_HEIGHT.snooki }),
-        rasterize(pick('needle', ['walk']), { height: RASTER_HEIGHT.needle }),
-      ]);
+      // the same frames the scenes use (baked once, shared: world/sprite-cache.js), never released here
+      const [anji, snooki, needle] = await Promise.all(['anji', 'snooki', 'needle'].map((k) => spriteFrames(k, app.game.state.cosmetics)));
       if (scope.disposed) return;
       frames = { anji, snooki, needle };
       s = createChase(course);
