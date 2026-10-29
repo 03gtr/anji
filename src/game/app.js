@@ -9,7 +9,8 @@
  */
 import { createBus } from './core/bus.js';
 import { createScope } from './core/scope.js';
-import { createSaveManager, defaultState } from './core/save.js';
+import { createSaveManager, defaultState, SAVE_KEY } from './core/save.js';
+import { createS2Store, S2_KEY } from './core/s2-store.js';
 import { createSettings } from './core/settings.js';
 import { createGame } from './core/game.js';
 import { createAudio } from './core/audio.js';
@@ -19,7 +20,7 @@ import { createOverlays } from './ui/overlay.js';
 import { createToasts } from './ui/toast.js';
 import { playDialogue } from './ui/dialogue-box.js';
 import { playCinematic } from './ui/cinematic.js';
-import { chapterCard, openJournal, openMap, openSettings, openHelp } from './ui/menus.js';
+import { chapterCard, openJournal, openMap, openSettings, openHelp, confirmBox } from './ui/menus.js';
 import { worldOfScene, regionOf } from './data/worlds.js';
 import { openPuzzle } from './puzzles/host.js';
 import { openMinigame } from './minigames/host.js';
@@ -58,7 +59,10 @@ export function createGameApp(root, opts = {}) {
   const settings = createSettings({ storage: opts.storage, systemReducedMotion: () => opts.reducedMotion ?? systemReduced() });
   const saves = createSaveManager({ storage: opts.storage, now: opts.now });
   const loaded = saves.load();
-  const game = createGame({ saveManager: saves, bus, initial: loaded.state, now: opts.now });
+  // Season 2 keeps its own document (core/s2-store.js), bound to this playthrough
+  const s2Store = createS2Store({ storage: opts.storage, now: opts.now });
+  const s2Loaded = s2Store.load(loaded.state.createdAt);
+  const game = createGame({ saveManager: saves, s2Store, bus, initial: loaded.state, s2Initial: s2Loaded.state, now: opts.now });
   const totals = {};
   for (const id of Object.keys(COLLECTIBLES)) totals[groupOf(id)] = (totals[groupOf(id)] || 0) + 1;
   game.totalOf = (group) => totals[group] || 0;
@@ -100,7 +104,9 @@ export function createGameApp(root, opts = {}) {
     overlays,
     offline,
     tips,
+    s2Store,
     loadStatus: loaded.status,
+    s2LoadStatus: s2Loaded.status,
     reduced: () => settings.reducedMotion(),
     applyMotion() {
       shell.classList.toggle('reduce-motion', settings.reducedMotion());
@@ -250,9 +256,52 @@ export function createGameApp(root, opts = {}) {
     if (c.kind === 'journal') tips.show('journal');
     if (c.kind === 'flag' && c.id === 'map-open') tips.show('map');
   });
-  bus.on('save-error', (err) =>
-    toasts.toast(err === 'quota' ? 'المساحة على الجهاز ممتلئة: التقدم ما انحفظ. حرري شوية مساحة.' : 'ما گدرنا نحفظ التقدم على هذا الجهاز (التصفح الخاص؟).', 'warn'),
-  );
+  // A save this tab must not write (core/save.js, core/s2-store.js): another tab wrote newer progress,
+  // or the save is from a newer build. Said once, with a way on; nothing on disk is touched.
+  let blockedShown = false;
+  function saveBlocked(why) {
+    if (blockedShown) return;
+    blockedShown = true;
+    const text =
+      why === 'other-tab'
+        ? 'اللعبة مفتوحة بمكان ثاني وانحفظ هناك تقدم أحدث. حتى ما يضيع شي، هنا ما نحفظ بعد هسه. أعيدي التحميل حتى تكملين من آخر تقدم.'
+        : 'هالحفظ من نسخة أحدث من اللعبة. حدّثي الصفحة حتى تكملين — تقدمچ محفوظ وما انلمس.';
+    overlays.open(
+      (el, { close, scope }) => {
+        el.innerHTML = `<section class="panel panel-small save-blocked" role="alertdialog"><h2 tabindex="-1">تقدمچ بأمان</h2><p>${text}</p>
+          <div class="stack"><button type="button" class="btn btn-primary" data-reload>أعيدي التحميل</button>
+          <button type="button" class="btn btn-ghost" data-no data-autofocus>تمام</button></div></section>`;
+        scope.on(el.querySelector('[data-reload]'), 'click', () => location.reload());
+        scope.on(el.querySelector('[data-no]'), 'click', () => close());
+      },
+      { className: 'overlay-panel', dismissible: true, label: 'تقدمچ بأمان' },
+    );
+  }
+  bus.on('save-error', (err) => {
+    if (err === 'other-tab' || err === 'readonly') return saveBlocked(err === 'other-tab' ? 'other-tab' : 'future');
+    toasts.toast(err === 'quota' ? 'المساحة على الجهاز ممتلئة: التقدم ما انحفظ. حرري شوية مساحة.' : 'ما گدرنا نحفظ التقدم على هذا الجهاز (التصفح الخاص؟).', 'warn');
+  });
+  // another tab saved: say so before this one tries (the stores refuse to overwrite it anyway)
+  globalThis.window?.addEventListener('storage', (e) => {
+    if ((e.key === SAVE_KEY || e.key === S2_KEY) && e.newValue != null) saveBlocked('other-tab');
+  });
+  if (loaded.status === 'future' || s2Loaded.status === 'future') saveBlocked('future');
+  if (loaded.status === 'overwritten') {
+    // an older version of the game, still open somewhere, wrote over newer progress: ask, keep both
+    queueMicrotask(async () => {
+      const back = await confirmBox(app, {
+        title: 'تقدمچ الأحدث محفوظ',
+        text: 'نسخة قديمة من اللعبة (صفحة ثانية چانت مفتوحة) كتبت فوق تقدمچ. نرجّع التقدم الأحدث؟ النسختين محفوظات بالحالتين.',
+        yes: 'رجّعي الأحدث',
+        no: 'خليها مثل ما هي',
+      });
+      if (back) {
+        saves.restore(loaded.alt);
+        game.replace(loaded.alt);
+        toasts.toast('رجع تقدمچ الأحدث ✓', 'unlock');
+      } else saves.keep();
+    });
+  }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) game.save();
   });

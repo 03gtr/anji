@@ -166,6 +166,19 @@ title, under menus/puzzles/minigames and after leaving the world.
 
 ## Saves
 
+**Season 2 (since M1).** Season 2 keeps its own document, `snooki-game:s2` (`core/s2-store.js`). `game.js` routes every id with an `s2` segment there (`isS2`), so Season 2 never writes the main save. Details: `docs/season-2/SEASON_2_TECHNICAL_PLAN.md` §1–3.
+
+The main save also gained these protections. The released builds' code cannot change, so the protections live in the new build:
+
+| Case | What the new build does |
+|---|---|
+| Every save it writes | Marks it with `rev` (in the file, never in the state) and mirrors it to `:shadow` |
+| An older build wrote last | Seen at the next load (`'overwritten'`). The player is asked; both copies are kept (`:alt`) |
+| A save from a newer build | Read-only, never reset |
+| Another tab of this build saved newer progress | This tab does not overwrite it, and says so |
+
+Tests: `tests/game/s2-*.test.js`, with the released save code frozen in `tests/fixtures/deployed-client/`.
+
 `snooki-game:save` (+ `:backup`, and `:broken` if a corrupt save was quarantined),
 `snooki-game:settings`, `snooki-game:memories` (imported personal memories).
 Schema version: `SAVE_VERSION` in `core/save.js` (V2 = 2; migration 1 → 2

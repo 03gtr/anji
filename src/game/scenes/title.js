@@ -67,7 +67,7 @@ export function createTitle(app, { message } = {}) {
     app.audio.unlock();
     app.audio.play('tap');
     if (act === 'continue') {
-      const loc = game.state.location;
+      const loc = game.resumeLocation(); // a Season 2 place when she was last there
       app.go(loc.scene || 'garden', { spawnX: loc.x ?? undefined });
     } else if (act === 'new') {
       if (started) {

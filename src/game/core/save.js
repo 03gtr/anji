@@ -191,18 +191,75 @@ export function createSaveManager({
       return null;
     }
   };
+  const shadowKey = `${key}:shadow`;
+  const altKey = `${key}:alt`;
   const parse = (text) => normalize(migrate(JSON.parse(text), { version, migrations }), now());
+  const parseObj = (text) => {
+    try {
+      const o = text == null ? null : JSON.parse(text);
+      return isObj(o) ? o : null;
+    } catch {
+      return null;
+    }
+  };
+  const revOf = (o) => (Number.isInteger(o?.rev) && o.rev > 0 ? o.rev : null);
+  /*
+   * Older tabs and newer saves (Season 2 safety, tests/game/s2-older-tab.test.js). Released builds
+   * cannot be changed: an older tab still open writes its state over the save. So this build marks
+   * every save it writes with a revision (`rev`, in the file only — never in the game state) and
+   * mirrors it to `:shadow`, a key older builds never touch. A save on disk without `rev` while the
+   * shadow of the same playthrough has one was written by an older build; if progress was lost the
+   * load says so and the app asks — both copies are kept. A save from a NEWER build is read-only
+   * (the released code reset it). A second tab of this build never overwrites a newer save.
+   */
+  let readOnly = false;
+  let reason = null;
+  let lastRev = null; // the rev on disk when this tab loaded or last wrote (null: none)
+  let pending = null; // { current, alt } while the app asks about an older tab's overwrite
 
   return {
     available: Boolean(ls),
+    get readOnly() {
+      return readOnly;
+    },
+    get reason() {
+      return reason;
+    },
     /**
-     * @returns {{ state: object, status: 'new'|'loaded'|'recovered'|'reset', error?: string }}
+     * @returns {{ state: object, status: 'new'|'loaded'|'recovered'|'reset'|'future'|'overwritten', error?: string,
+     *   alt?: object, lost?: { flags: string[], journal: string[], collected: string[] } }}
      */
     load() {
+      readOnly = false;
+      reason = null;
+      pending = null;
       const primary = read(key);
       if (primary == null) return { state: defaultState(now()), status: 'new' };
+      const raw = parseObj(primary);
+      if (raw && Number.isInteger(raw.v) && raw.v > version) {
+        readOnly = true; // never reset or write a newer build's save
+        reason = 'future';
+        return { state: defaultState(now()), status: 'future', error: 'future' };
+      }
+      lastRev = revOf(raw);
       try {
-        return { state: parse(primary), status: 'loaded' };
+        const state = parse(primary);
+        const shadow = parseObj(read(shadowKey));
+        if (raw && lastRev == null && revOf(shadow) && shadow.createdAt === raw.createdAt) {
+          // an older build wrote last (lastRev stays null: its save has no rev); the next write continues after the shadow
+          const alt = normalize(migrate(shadow, { version, migrations }), now());
+          const missing = (list, have) => list.filter((x) => !have.includes(x));
+          const lost = {
+            flags: Object.keys(alt.flags).filter((f) => alt.flags[f] && !state.flags[f]),
+            journal: missing(alt.journal, state.journal),
+            collected: missing(alt.collected, state.collected),
+          };
+          if (lost.flags.length || lost.journal.length || lost.collected.length) {
+            pending = { current: primary, alt: read(shadowKey) };
+            return { state, status: 'overwritten', alt, lost };
+          }
+        }
+        return { state, status: 'loaded' };
       } catch (err) {
         const backup = read(backupKey);
         try {
@@ -220,21 +277,50 @@ export function createSaveManager({
         return { state: defaultState(now()), status: 'reset', error: err.code || 'corrupt' };
       }
     },
-    /** @returns {{ ok: boolean, error?: 'quota'|'unavailable'|'failed' }} */
+    /** @returns {{ ok: boolean, error?: 'quota'|'unavailable'|'failed'|'readonly'|'other-tab' }} */
     save(state) {
       if (!ls) return { ok: false, error: 'unavailable' };
+      if (readOnly) return { ok: false, error: 'readonly' };
       try {
-        const text = JSON.stringify({ ...state, v: version, updatedAt: now() });
         const previous = read(key);
-        if (previous != null) {
-          try {
-            JSON.parse(previous);
-            ls.setItem(backupKey, previous);
-          } catch {
-            /* never back up a corrupted save over a good backup */
-          }
+        const onDisk = parseObj(previous);
+        // someone else wrote since this tab loaded or last wrote: another tab of this build (a newer
+        // rev) or an older build (no rev over ours). Never overwrite it. An unreadable save is no tab.
+        if (onDisk && revOf(onDisk) !== lastRev) {
+          readOnly = true;
+          reason = 'other-tab';
+          return { ok: false, error: 'other-tab' };
         }
+        const rev = Math.max(lastRev ?? 0, revOf(parseObj(read(shadowKey))) ?? 0) + 1;
+        const text = JSON.stringify({ ...state, rev, v: version, updatedAt: now() });
+        if (onDisk) ls.setItem(backupKey, previous); // never a corrupted save over a good backup
         ls.setItem(key, text);
+        ls.setItem(shadowKey, text);
+        lastRev = rev;
+        pending = null;
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: isQuota(err) ? 'quota' : 'failed' };
+      }
+    },
+    /** After `load()` said 'overwritten': «رجّعي الأحدث» — the newer progress back, the other copy kept. */
+    restore(alt) {
+      if (pending) {
+        try {
+          ls.setItem(altKey, pending.current);
+        } catch {
+          /* ignore */
+        }
+      }
+      return this.save(alt);
+    },
+    /** After `load()` said 'overwritten': «خليها» — keep the save as it is, the newer copy kept aside. */
+    keep() {
+      if (!pending) return { ok: true };
+      try {
+        ls.setItem(altKey, pending.alt);
+        ls.setItem(shadowKey, pending.current); // asked once: the shadow now matches the save
+        pending = null;
         return { ok: true };
       } catch (err) {
         return { ok: false, error: isQuota(err) ? 'quota' : 'failed' };
@@ -244,16 +330,32 @@ export function createSaveManager({
       return read(key) != null || read(backupKey) != null;
     },
     clear() {
-      for (const k of [key, backupKey, brokenKey]) {
+      for (const k of [key, backupKey, brokenKey, shadowKey, altKey]) {
         try {
           ls?.removeItem(k);
         } catch {
           /* ignore */
         }
       }
+      lastRev = null;
+      pending = null;
+      readOnly = false;
+      reason = null;
     },
-    exportText(state) {
-      return JSON.stringify({ game: GAME_ID, exportedAt: new Date(now()).toISOString(), save: { ...state, v: version } }, null, 2);
+    /** A backup file; with Season 2's document when given (older builds import the main save only). */
+    exportText(state, s2 = null) {
+      const data = { game: GAME_ID, exportedAt: new Date(now()).toISOString(), save: { ...state, v: version } };
+      if (s2) data.s2 = s2;
+      return JSON.stringify(data, null, 2);
+    },
+    /** Season 2's document inside a backup file, or null (older backups have none). */
+    importS2(text) {
+      try {
+        const data = JSON.parse(text);
+        return isObj(data?.s2) ? data.s2 : null;
+      } catch {
+        return null;
+      }
     },
     /** Parse an exported backup. Throws SaveError on anything unusable. */
     importText(text) {
