@@ -11,14 +11,18 @@
  * Lifetime: one look per character kind. The key is the frames' own SVG text (plus the size), so
  * any change of look — the wardrobe — gives a new key: stale art cannot be shown. A new look
  * replaces the kind's old frames, which are released once the new ones are ready. At most one set
- * per kind is ever held (the kinds are a fixed list), so the cache cannot grow without bound.
- * A failed bake is not kept: the next request tries again (a scene's «جرّبي مرة ثانية»).
+ * per kind is kept (the kinds are a fixed list), so the cache cannot grow without bound; a look
+ * asked for and then superseded before it finished baking is released as soon as it is done.
+ * A failed bake is not kept: the next request tries again (a scene's «جرّبي مرة ثانية»), and the
+ * last good look stays.
  */
 import { frameTable, rasterize as rasterizeTable, RASTER_HEIGHT } from '../characters/sprites.js';
 import { releaseCanvas } from './painter.js';
 
-/** kind → { key, frames: Promise<{ pose: [canvas…] }>, total } */
+/** kind → { key, frames: Promise<{ pose: [canvas…] }>, total }: the look handed out now (maybe still baking) */
 const slots = new Map();
+/** kind → { set, entry }: the last look that finished baking while current — the one scenes draw */
+const settled = new Map();
 
 const releaseSet = (set) => Object.values(set || {}).forEach((list) => list.forEach(releaseCanvas));
 
@@ -66,28 +70,39 @@ export function spriteFrames(kind, cosmetics, { onProgress, rasterize = rasteriz
       return set;
     });
   }
-  const frames = rasterize(table, { height, onProgress: onProgress && (() => onProgress()) });
-  const next = { key, frames, total };
-  slots.set(kind, next);
-  frames.then(
-    () => {
-      // the old look is no longer handed out; give its memory back now that the new one is ready
-      if (slot && slots.get(kind) === next) slot.frames.then(releaseSet, () => {});
+  const next = { key, total };
+  // What callers get: this look once baked — or, if a newer look was asked for meanwhile (two
+  // wardrobe changes in a row), the newest one: a superseded look is never handed out.
+  next.frames = rasterize(table, { height, onProgress: onProgress && (() => onProgress()) }).then(
+    (set) => {
+      if (slots.get(kind) !== next) {
+        releaseSet(set); // superseded while baking: nobody draws it
+        return slots.get(kind)?.frames ?? Promise.reject(new Error(`no current look for ${kind}`));
+      }
+      // the look scenes were drawing is no longer handed out: give its memory back now that this one is ready
+      const old = settled.get(kind);
+      settled.set(kind, { set, entry: next });
+      if (old && old.set !== set) releaseSet(old.set);
+      return set;
     },
-    () => {
+    (err) => {
       if (slots.get(kind) === next) {
-        if (slot) slots.set(kind, slot); // keep the previous look rather than nothing
+        const good = settled.get(kind); // keep the last look that baked (still alive) rather than nothing
+        if (good) slots.set(kind, good.entry);
         else slots.delete(kind);
       }
+      throw err;
     },
   );
-  return frames;
+  slots.set(kind, next);
+  return next.frames;
 }
 
 /** Release every cached frame (tests; nothing in the game needs to). */
 export function clearSpriteFrames() {
-  for (const slot of slots.values()) slot.frames.then(releaseSet, () => {});
+  for (const { set } of settled.values()) releaseSet(set);
   slots.clear();
+  settled.clear();
 }
 
 /** What the cache holds: kind → look key (tests and diagnostics). */

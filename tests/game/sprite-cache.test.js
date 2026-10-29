@@ -148,4 +148,67 @@ describe('sprite frames: baked once per look, shared by every scene', () => {
     expect(await spriteFrames('anji', CLASSIC, { rasterize: good })).toBe(classic);
     expect(good.calls).toHaveLength(1);
   });
+
+  /** A rasteriser whose bakes finish only when the test says so (to interleave requests). */
+  function heldRasterize() {
+    const pending = [];
+    const inner = fakeRasterize();
+    const fn = (table, opts) => new Promise((resolve, reject) => pending.push({ go: () => inner(table, opts).then(resolve), fail: () => reject(new Error('image failed to load')) }));
+    fn.pending = pending;
+    return fn;
+  }
+  const settle = async () => { for (let i = 0; i < 6; i++) await Promise.resolve(); };
+
+  it('two wardrobe changes in a row (the first still baking): everyone gets the newest look; the superseded one is released, never handed out', async () => {
+    const good = fakeRasterize();
+    const classic = await spriteFrames('anji', CLASSIC, { rasterize: good });
+    const held = heldRasterize();
+    const toCozy = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'cozy' }, { rasterize: held }); // a scene re-dressing…
+    const toRacer = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'racer' }, { rasterize: held }); // …and changed again
+    held.pending[1].go(); // the newest finishes first
+    const racer = await toRacer;
+    await settle();
+    expect(allFrames(classic).every((c) => c.width === 0)).toBe(true); // the old look, released once the newest is ready
+    expect(allFrames(racer).every((c) => c.width > 0)).toBe(true);
+    held.pending[0].go(); // the superseded one finishes late
+    expect(await toCozy).toBe(racer); // its caller gets the newest look, not the superseded one
+    await settle();
+    expect(allFrames(racer).every((c) => c.width > 0)).toBe(true); // still drawn
+    expect(await spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'racer' }, { rasterize: good })).toBe(racer);
+  });
+
+  it('…and in the other order (the superseded look finishes first): it is released at once, and both callers get the newest', async () => {
+    const good = fakeRasterize();
+    const classic = await spriteFrames('anji', CLASSIC, { rasterize: good });
+    const held = heldRasterize();
+    const toCozy = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'cozy' }, { rasterize: held });
+    const toRacer = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'racer' }, { rasterize: held });
+    held.pending[0].go();
+    await settle();
+    expect(allFrames(classic).every((c) => c.width > 0)).toBe(true); // nothing newer is ready yet: the old look is still drawn
+    held.pending[1].go();
+    const [a, b] = await Promise.all([toCozy, toRacer]);
+    expect(a).toBe(b);
+    await settle();
+    expect(allFrames(b).every((c) => c.width > 0)).toBe(true);
+    expect(allFrames(classic).every((c) => c.width === 0)).toBe(true);
+  });
+
+  it('a superseded look whose replacement fails: that caller is told; the other gets the last good look, which stays (not released)', async () => {
+    const good = fakeRasterize();
+    const classic = await spriteFrames('anji', CLASSIC, { rasterize: good });
+    const held = heldRasterize();
+    const toCozy = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'cozy' }, { rasterize: held });
+    const toRacer = spriteFrames('anji', { ...CLASSIC, anjiOutfit: 'racer' }, { rasterize: held });
+    held.pending[1].fail();
+    await expect(toRacer).rejects.toThrow('image failed');
+    held.pending[0].go();
+    // superseded callers always get the current look — here the last good one (as a failed re-dress
+    // kept the old look before) — never a set that is released or about to be
+    expect(await toCozy).toBe(classic);
+    await settle();
+    expect(allFrames(classic).every((c) => c.width > 0)).toBe(true);
+    expect(await spriteFrames('anji', CLASSIC, { rasterize: good })).toBe(classic);
+    expect(good.calls).toHaveLength(1);
+  });
 });
