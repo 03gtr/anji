@@ -122,6 +122,18 @@ painting with chunk caching (`world/painter.js`), interactables, triggers and
 exits. Real-time play pauses under any menu, puzzle, minigame or cinematic
 overlay and when the tab is hidden.
 
+**Sprite frames are baked once per look** (`world/sprite-cache.js`) and shared
+by every scene and the chase minigame. Each kind holds one look, keyed by its
+own SVG text; a wardrobe change bakes the new look and then releases the old.
+Scenes never release sprite frames themselves.
+
+This fixes a defect seen in WebKit. Re-baking every character on every scene
+entry (drawing ~90 SVG images into canvases) grew Safari-engine graphics memory
+by ~450 MB per scene change. That memory came back only through late garbage
+collection, and the process holding it could die, leaving a white page.
+`tests/browser/sprite-memory.browser.test.js` checks this. A scene's own canvases
+are still released when it ends (`releaseCanvas`).
+
 ## Adding content
 
 - **Dialogue**: a new entry in `data/dialogue/actN.js` (`{ s, e, t }` lines,

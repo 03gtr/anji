@@ -12,7 +12,8 @@ import * as P from './props.js';
 import { createPainter, releaseCanvas } from './painter.js';
 import { frameCamera, followTop, MIN_TOP } from './camera.js';
 import { stepBody, followVelocity, approach } from './physics.js';
-import { frameTable, rasterize, RASTER_HEIGHT } from '../characters/sprites.js';
+import { frameTable } from '../characters/sprites.js';
+import { spriteFrames } from './sprite-cache.js';
 import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
@@ -36,9 +37,6 @@ export function bubbleLines(text, measure, maxW) {
   if (line) lines.push(line);
   return lines.length ? lines : [''];
 }
-
-/** Release a set of baked sprite frames ({ pose: [canvas…] }). */
-const releaseFrames = (set) => Object.values(set || {}).forEach((list) => list.forEach(releaseCanvas));
 
 /** Prompt text: the game's Arabic font; icons: the platform's colour-emoji font. */
 export const PROMPT_FONT = '700 10px "Baloo Bhaijaan 2", sans-serif';
@@ -111,11 +109,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   let loaded = 0;
   const frames = {};
   await Promise.all(
-    tables.map(async ([k, table]) => {
-      frames[k] = await rasterize(table, {
-        height: RASTER_HEIGHT[k],
-        onProgress: () => onProgress?.(++loaded, totalFrames),
-      });
+    tables.map(async ([k]) => {
+      // baked once per look and shared by every scene (world/sprite-cache.js)
+      frames[k] = await spriteFrames(k, game.state.cosmetics, { onProgress: () => onProgress?.(++loaded, totalFrames) });
     }),
   );
   if (scope.disposed) return null;
@@ -123,7 +119,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   /** Sprites for an actor kind that appears mid-scene (e.g. a cutscene spawn). */
   async function ensureFrames(kind) {
     if (frames[kind]) return;
-    frames[kind] = await rasterize(frameTable(kind, game.state.cosmetics), { height: RASTER_HEIGHT[kind] });
+    frames[kind] = await spriteFrames(kind, game.state.cosmetics);
   }
 
   const painter = createPainter({ theme: scene.theme, staticProps: scene.props || [], seed: scene.seed || 7, propDrawers: PROP_DRAWERS });
@@ -898,9 +894,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     /** Re-dress Anji and Snooki after a wardrobe change. */
     async refreshCosmetics() {
       for (const kind of ['anji', 'snooki']) {
-        const old = frames[kind];
-        frames[kind] = await rasterize(frameTable(kind, game.state.cosmetics), { height: RASTER_HEIGHT[kind] });
-        releaseFrames(old);
+        // a new look is a new cache entry; the cache releases the old frames once these are ready
+        frames[kind] = await spriteFrames(kind, game.state.cosmetics);
       }
     },
     tick(dt, frames = 1) {
@@ -910,8 +905,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     dispose() {
       loop.stop();
       painter.dispose();
-      // every scene bakes its own sprite frames: hand their memory back now (see releaseCanvas)
-      for (const set of Object.values(frames)) releaseFrames(set);
+      // the sprite frames are not this scene's to release: they stay in the shared cache for the next
       canvas.remove();
       releaseCanvas(canvas);
     },

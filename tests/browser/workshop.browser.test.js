@@ -179,26 +179,33 @@ describe.skipIf(!browser)(`the workshop and the false trails in a real browser${
   }
 
   it('phone: a place that cannot be built says so and offers a way on; «رجوع للخريطة» and «جرّبي مرة ثانية» both work (REGRESSION: an endless loading bar)', async () => {
-    const t = await open({ phone: true, scene: 'house', flags: AFTER });
+    // the glass house in its finished state (Act I done), so it opens straight into play
+    const t = await open({ phone: true, scene: 'house', flags: [...AFTER, 'maze-done', 'needle-met', 'chase-done'] });
+    // Sprite images fail from here on (as when a phone runs short of memory). Characters already
+    // drawn once are kept for every scene (world/sprite-cache.js), so a place with only them —
+    // the workshop: Anji and the dogs — still opens: nothing has to be loaded again.
     await t.page.evaluate(() => (window.__failImages = true));
     await travel(t, 'workshop');
+    await t.page.waitForFunction(() => window.__game.screen?.world?.scene?.id === 'workshop' && window.__game.screen.world.mode === 'play', null, { timeout: 15000 });
+    // a place with someone not drawn yet (Ryan, in the hidden garden) needs images: it cannot be built
+    await travel(t, 'final');
     await t.page.waitForSelector('.scene-error', { timeout: 15000 });
-    expect(await t.page.evaluate(() => document.querySelector('.scene-error').textContent)).toMatch(/ورشة الأشياء المفقودة[\s\S]*تقدمچ محفوظ/);
-    expect((await save(t.page)).location.scene).toBe('house'); // her saved place is still the one before
+    expect(await t.page.evaluate(() => document.querySelector('.scene-error').textContent)).toMatch(/الحديقة المخفية[\s\S]*تقدمچ محفوظ/);
+    expect((await save(t.page)).location.scene).toMatch(/^(house|workshop)$/); // her saved place is one she was in, never the unbuilt one
     await press(t, '.scene-error [data-away]');
     await t.page.waitForSelector('.map-board .map-node');
     await t.page.evaluate(() => (window.__failImages = false));
-    await press(t, '.map-node[data-world="workshop"]');
-    await t.page.waitForFunction(() => window.__game.screen?.world?.scene?.id === 'workshop' && window.__game.screen.world.mode === 'play', null, { timeout: 15000 });
-    // and «جرّبي مرة ثانية»: fails, then the trouble passes, she tries again
+    await press(t, '.map-node[data-world="final"]');
+    await t.page.waitForFunction(() => window.__game.screen?.world?.scene?.id === 'final' && window.__game.screen.world.mode === 'play', null, { timeout: 15000 });
+    // and «جرّبي مرة ثانية»: fails (Nurse Needle in the glass house is not drawn yet), then the trouble passes, she tries again
     await t.page.evaluate(() => (window.__failImages = true));
-    await travel(t, 'house');
+    await travel(t, 'conservatory');
     await t.page.waitForSelector('.scene-error', { timeout: 15000 });
     await t.page.evaluate(() => (window.__failImages = false));
     await press(t, '.scene-error [data-retry]');
-    await t.page.waitForFunction(() => window.__game.screen?.world?.scene?.id === 'house' && window.__game.screen.world.mode === 'play', null, { timeout: 15000 });
+    await t.page.waitForFunction(() => window.__game.screen?.world?.scene?.id === 'conservatory' && window.__game.screen.world.mode === 'play', null, { timeout: 15000 });
     expect(t.errors).toEqual([]); // logged as console errors, never left uncaught
-  }, 120000);
+  }, 180000);
 
   it('phone: the machine\'s minigame cannot load — it says so; «رجوع للمغامرة» brings her back to play (REGRESSION: a blank screen, no way out)', async () => {
     const t = await open({ phone: true, scene: 'workshop', flags: MACHINE, items: ['map-1', 'map-2', 'map-3', 'blue-thread'] });
