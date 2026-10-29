@@ -1,5 +1,6 @@
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 import { DEEP_OPEN } from './missions-deep.js';
+import { S2_OPEN } from './missions-s2.js';
 
 /**
  * World map: the locations of the garden, how they connect, and when
@@ -59,12 +60,23 @@ export const WORLDS = [
     { id: 'forgottengreen', name: 'البيت الأخضر المنسي', short: 'البيت الأخضر', icon: 'rose', x: 62, y: 24.5, unlock: 'flag:dg-bridge', locked: 'وراء الجسر المخفي.' },
     { id: 'evidenceroom', name: 'غرفة الأدلة الأخيرة', short: 'غرفة الأدلة', icon: 'key', x: 62, y: 9, unlock: 'flag:dg-awake', locked: 'تنفتح لمن تصحى البذرة.' },
   ].map((w) => ({ act: 8, scene: w.id, spawn: 140, ready: true, pack: 'deep', region: 'deep', ...w, locked: w.locked ?? 'تنفتح بعد نهاية الحكاية، لمن تلگين علبة البذرة الأخيرة فارغة بالورشة.' })),
+  // Season 2 «ملف الدائرة المغلقة», M1: the map's third page (`region: 's2'`); every id starts with `s2-`
+  ...[
+    { id: 's2-archive', name: 'أرشيف الحديقة', short: 'الأرشيف', icon: 'note', x: 37, y: 86.5, unlock: S2_OPEN, locked: 'ينفتح بعد نهاية الحكاية.' },
+    { id: 's2-tree', name: 'شجرة الفوانيس', icon: 'moon-full', x: 12, y: 71, unlock: 'flag:mission:s2-01', locked: 'تنفتح لمن تلگين شنو ناقص بالسجل.' },
+    { id: 's2-caseroom', name: 'غرفة الدائرة', icon: 'mark', x: 37, y: 55.5, unlock: 'flag:s2:caseroom-open', locked: 'تنفتح لمن تفتحين دفتر التحقيق ويا ريان.' },
+    { id: 's2-clinic', name: 'العيادة', icon: 'stethoscope', x: 62, y: 71, unlock: 'flag:mission:s2-04', locked: 'تنفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
+    { id: 's2-gym', name: 'صالة التمرين', short: 'الصالة', icon: 'dumbbell', x: 87, y: 71, unlock: 'flag:mission:s2-04', locked: 'تنفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
+    { id: 's2-lamphouse', name: 'بيت الفانوس', icon: 'sun', x: 62, y: 40, unlock: 'flag:mission:s2-04', locked: 'ينفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
+    { id: 's2-home', name: 'حديقة البيت', icon: 'heart', x: 87, y: 40, unlock: 'flag:mission:s2-04', locked: 'تنفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
+  ].map((w) => ({ act: 8, scene: w.id, spawn: 140, ready: true, pack: 's2', region: 's2', ...w })),
 ];
 
-/** Map pages: the garden, and (Phase 04) the deep garden under and behind it. */
+/** Map pages: the garden, (Phase 04) the deep garden under and behind it, and (Season 2) the closed circle. */
 export const REGIONS = [
   { id: 'garden', name: 'الحديقة' },
   { id: 'deep', name: 'الحديقة العميقة' },
+  { id: 's2', name: 'الدائرة المغلقة' },
 ];
 export const regionOf = (w) => w?.region ?? 'garden';
 
@@ -85,6 +97,10 @@ export const ROUTES = [
   ['mirrorhouse', 'roots'], ['mirrorhouse', 'forgottengreen'], ['forgottengreen', 'evidenceroom'],
   // entrances (between pages: not drawn, used for routing)
   ['garden', 'clockgarden'], ['house', 'letterhall'], ['workshop', 'falsetrails'], ['observatory', 'sealedroom'], ['conservatory', 'roots'],
+  // Season 2 «ملف الدائرة المغلقة» (its own page)
+  ['s2-archive', 's2-tree'], ['s2-archive', 's2-caseroom'], ['s2-caseroom', 's2-clinic'], ['s2-clinic', 's2-gym'], ['s2-caseroom', 's2-lamphouse'], ['s2-lamphouse', 's2-home'],
+  // entrance: the archive's left door leads back to the garden (routing only)
+  ['garden', 's2-archive'],
 ];
 
 export const worldById = (id) => WORLDS.find((w) => w.id === id);

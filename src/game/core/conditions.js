@@ -56,6 +56,22 @@ export function check(cond, game) {
       const k = Number(m[3]);
       return { '>=': n >= k, '<=': n <= k, '==': n === k, '>': n > k, '<': n < k }[m[2]];
     }
+    // Season 2 (stored in its own document by core/game.js):
+    case 'ev': // 'ev:e-wax' — a piece of evidence she has (data/evidence-s2.js)
+      return game.has(`s2.ev.${arg}`);
+    case 'dec': {
+      // 'dec:lead=anji' — a decision she made (registry: data/evidence-s2.js DECISIONS)
+      const cut = arg.indexOf('=');
+      return game.flag(`s2:dec:${arg.slice(0, cut)}`) === arg.slice(cut + 1);
+    }
+    case 'num': {
+      // 'num:s2:quiz>=2' — a number kept in a Season 2 flag (absent = 0)
+      const m = arg.match(/^(s2:[\w:-]+?)\s*(>=|<=|==|>|<)\s*(-?\d+)$/);
+      if (!m) throw new Error(`Bad num condition: ${cond}`);
+      const n = Number(game.flag(m[1]) ?? 0);
+      const k = Number(m[3]);
+      return { '>=': n >= k, '<=': n <= k, '==': n === k, '>': n > k, '<': n < k }[m[2]];
+    }
     default:
       throw new Error(`Unknown condition kind: ${cond}`);
   }

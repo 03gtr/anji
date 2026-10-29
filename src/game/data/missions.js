@@ -19,6 +19,7 @@ import { MISSIONS_SP1 } from './missions-sp1.js';
 import { MISSIONS_SP2 } from './missions-sp2.js';
 import { MISSIONS_DEEP } from './missions-deep.js';
 import { MISSIONS_TEAM } from './missions-team.js';
+import { MISSIONS_S2 } from './missions-s2.js';
 
 export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية', puzzle: 'لغز', together: 'سوا' };
 
@@ -218,6 +219,8 @@ export const MISSIONS = [
   ...MISSIONS_DEEP,
   // «إحنا فريق» (after the ending; appended)
   ...MISSIONS_TEAM,
+  // Season 2 «ملف الدائرة المغلقة», M1 (after the ending; appended; its progress lives in its own save)
+  ...MISSIONS_S2,
 ];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);

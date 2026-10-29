@@ -28,8 +28,18 @@ export function canSkip(def, { hintsUsed = 0, mistakes = 0, hintsOn = true } = {
   return mistakes >= SKIP_AFTER_MISTAKES || (hintsOn && hints > 0 && hintsUsed >= hints) || (!hintsOn && mistakes >= 1);
 }
 
-export function openPuzzle(app, def) {
+/**
+ * Cards that depend on what she has found (`if` on a staged puzzle's cards, Season 2) are kept only
+ * when she has them — the rules stay pure and see a plain config.
+ */
+export function resolveConfig(config, game) {
+  if (!Array.isArray(config?.stages)) return config;
+  return { ...config, stages: config.stages.map((st) => (Array.isArray(st.cards) ? { ...st, cards: st.cards.filter((c) => c.if === undefined || check(c.if, game)) } : st)) };
+}
+
+export function openPuzzle(app, input) {
   const { game, audio, settings } = app;
+  const def = { ...input, config: resolveConfig(input.config, game) };
   const rules = RULES[def.type];
   const view = VIEWS[def.type];
   if (!rules || !view) throw new Error(`Unknown puzzle type ${def.type}`);
@@ -162,6 +172,7 @@ export function openPuzzle(app, def) {
         },
         say,
         reduced: app.reduced,
+        game, // for names in card texts ({husky})
         /** Whether she has something (views list only the evidence she has found). */
         has: (cond) => check(cond, game),
       };

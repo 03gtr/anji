@@ -121,6 +121,9 @@ describe('who can start it, and when', () => {
     g.setFlag('notice:deep');
     expect(dueNotice(g, 'garden')?.id).toBe(PACKS_TEAM[0].id);
     g.setFlag(`notice:${PACKS_TEAM[0].id}`);
+    // …then Season 2's (it opens with the ending too), and after it nothing
+    expect(dueNotice(g, 'garden')?.id).toBe('s2');
+    g.setFlag('notice:s2');
     expect(dueNotice(g, 'garden')).toBeNull();
   });
 

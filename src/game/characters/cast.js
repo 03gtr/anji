@@ -11,6 +11,7 @@
  *  - The Gate, the phone and the narrator only have voices / icons.
  */
 import { lightingDefs, lit } from './lighting.js';
+import { CIRCLE, CIRCLE_KINDS, personPortrait } from './circle.js';
 
 let uid = 0;
 
@@ -348,6 +349,8 @@ export const CAST = {
   ryanpc: { name: 'ريان (نسخة اللعب)', portrait: () => ryanScreenPortrait() },
   sign: { name: 'لافتة', portrait: () => glyph('🪧', '#3b3d7e') },
   note: { name: 'ورقة', portrait: () => glyph('📜', '#3b3d7e') },
+  // Season 2's circle: original, clearly fictional designs (characters/circle.js)
+  ...Object.fromEntries(CIRCLE_KINDS.map((k) => [k, { name: CIRCLE[k].name, portrait: ({ expr } = {}) => personPortrait(k, expr) }])),
 };
 
 /**

@@ -532,12 +532,15 @@ export function openMap(app, { focus: asked, place } = {}) {
       if (place) targets.sort((a, b) => (b.id === place) - (a.id === place)); // a chosen place routes first
       const target = targets[0];
       const path = new Set(mapPath(hereWorld?.id, target?.id).map(([a, b]) => [a, b].sort().join('|')));
-      // Phase 04: two pages. The page shown is the target's, else where she is; the tabs appear
-      // once the deep garden has an open place (before that it does not exist for her)
-      const deepOpen = WORLDS.some((w) => regionOf(w) === 'deep' && open(w));
+      // Pages: the garden, the deep garden (Phase 04), the closed circle (Season 2). The page shown
+      // is the target's, else where she is; a page's tab appears once it has an open place (before
+      // that it does not exist for her)
+      const pages = REGIONS.filter((r) => r.id === 'garden' || WORLDS.some((w) => regionOf(w) === r.id && open(w)));
+      const deepOpen = pages.length > 1;
       let region = regionOf(target ?? hereWorld);
-      if (region === 'deep' && !deepOpen && !target) region = 'garden';
-      const unvisited = (w) => regionOf(w) === 'deep' && open(w) && !game.flag(`visited:${w.scene}`);
+      if (!pages.some((r) => r.id === region) && !target) region = 'garden';
+      // "not visited yet" is recorded for the later pages only (older saves never recorded visits)
+      const unvisited = (w) => regionOf(w) !== 'garden' && open(w) && !game.flag(`visited:${w.scene}`);
       const lines = (r) =>
         ROUTES.filter(([a, b]) => regionOf(worldById(a)) === r && regionOf(worldById(b)) === r)
           .map(([a, b]) => {
@@ -572,7 +575,7 @@ export function openMap(app, { focus: asked, place } = {}) {
         }
         ${
           deepOpen
-            ? `<div class="map-regions" role="group" aria-label="صفحات الخريطة">${REGIONS.map(
+            ? `<div class="map-regions" role="group" aria-label="صفحات الخريطة">${pages.map(
                 (r) => `<button type="button" data-region="${r.id}" aria-pressed="${r.id === region}">${esc(r.name)}${WORLDS.some((w) => regionOf(w) === r.id && unvisited(w)) ? '<span class="map-region-dot" aria-label="(بيها مكان جديد)"></span>' : ''}</button>`,
               ).join('')}</div>`
             : ''

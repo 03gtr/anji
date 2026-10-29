@@ -125,4 +125,24 @@ describe('the app and the two save documents', () => {
     expect(app.game.inJournal('s2-case-open')).toBe(true);
     expect(JSON.parse(storage2.getItem(S2_KEY)).owner).toBe(T0);
   });
+
+  it('Season 2 progress in the running app never writes the original save — not even its mission bookkeeping (REGRESSION)', async () => {
+    // a finished game whose newer original-game missions are open but not yet "seen" (as after an update)
+    const storage = memoryStorage({ [SAVE_KEY]: JSON.stringify({ ...finished(), v: SAVE_VERSION }) });
+    app = createGameApp(root, { storage, reducedMotion: true });
+    await wait(50);
+    const before = storage.getItem(SAVE_KEY);
+    app.game.setLocation('s2-archive', 300);
+    app.game.collect('s2.ev.e-register');
+    app.game.collect('s2.ev.e-copy');
+    app.game.setFlag('s2:01-compared'); // s2-01 completes (its reward: a Season 2 journal entry)
+    app.game.addJournal('s2-case-open');
+    await wait(50);
+    expect(app.game.flag('mission:s2-01')).toBe(true);
+    expect(storage.getItem(SAVE_KEY)).toBe(before);
+    // …while a change to the original game still syncs the original game's missions, as before
+    app.game.setLocation('final', 900);
+    await wait(50);
+    expect(storage.getItem(SAVE_KEY)).not.toBe(before);
+  });
 });

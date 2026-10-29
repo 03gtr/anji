@@ -204,9 +204,10 @@ export function createGameApp(root, opts = {}) {
       return;
     }
     await show((a) => createExplore(a, scene, { spawnX }), id);
-    // Phase 04: the deep garden's map marks places she has not been to yet (garden places
-    // keep no such mark: older saves never recorded visits, so they would all look new)
-    if (regionOf(worldOfScene(id)) === 'deep' && !game.flag(`visited:${id}`)) game.setFlag(`visited:${id}`);
+    // Phase 04 / Season 2: the later map pages mark places she has not been to yet (garden places
+    // keep no such mark: older saves never recorded visits, so they would all look new). A Season 2
+    // place's visit (`visited:s2-…`) is kept in Season 2's own save.
+    if (regionOf(worldOfScene(id)) !== 'garden' && worldOfScene(id) && !game.flag(`visited:${id}`)) game.setFlag(`visited:${id}`);
   }
 
   function toTitle({ message } = {}) {
@@ -230,8 +231,11 @@ export function createGameApp(root, opts = {}) {
     if (syncing || (c.kind === 'flag' && /^(ach|mission|mission-seen):/.test(String(c.id)))) return;
     if (c.kind === 'replace') return; // a new game / restored backup is not "progress"
     syncing = true;
+    // a change to Season 2's own save: only Season 2's missions, and no achievements (they live in
+    // the original campaign's save, which Season 2 never writes)
+    const season2 = c.doc === 's2';
     try {
-      const missions = syncMissions(game);
+      const missions = syncMissions(game, { season2 });
       if (missions.unlocked.length > 2) toasts.toast(`🧭 انفتحت ${missions.unlocked.length} مهمات جديدة بالدفتر`, 'hint');
       else for (const m of missions.unlocked) toasts.toast(`🧭 مهمة جديدة: ${m.title}`, 'hint');
       if (missions.unlocked.length) tips.show('missions');
@@ -246,7 +250,7 @@ export function createGameApp(root, opts = {}) {
         if (!guided) toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
         toasts.announce(m.changes);
       }
-      for (const a of syncAchievements(game)) {
+      for (const a of season2 ? [] : syncAchievements(game)) {
         toasts.toast(`🏆 إنجاز: ${a.name}`, 'unlock');
         toasts.announce(a.changes);
       }

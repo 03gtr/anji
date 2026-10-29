@@ -22,9 +22,33 @@ export const groupOf = (id) => String(id).split('.')[0];
 /** True for a Season 2 id: an `s2` segment at the start or after `:` / `.`, followed by `-` `:` `.` or the end. */
 export const isS2 = (id) => /(^|[:.])s2([-:.]|$)/.test(String(id));
 
+/**
+ * Season 2 ids never live in the main save. A main state that carries some (a test fixture, a
+ * developer link) hands them to Season 2's document — in memory; nothing is written here.
+ */
+function liftS2(main, s2) {
+  for (const [k, v] of Object.entries(main.flags ?? {})) {
+    if (!isS2(k)) continue;
+    if (!(k in s2.flags)) s2.flags[k] = v;
+    delete main.flags[k];
+  }
+  for (const list of ['collected', 'seen', 'journal']) {
+    const mine = (main[list] ?? []).filter(isS2);
+    if (!mine.length) continue;
+    main[list] = main[list].filter((x) => !isS2(x));
+    for (const x of mine) if (!s2[list].includes(x)) s2[list].push(x);
+  }
+  for (const [k, r] of Object.entries(main.records ?? {})) {
+    if (!isS2(k)) continue;
+    if (!(k in s2.records)) s2.records[k] = r;
+    delete main.records[k];
+  }
+}
+
 export function createGame({ saveManager, s2Store = null, bus, initial, s2Initial, now = () => Date.now() }) {
   let state = initial ?? defaultState(now());
   let s2 = s2Initial ?? s2DefaultState(state.createdAt, now());
+  liftS2(state, s2);
   let lastSaveError = null;
   let inS2 = false; // she is in a Season 2 place (play time and location go to its document)
   let mainDirty = false; // play time not written yet
@@ -43,7 +67,9 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
     }
     if (!res.ok && res.error !== lastSaveError) bus?.emit('save-error', res.error);
     lastSaveError = res.ok ? null : res.error;
-    bus?.emit('change', { kind, ...detail });
+    // `doc` says which save changed: after a Season 2 change the app syncs only Season 2's missions,
+    // so the original campaign's bookkeeping is never written because of Season 2
+    bus?.emit('change', { kind, doc: toS2 ? 's2' : 'main', ...detail });
     return res;
   }
   const docOf = (id) => (isS2(id) ? s2 : state);
