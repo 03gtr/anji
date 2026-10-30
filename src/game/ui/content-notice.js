@@ -43,8 +43,9 @@ export function showContentNotice(app, sceneId, host) {
   const tryShow = () => {
     const pack = dueNotice(game, sceneId);
     if (!pack) return true; // nothing to show: stop waiting
-    // wait for menus / cinematics to close and for toasts to finish (they share the top of the screen)
-    if (app.overlays.count || host.ownerDocument.querySelector('.toast')) return false;
+    // wait for menus / cinematics to close, for toasts to finish and for the next-objective card to be
+    // dismissed (they share the top of the screen; the card would cover the notice)
+    if (app.overlays.count || host.ownerDocument.querySelector('.toast, .guide-card')) return false;
     const card = h(`<aside class="pack-notice" role="status" aria-live="polite">
         <p>${esc(pack.notice)}</p>
         <div class="pack-notice-actions">

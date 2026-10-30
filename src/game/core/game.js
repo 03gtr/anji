@@ -50,8 +50,12 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
   let s2 = s2Initial ?? s2DefaultState(state.createdAt, now());
   liftS2(state, s2);
   let lastSaveError = null;
-  let inS2 = false; // she is in a Season 2 place (play time and location go to its document)
-  let mainDirty = false; // play time not written yet
+  // «كمّلي» goes to Season 2 when its document says she is there (`here`, written as she enters or leaves a
+  // Season 2 place) and it was written after the main save. A document without `here` (written before the
+  // marker existed) goes by the newer document alone.
+  const resumesInS2 = () => Boolean(s2.location.scene) && s2.here !== false && (s2.updatedAt ?? 0) > (state.updatedAt ?? 0);
+  let inS2 = resumesInS2(); // she is in a Season 2 place (play time and location go to its document)
+  let mainDirty = false; // a change not written yet (play time, or a write that failed)
   let s2Dirty = false;
 
   function commitDoc(toS2, kind, detail) {
@@ -59,11 +63,11 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
     if (toS2) {
       s2.updatedAt = now();
       res = s2Store?.save(s2) ?? { ok: true };
-      s2Dirty = false;
+      s2Dirty = !res.ok;
     } else {
       state.updatedAt = now();
       res = saveManager?.save(state) ?? { ok: true };
-      mainDirty = false;
+      mainDirty = !res.ok;
     }
     if (!res.ok && res.error !== lastSaveError) bus?.emit('save-error', res.error);
     lastSaveError = res.ok ? null : res.error;
@@ -223,15 +227,33 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
 
     setLocation(scene, x = null) {
       const loc = { scene, x: Number.isFinite(x) ? Math.round(x) : null };
+      const left = inS2 && !isS2(scene);
       inS2 = isS2(scene);
-      if (inS2) s2.location = loc;
-      else state.location = loc;
-      commitDoc(inS2, 'location', { scene });
+      const doc = inS2 ? s2 : state;
+      const moved = doc.location?.scene !== loc.scene || doc.location?.x !== loc.x;
+      doc.location = loc;
+      // the world re-saves her spot every few seconds and as she leaves: only a real move is written; an
+      // unchanged spot is still announced (missions and the objective follow it, as before) but not rewritten
+      const unchanged = (toS2) => bus?.emit('change', { kind: 'location', doc: toS2 ? 's2' : 'main', scene });
+      if (inS2) {
+        if (moved || s2.here !== true) {
+          s2.here = true;
+          commitDoc(true, 'location', { scene });
+        } else unchanged(true);
+        return;
+      }
+      // leaving Season 2 is written to its own document, never as an empty main-save write
+      if (left) {
+        s2.here = false;
+        commitDoc(true, 'location', { scene });
+      }
+      if (moved) commitDoc(false, 'location', { scene });
+      else unchanged(false);
     },
     /** Where she is now (the Season 2 place she is in, or her place in the original campaign). */
     location: () => (inS2 ? s2.location : state.location),
-    /** Where «كمّلي» resumes: the document written last that has a place. */
-    resumeLocation: () => (s2.location.scene && (s2.updatedAt ?? 0) > (state.updatedAt ?? 0) ? s2.location : state.location),
+    /** Where «كمّلي» resumes: her Season 2 place while she is there (see `resumesInS2`), else the original one. */
+    resumeLocation: () => (resumesInS2() ? s2.location : state.location),
     addPlayTime(ms) {
       if (!(ms > 0)) return;
       // saved with the next change; not worth a write of its own
@@ -262,11 +284,11 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
       }
       return commitDoc(false, 'replace', {});
     },
-    /** Write what is not written yet (the tab is hiding). Outside Season 2 the main save, as before. */
+    /** Write what is not written yet (the tab is hiding). A save with nothing new is not rewritten. */
     save() {
       let res = { ok: true };
       if (s2Dirty) res = commitDoc(true, 'save', {});
-      if (mainDirty || !inS2) res = commitDoc(false, 'save', {});
+      if (mainDirty) res = commitDoc(false, 'save', {});
       return res;
     },
   };
