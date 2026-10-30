@@ -32,6 +32,8 @@ import { resolveConfig } from '../../src/game/puzzles/host.js';
 import { possibleReactions, reactionKeys, CATEGORIES, REPLIES, REACTIONS, reaction } from '../../src/game/progression/social.js';
 import { dueNotice } from '../../src/game/ui/content-notice.js';
 import { journalEntries } from '../../src/game/progression/journal-index.js';
+import { ACTS, currentObjective } from '../../src/game/data/chapters.js';
+import { MISSIONS } from '../../src/game/data/missions.js';
 import { dogsIn } from '../../src/game/data/companions.js';
 import { WORLDS } from '../../src/game/data/worlds.js';
 import { memoryStorage } from '../helpers.js';
@@ -508,11 +510,26 @@ describe('around the season', () => {
     expect(g.state.flags['notice:s2']).toBeUndefined();
   });
 
-  it('in a Season 2 place the objective is Season 2’s (not another pack’s)', () => {
-    const t = setup();
+  it('the objective follows the pack of the place she is in — journal and HUD alike (REGRESSION: the deep garden showed the archives’ step)', () => {
+    // a finished game (every act objective done) with Story Pack 02's first chapter, the deep garden and Season 2 all open
+    const done = ACTS.flatMap((a) => a.objectives.flatMap((o) => atoms(o.done)));
+    const flags = Object.fromEntries(
+      [...done, 'flag:game-complete', 'flag:dg-box', 'flag:sp1-husky-met', 'flag:husky-name'].filter((a) => a.startsWith('flag:')).map((a) => [a.slice(5), true]),
+    );
+    // objectives met by a record (a race, a minigame) — a real finished save has them
+    const records = Object.fromEntries(
+      done
+        .filter((a) => /^(record|medal):/.test(a))
+        .map((a) => [a.startsWith('record:') ? a.slice(7) : a.slice(6, a.lastIndexOf(':')), { plays: 1, best: null, medal: 'gold', completed: true }]),
+    );
+    const t = setup(memoryStorage(), { ...defaultState(T0), flags, records });
+    expect(currentObjective(t.game).act).toBeNull(); // every act objective is done: the post-game rule applies
     t.game.setLocation('s2-archive', 200);
-    const cur = journalEntries(t.game).find((e) => e.isCurrent);
-    expect(cur?.id).toBe('s2-01');
+    expect(journalEntries(t.game).find((e) => e.isCurrent)?.id).toBe('s2-01');
+    expect(currentObjective(t.game).text).toBe(MISSIONS_S2[0].steps[0].text);
+    t.game.setLocation('clockgarden', 200); // a deep garden place
+    expect(MISSIONS.find((m) => m.id === journalEntries(t.game).find((e) => e.isCurrent)?.id)?.pack).toBe('deep');
+    expect(currentObjective(t.game).title).toBe(MISSIONS.find((m) => m.pack === 'deep' && m.kind === 'story').title);
   });
 
   it('dogs: Snooki stands with Ryan where Ryan is, and is away where he is not; her husky walks with her', () => {

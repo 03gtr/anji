@@ -104,14 +104,16 @@ export const MILESTONES = [
 ];
 export const milestoneOf = (m) => m.ms ?? MILESTONES.find((x) => x.acts.includes(m.act)).id;
 
-// Optional content: never yields evidence a main mission or hypothesis requires.
+// Optional content: never yields evidence a main mission or hypothesis requires. The six activities
+// first planned for M1 moved to M2 when M1 was approved as missions s2-01 … s2-11 (owner,
+// 2026-10-29): they are not in the M1 release candidate.
 export const OPTIONAL = [
-  { id: 'o-lanterns', ms: 'M1', requires: ['s2-02'], yields: [], min: [15, 25], what: 'lantern workshop (reuses the gift workshop)' },
-  { id: 'o-training', ms: 'M1', requires: ['s2-03'], yields: [], min: [20, 30], what: 'dog training: husky scouting course, Snooky stay drill' },
-  { id: 'o-prank', ms: 'M1', requires: ['s2-03'], yields: [], min: [15, 25], what: 'prank exchange over Ryan’s formal notebook' },
-  { id: 'o-duel', ms: 'M1', requires: ['s2-04'], yields: [], min: [20, 40], what: 'puzzle duel Anji vs Ryan (replayable)' },
-  { id: 'o-memories', ms: 'M1', requires: ['s2-01'], yields: [], min: [20, 30], what: 'memory archive (canon memories marked apart from invented ones)' },
-  { id: 'o-outing', ms: 'M1', requires: ['s2-11'], yields: [], min: [25, 40], what: 'Anji picks an outing; Ryan responds' },
+  { id: 'o-lanterns', ms: 'M2', requires: ['s2-02'], yields: [], min: [15, 25], what: 'lantern workshop (reuses the gift workshop)' },
+  { id: 'o-training', ms: 'M2', requires: ['s2-03'], yields: [], min: [20, 30], what: 'dog training: husky scouting course, Snooky stay drill' },
+  { id: 'o-prank', ms: 'M2', requires: ['s2-03'], yields: [], min: [15, 25], what: 'prank exchange over Ryan’s formal notebook' },
+  { id: 'o-duel', ms: 'M2', requires: ['s2-04'], yields: [], min: [20, 40], what: 'puzzle duel Anji vs Ryan (replayable)' },
+  { id: 'o-memories', ms: 'M2', requires: ['s2-01'], yields: [], min: [20, 30], what: 'memory archive (canon memories marked apart from invented ones)' },
+  { id: 'o-outing', ms: 'M2', requires: ['s2-11'], yields: [], min: [25, 40], what: 'Anji picks an outing; Ryan responds' },
   { id: 'o-apology', ms: 'M2', requires: ['s2-15'], when: 'decision accuse = early', yields: [], min: [10, 15], what: 'repair after an early accusation' },
   { id: 'o-challenge', ms: 'M3', requires: ['s2-30'], yields: [], min: [45, 90], what: 'post-campaign cipher of the register' },
 ];
