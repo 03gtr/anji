@@ -139,8 +139,24 @@ async function tapObject(t, x) {
       .finally(() => t.page.keyboard.up(key));
     await t.page.waitForTimeout(250);
   }
-  // …then a real tap (touch on a phone) on it
+  // …once it is on screen and the camera has stopped gliding, as a player sees it: the camera eases after
+  // her (and after a scene opens on a phone it starts ~90 units off), so a point measured too early can be
+  // off screen or move before the tap lands (REGRESSION: the board tap after a reload hit nothing)
+  await t.page.evaluate(() => { window.__tapAt = null; });
+  await t.page.waitForFunction(
+    (ox) => {
+      const w = window.__game.screen.world;
+      const q = w.toScreen(ox, w.player.y - 50);
+      const last = window.__tapAt;
+      window.__tapAt = q;
+      return q.x >= 0 && q.x <= innerWidth && q.y >= 0 && q.y <= innerHeight && last && Math.abs(q.x - last.x) < 0.5 && Math.abs(q.y - last.y) < 0.5;
+    },
+    x,
+    { timeout: 10000, polling: 100 },
+  );
+  // …then a real tap (touch on a phone) on it — on the world itself, nothing covering it
   const p = await t.page.evaluate((ox) => { const w = window.__game.screen.world; return w.toScreen(ox, w.player.y - 50); }, x);
+  expect(await t.page.evaluate(({ x: px, y: py }) => document.elementFromPoint(px, py)?.tagName, p), 'the world is what is under the tap').toBe('CANVAS');
   if (t.touch) await t.page.touchscreen.tap(p.x, p.y);
   else await t.page.mouse.click(p.x, p.y);
   await t.page.waitForFunction(() => document.querySelector('.overlay'), null, { timeout: 30000 });
@@ -187,6 +203,8 @@ for (const [name, engine] of Object.entries(engines)) {
         await tapObject(t, 720); // the board
         await read(t).catch(() => {}); // the intro line, once
         await t.page.waitForSelector('.panel.puzzle-sort .sort-card');
+        // measured once the panel has settled: its pop-in (scale 0.97 → 1, 0.28 s) would read 43 px for a 44 px card
+        await t.page.evaluate(() => { const panel = document.querySelector('.panel.puzzle-sort'); return Promise.all((panel.closest('.overlay') ?? panel).getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)); });
         // every control: at least 44 px tall, inside the screen once scrolled to, and on top
         const boxes = await t.page.evaluate(() =>
           [...document.querySelectorAll('.panel.puzzle-sort .sort-card, .panel.puzzle-sort .sort-bin-head, .panel.puzzle-sort [data-submit]')].map((el) => {
