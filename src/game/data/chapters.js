@@ -7,6 +7,7 @@ import { check } from '../core/conditions.js';
 import { MISSIONS } from './missions.js';
 import { missionState } from '../progression/missions.js';
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
+import { WORLDS } from './worlds.js';
 
 export const ACTS = [
   {
@@ -131,8 +132,12 @@ export function currentObjective(game) {
     }
     if (next) return { act: act.act, title: act.title, text: next.text };
   }
-  // after the ending: the next step of an open story-pack chapter, if any
-  for (const m of MISSIONS.filter((x) => x.kind === 'story')) {
+  // after the ending: the next step of an open story-pack chapter — the one of the place she is in
+  // first (the deep garden used to show the archives' step; Season 2 would have shown another pack's)
+  const here = (typeof game.location === 'function' ? game.location() : game.state?.location)?.scene;
+  const herePack = here ? WORLDS.find((w) => w.scene === here)?.pack : null;
+  const story = MISSIONS.filter((x) => x.kind === 'story');
+  for (const m of herePack ? [...story.filter((x) => x.pack === herePack), ...story.filter((x) => x.pack !== herePack)] : story) {
     const st = missionState(m, game);
     if (st.status === 'active') return { act: null, title: m.title, text: st.next.text };
   }

@@ -187,6 +187,7 @@ describe('missions: stable ids, prerequisites, one-time rewards', () => {
 describe('the new-content notice', () => {
   it('appears only when the pack is really playable, and only until acknowledged', () => {
     const g = createGame({ saveManager: null });
+    g.setFlag('notice:s2'); // Season 2's notice (it also opens with the ending) is tested in s2-m1.test.js
     expect(dueNotice(g, 'garden')).toBeNull(); // story not finished
     g.setFlag('game-complete');
     expect(dueNotice(g, 'garden')?.id).toBe('sp1');
@@ -196,6 +197,7 @@ describe('the new-content notice', () => {
   });
   it('is not shown if the pack content failed to load', () => {
     const g = createGame({ saveManager: null });
+    g.setFlag('notice:s2'); // (Season 2's own notice: tested in s2-m1.test.js)
     g.setFlag('game-complete');
     const saved = SCENES.roads;
     delete SCENES.roads;
@@ -357,7 +359,9 @@ describe('Story Pack 01 in the app', () => {
   it('the notice offers the new places once; «بعدين» is remembered after a reload', { timeout: 30000 }, async () => {
     const save = finishedSave();
     save.flags['final-entered'] = true; // skip the finale's own intro line
-    const storage = memoryStorage({ [SAVE_KEY]: JSON.stringify(save) });
+    // Season 2's own notice (it opens with the ending too) was already seen — kept in its own save
+    const s2Seen = JSON.stringify({ v: 1, owner: save.createdAt, rev: 1, flags: { 'notice:s2': true } });
+    const storage = memoryStorage({ [SAVE_KEY]: JSON.stringify(save), 'snooki-game:s2': s2Seen });
     app = createGameApp(root, { storage, reducedMotion: true });
     app.settings.set({ tips: false });
     await app.go('final', { spawnX: 300 });

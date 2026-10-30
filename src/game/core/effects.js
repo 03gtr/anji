@@ -43,6 +43,23 @@ export function applyEffects(effects, game) {
       case 'seen':
         game.markSeen(id);
         break;
+      // Season 2 (its own document, core/game.js):
+      case 'ev': // 'ev:e-wax' — evidence found (once)
+        if (game.collect(`s2.ev.${id}`)) changes.push({ kind: 'evidence', id });
+        break;
+      case 'dec': {
+        // 'dec:lead=anji' — a decision, stored once as a named value
+        const cut = id.indexOf('=');
+        game.setFlag(`s2:dec:${id.slice(0, cut)}`, id.slice(cut + 1));
+        break;
+      }
+      case 'num': {
+        // 'num:s2:quiz+1' — add to a number kept in a Season 2 flag
+        const m = id.match(/^(s2:[\w:-]+?)([+-]\d+)$/);
+        if (!m) throw new Error(`Bad num effect: ${fx}`);
+        game.setFlag(m[1], Number(game.flag(m[1]) ?? 0) + Number(m[2]));
+        break;
+      }
       default:
         throw new Error(`Unknown effect: ${fx}`);
     }
@@ -50,7 +67,12 @@ export function applyEffects(effects, game) {
   return changes;
 }
 
-const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen']);
+const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num']);
 export function isValidEffect(fx) {
-  return typeof fx === 'string' && KINDS.has(fx.replace(/^[!-]/, '').split(':')[0]) && fx.includes(':');
+  if (typeof fx !== 'string' || !fx.includes(':')) return false;
+  const kind = fx.replace(/^[!-]/, '').split(':')[0];
+  if (!KINDS.has(kind)) return false;
+  if (kind === 'dec') return /^dec:[\w-]+=[\w-]+$/.test(fx);
+  if (kind === 'num') return /^num:s2:[\w:-]+?[+-]\d+$/.test(fx);
+  return true;
 }

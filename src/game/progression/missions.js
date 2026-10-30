@@ -29,11 +29,13 @@ export function missionState(m, game) {
 /**
  * Record newly completed missions (apply rewards once) and report newly
  * unlocked ones, so the UI can announce both.
+ * `{ season2 }`: only Season 2's missions (after a change to Season 2's own save, so that
+ * nothing of the original campaign is written because of Season 2).
  */
-export function syncMissions(game) {
+export function syncMissions(game, { season2 = false } = {}) {
   const completed = [];
   const unlocked = [];
-  for (const m of MISSIONS) {
+  for (const m of season2 ? MISSIONS.filter((x) => x.pack === 's2') : MISSIONS) {
     const done = `mission:${m.id}`;
     if (game.flag(done)) continue;
     const st = missionState(m, game);

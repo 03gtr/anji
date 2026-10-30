@@ -554,7 +554,84 @@ export function logicgridSolutions(config, clues = config.clues) {
   return found;
 }
 
-export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series, machine, contradict, logicgrid };
+/* ── sort (Season 2): cards into columns, stage by stage — the case board and «دليل لو كلام» ──
+ * config: { stages: [
+ *   { kind: 'sort', prompt, bins: [{ id, label, icon? }], cards: [{ id, label, note?, accepts: [binId…] }] }
+ *   { kind: 'pick', prompt, options: [{ id, label, why? }], answer: id }
+ * ], messages? }
+ * A card's `accepts` lists EVERY column it fits (a claim may fit two theories): any consistent
+ * layout passes, never one developer layout. A wrong check keeps her layout and says only how many
+ * cards fit; a wrong pick says the option's `why` (what is true about it), never the answer. */
+export const sort = {
+  init: () => ({ stage: 0, placed: {}, sel: null, choice: null, mistakes: 0 }),
+  pick(config, state, cardId) {
+    const st = config.stages[state.stage];
+    if (st?.kind !== 'sort' || !st.cards.some((c) => c.id === cardId)) return { state, outcome: 'noop' };
+    return { state: { ...state, sel: state.sel === cardId ? null : cardId }, outcome: 'progress' };
+  },
+  place(config, state, binId) {
+    const st = config.stages[state.stage];
+    if (st?.kind !== 'sort' || !state.sel || !st.bins.some((b) => b.id === binId)) return { state, outcome: 'noop' };
+    return { state: { ...state, placed: { ...state.placed, [state.sel]: binId }, sel: null }, outcome: 'progress' };
+  },
+  unplace(config, state, cardId) {
+    if (!(cardId in state.placed)) return { state, outcome: 'noop' };
+    const placed = { ...state.placed };
+    delete placed[cardId];
+    return { state: { ...state, placed }, outcome: 'progress' };
+  },
+  choose(config, state, optionId) {
+    const st = config.stages[state.stage];
+    if (st?.kind !== 'pick' || !st.options.some((o) => o.id === optionId)) return { state, outcome: 'noop' };
+    return { state: { ...state, choice: optionId }, outcome: 'progress' };
+  },
+  submit(config, state) {
+    const st = config.stages[state.stage];
+    if (!st) return { state, outcome: 'noop' };
+    let ok;
+    let message;
+    if (st.kind === 'sort') {
+      const left = st.cards.filter((c) => !state.placed[c.id]).length;
+      if (left) return { state, outcome: 'noop', message: config.messages?.left ?? 'بعد أكو بطاقات ما حطيتيها بمكان.' };
+      const right = st.cards.filter((c) => c.accepts.includes(state.placed[c.id])).length;
+      ok = right === st.cards.length;
+      message = ok ? null : `${right} من ${st.cards.length} بطاقات بمكان يركب. اللي حطيتيه باقي.`;
+    } else {
+      if (!state.choice) return { state, outcome: 'noop' };
+      ok = state.choice === st.answer;
+      message = ok ? null : st.options.find((o) => o.id === state.choice)?.why ?? config.messages?.wrong ?? 'مو هذا. فكري بشنو عدچ دليل عليه.';
+    }
+    if (!ok) return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong', message };
+    const next = state.stage + 1;
+    if (next >= config.stages.length) return { state, outcome: 'solved' };
+    return { state: { ...state, stage: next, placed: {}, sel: null, choice: null }, outcome: 'progress', message: st.done ? `✓ ${st.done}` : undefined };
+  },
+};
+
+/* ── rubbing (Season 2): a pencil over a blank card brings out what was pressed into it ──
+ * config: { regions: [{ id, text }], question, options: [{ id, label, why? }], answer }
+ * Rub every region (any order; each shows its piece of the imprint as text, so nothing is colour-
+ * only), then say what can really be read. Guessing past the evidence is a wrong answer with a reason. */
+export const rubbing = {
+  init: () => ({ rubbed: [], choice: null, mistakes: 0 }),
+  rub(config, state, regionId) {
+    if (!config.regions.some((r) => r.id === regionId) || state.rubbed.includes(regionId)) return { state, outcome: 'noop' };
+    return { state: { ...state, rubbed: [...state.rubbed, regionId] }, outcome: 'progress' };
+  },
+  choose(config, state, optionId) {
+    if (state.rubbed.length < config.regions.length || !config.options.some((o) => o.id === optionId)) return { state, outcome: 'noop' };
+    return { state: { ...state, choice: optionId }, outcome: 'progress' };
+  },
+  submit(config, state) {
+    if (state.rubbed.length < config.regions.length) return { state, outcome: 'noop', message: 'بعد أكو مكان بالبطاقة ما مرّيتي عليه.' };
+    if (!state.choice) return { state, outcome: 'noop' };
+    if (state.choice === config.answer) return { state, outcome: 'solved' };
+    const why = config.options.find((o) => o.id === state.choice)?.why;
+    return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong', message: why ?? 'هذا أكثر من اللي ينقرى.' };
+  },
+};
+
+export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series, machine, contradict, logicgrid, sort, rubbing };
 
 /** Next hint to show (hints are revealed one by one, never skipped). */
 export function nextHint(hints, used) {
@@ -608,6 +685,17 @@ export function programSolution(stage, commands = ['F', 'L', 'R']) {
 }
 
 const SOLVE = {
+  sort: (c, s) => {
+    const moves = [];
+    for (let k = s.stage; k < c.stages.length; k++) {
+      const st = c.stages[k];
+      if (st.kind === 'sort') for (const card of st.cards) moves.push(['pick', card.id], ['place', card.accepts[0]]);
+      else moves.push(['choose', st.answer]);
+      moves.push(['submit']);
+    }
+    return moves;
+  },
+  rubbing: (c, s) => [...c.regions.filter((r) => !s.rubbed.includes(r.id)).map((r) => ['rub', r.id]), ['choose', c.answer], ['submit']],
   sequence: (c, s) => c.answer.slice(s.pressed.length).map((id) => ['press', id]),
   choice: (c) => [['pick', c.answer]],
   lock: (c, s) => {

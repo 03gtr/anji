@@ -140,6 +140,14 @@ function missionEntries(game) {
 
 /** The entry the story currently points at (same rule as the HUD objective). */
 function currentId(game, entries) {
+  // in a pack's own place (the deep garden, Season 2…), its open main mission is the objective —
+  // not the first unfinished one of some other pack (that pointed the deep garden at the archives)
+  const here = (typeof game.location === 'function' ? game.location() : game.state?.location)?.scene;
+  const herePack = here ? WORLDS.find((w) => w.scene === here)?.pack : null;
+  if (herePack) {
+    const m = entries.find((e) => e.pack === herePack && e.category === 'main' && (e.status === 'active' || e.status === 'available'));
+    if (m) return m.id;
+  }
   for (const a of ACTS) {
     const next = a.objectives.find((o) => !safe(o.done, game));
     if (!next) continue;

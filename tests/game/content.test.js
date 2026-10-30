@@ -24,7 +24,9 @@ import { MOVE } from '../../src/game/world/physics.js';
 import { GROUND } from '../../src/game/world/props.js';
 
 const EXPR = { anji: ANJI_EXPRESSIONS, snooki: SNOOKI_EXPRESSIONS, needle: ['cheerful', 'determined', 'sneaky'], ryan: ['back', 'turn', 'smile'], munther: MUNTHER_EXPRESSIONS };
-const COND_KINDS = new Set(['flag', 'item', 'got', 'seen', 'record', 'medal', 'count']);
+// Season 2 adds `ev:` (evidence), `dec:` (a named decision) and `num:` (a number); each is checked
+// against Season 2's registries in tests/game/s2-m1.test.js
+const COND_KINDS = new Set(['flag', 'item', 'got', 'seen', 'record', 'medal', 'count', 'ev', 'dec', 'num']);
 
 /** Every action (recursively) in a scene. */
 function sceneActions(scene) {

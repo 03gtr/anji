@@ -13,9 +13,10 @@ import { PACKS as PACKS_SP1 } from '../data/missions-sp1.js';
 import { PACKS_SP2 } from '../data/missions-sp2.js';
 import { PACKS_DEEP } from '../data/missions-deep.js';
 import { PACKS_TEAM } from '../data/missions-team.js';
+import { PACKS_S2 } from '../data/missions-s2.js';
 
 // one at a time, in this order (the deep garden's and Team Us's come after Story Pack 01's; all after the ending)
-const PACKS = [...PACKS_SP2, ...PACKS_SP1, ...PACKS_DEEP, ...PACKS_TEAM];
+const PACKS = [...PACKS_SP2, ...PACKS_SP1, ...PACKS_DEEP, ...PACKS_TEAM, ...PACKS_S2];
 import { h, esc } from './dom.js';
 
 export const noticeFlag = (pack) => `notice:${pack.id}`;
@@ -42,8 +43,9 @@ export function showContentNotice(app, sceneId, host) {
   const tryShow = () => {
     const pack = dueNotice(game, sceneId);
     if (!pack) return true; // nothing to show: stop waiting
-    // wait for menus / cinematics to close and for toasts to finish (they share the top of the screen)
-    if (app.overlays.count || host.ownerDocument.querySelector('.toast')) return false;
+    // wait for menus / cinematics to close, for toasts to finish and for the next-objective card to be
+    // dismissed (they share the top of the screen; the card would cover the notice)
+    if (app.overlays.count || host.ownerDocument.querySelector('.toast, .guide-card')) return false;
     const card = h(`<aside class="pack-notice" role="status" aria-live="polite">
         <p>${esc(pack.notice)}</p>
         <div class="pack-notice-actions">

@@ -10,6 +10,7 @@ import { symbol } from '../ui/symbols.js';
 import { esc, tx } from '../ui/dom.js';
 import { num } from '../ui/format.js';
 import { solve, flipCandles, programSolution, programCommands, machineDials, machineSolution } from './rules.js';
+import { fillNames } from '../core/names.js';
 
 function rerender(body, html, wire) {
   const focused = document.activeElement?.closest?.('[data-k]')?.dataset.k;
@@ -575,6 +576,110 @@ export const VIEWS = {
           body.querySelectorAll('[data-evidence]').forEach((b) => b.addEventListener('click', () => api.act('pickEvidence', b.dataset.evidence)));
           body.querySelector('[data-submit]').addEventListener('click', () => {
             if (api.act('submit') === 'noop') api.say('اختاري جملة ودليل — أو «كلها تركب».', 'bad');
+          });
+        },
+      );
+    },
+  },
+
+  // Season 2: cards into columns (the case board, «دليل لو كلام»), or one answer — tap a card,
+  // then a column (no drag needed); a placed card taps back off. Columns wrap on narrow phones.
+  sort: {
+    solution: true,
+    render(body, api) {
+      const { config } = api.def;
+      const s = api.state;
+      const st = config.stages[s.stage];
+      const say = (text) => esc(fillNames(tx(text), api.game));
+      const many = config.stages.length > 1 ? `<div class="pg-stage">${num(s.stage + 1)} من ${num(config.stages.length)}</div>` : '';
+      if (st.kind === 'pick') {
+        const sol = api.showSolution ? st.answer : null;
+        rerender(
+          body,
+          `${many}<p class="choice-q">${say(st.prompt)}</p>
+           <div class="sort-pick">${st.options
+             .map((o) => `<button type="button" class="ct-claim ${s.choice === o.id ? 'is-sel' : ''} ${sol === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${s.choice === o.id}">${say(o.label)}</button>`)
+             .join('')}</div>
+           <button type="button" class="btn btn-primary" data-k="submit" data-submit>${esc(tx(config.labels?.submit || 'هذا جوابي'))}</button>`,
+          () => {
+            body.querySelectorAll('[data-choose]').forEach((b) => b.addEventListener('click', () => api.act('choose', b.dataset.choose)));
+            body.querySelector('[data-submit]').addEventListener('click', () => {
+              if (api.act('submit') === 'noop') api.say('اختاري جواب.', 'bad');
+            });
+          },
+        );
+        return;
+      }
+      const sol = api.showSolution ? Object.fromEntries(st.cards.map((c) => [c.id, c.accepts[0]])) : null;
+      const card = (c) =>
+        `<button type="button" class="sort-card ${s.sel === c.id ? 'is-sel' : ''}" data-k="c${c.id}" data-card="${c.id}" aria-pressed="${s.sel === c.id}">
+          ${c.icon ? symbol(c.icon) : ''}<b>${say(c.label)}</b>${c.note ? `<small>${say(c.note)}</small>` : ''}
+          ${sol ? `<small class="is-solution">← ${say(st.bins.find((b) => b.id === sol[c.id]).label)}</small>` : ''}</button>`;
+      const loose = st.cards.filter((c) => !s.placed[c.id]);
+      rerender(
+        body,
+        `${many}<p class="choice-q">${say(st.prompt)}</p>
+         <div class="sort-tray" aria-label="البطاقات">${loose.map(card).join('') || '<p class="muted small">كل البطاقات بأماكنها. تحققي، لو المسي بطاقة حتى ترجعيها.</p>'}</div>
+         <div class="sort-bins" style="--bins:${st.bins.length}">${st.bins
+           .map(
+             (b) => `<section class="sort-bin">
+               <button type="button" class="sort-bin-head" data-k="b${b.id}" data-bin="${b.id}">${b.icon ? symbol(b.icon) : ''}<span>${say(b.label)}</span></button>
+               ${st.cards
+                 .filter((c) => s.placed[c.id] === b.id)
+                 .map((c) => `<button type="button" class="sort-placed" data-k="p${c.id}" data-unplace="${c.id}" aria-label="${say(c.label)} — رجّعيها">${say(c.label)}</button>`)
+                 .join('')}
+             </section>`,
+           )
+           .join('')}</div>
+         <p class="muted small">المسي بطاقة، بعدين المسي العمود. البطاقة اللي بعمود، المسيها حتى ترجع.</p>
+         <button type="button" class="btn btn-primary" data-k="submit" data-submit>${esc(tx(config.labels?.check || 'تحققي ✔'))}</button>`,
+        () => {
+          body.querySelectorAll('[data-card]').forEach((b) => b.addEventListener('click', () => api.act('pick', b.dataset.card)));
+          body.querySelectorAll('[data-bin]').forEach((b) =>
+            b.addEventListener('click', () => {
+              if (api.act('place', b.dataset.bin) === 'noop') api.say('المسي بطاقة أول، بعدين العمود.', 'bad');
+            }),
+          );
+          body.querySelectorAll('[data-unplace]').forEach((b) => b.addEventListener('click', () => api.act('unplace', b.dataset.unplace)));
+          body.querySelector('[data-submit]').addEventListener('click', () => {
+            if (api.act('submit') === 'noop') api.say('بعد أكو بطاقات ما حطيتيها بمكان.', 'bad');
+          });
+        },
+      );
+    },
+  },
+
+  // Season 2: rub the pencil over each part of a blank card; the pressed-in words come out as text
+  rubbing: {
+    solution: true,
+    render(body, api) {
+      const { config } = api.def;
+      const s = api.state;
+      const say = (text) => esc(fillNames(tx(text), api.game));
+      const all = s.rubbed.length >= config.regions.length;
+      const next = api.showSolution ? solve('rubbing', config, s)?.[0] : null;
+      rerender(
+        body,
+        `<div class="rub-card" role="group" aria-label="البطاقة الفارغة">${config.regions
+          .map((r) => {
+            const on = s.rubbed.includes(r.id);
+            return `<button type="button" class="rub-cell ${on ? 'is-rubbed' : ''} ${next?.[0] === 'rub' && next[1] === r.id ? 'is-solution' : ''}" data-k="r${r.id}" data-rub="${r.id}" aria-pressed="${on}" aria-label="${on ? say(r.text) : 'مكان ما انمر عليه بعد'}">${on ? `<span>${say(r.text)}</span>` : '✏️'}</button>`;
+          })
+          .join('')}</div>
+         ${
+           all
+             ? `<p class="choice-q">${say(config.question)}</p>
+                <div class="sort-pick">${config.options
+                  .map((o) => `<button type="button" class="ct-claim ${s.choice === o.id ? 'is-sel' : ''} ${api.showSolution && config.answer === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${s.choice === o.id}">${say(o.label)}</button>`)
+                  .join('')}</div>
+                <button type="button" class="btn btn-primary" data-k="submit" data-submit>هذا اللي ينقرى</button>`
+             : `<p class="muted small">مرّي القلم على كل مكان بالبطاقة (المسيه): ${num(s.rubbed.length)} من ${num(config.regions.length)}.</p>`
+         }`,
+        () => {
+          body.querySelectorAll('[data-rub]').forEach((b) => b.addEventListener('click', () => api.act('rub', b.dataset.rub)));
+          body.querySelectorAll('[data-choose]').forEach((b) => b.addEventListener('click', () => api.act('choose', b.dataset.choose)));
+          body.querySelector('[data-submit]')?.addEventListener('click', () => {
+            if (api.act('submit') === 'noop') api.say('اختاري شنو ينقرى.', 'bad');
           });
         },
       );

@@ -10,6 +10,7 @@ import { PUZZLES_SP1 } from './puzzles-sp1.js';
 import { PUZZLES_SP2 } from './puzzles-sp2.js';
 import { PUZZLES_DEEP } from './puzzles-deep.js';
 import { PUZZLES_TEAM } from './puzzles-team.js';
+import { PUZZLES_S2 } from './puzzles-s2.js';
 
 export const PUZZLES = {
   // Clue: the fountain engraving "from darkness to full light".
@@ -418,4 +419,6 @@ export const PUZZLES = {
   // Phase 04 «الحديقة العميقة» (Act VII, before the hidden garden)
   ...PUZZLES_DEEP,
   ...PUZZLES_TEAM,
+  // Season 2 «ملف الدائرة المغلقة», M1
+  ...PUZZLES_S2,
 };

@@ -14,6 +14,7 @@ import { frameCamera, followTop, MIN_TOP } from './camera.js';
 import { stepBody, followVelocity, approach } from './physics.js';
 import { frameTable } from '../characters/sprites.js';
 import { spriteFrames } from './sprite-cache.js';
+import { reaction as socialReaction } from '../progression/social.js';
 import { check } from '../core/conditions.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
@@ -50,6 +51,12 @@ export const KIND = {
   ryan: { h: 130, w: 40, feet: 195 / 200, fps: 8 },
   shadow: { h: 130, w: 40, feet: 195 / 200, fps: 8 }, // Ryan's silhouette: same build
   needle: { h: 78, w: 40, feet: 166 / 170, fps: 8 },
+  // Season 2's circle (characters/circle.js): ordinary adult builds, close to Anji's
+  rabi: { h: 116, w: 36, feet: 193 / 200, fps: 8 },
+  lama: { h: 110, w: 34, feet: 193 / 200, fps: 8 },
+  sabri: { h: 116, w: 36, feet: 193 / 200, fps: 8 },
+  jojo: { h: 112, w: 36, feet: 193 / 200, fps: 7 },
+  sister: { h: 110, w: 34, feet: 193 / 200, fps: 8 },
 };
 
 const REACH = 34; // how close (beyond an object's half width) counts as "next to it"
@@ -271,6 +278,14 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       return runActions(check(act.if, game) ? act.then : act.else || []);
     }
     if (act.say) return app.ui.dialogue(act.say);
+    // Season 2: Ryan's reaction when someone talks to Anji — contextual, sometimes none (progression/social.js)
+    if (act.social) {
+      // only when he is actually here — never a line from someone not on screen
+      const ryan = actors.get('ryan');
+      if (!ryan || ryan.visible === false) return;
+      const { say } = socialReaction(game, act.social);
+      return say ? app.ui.dialogue(say) : undefined;
+    }
     if (act.fx) {
       const changes = applyEffects(act.fx, game);
       if (!act.quiet) app.ui.announce?.(changes); // quiet: after a moment that should stay calm

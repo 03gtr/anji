@@ -6,6 +6,7 @@
 import { anjiSprite } from './anji.js';
 import { snookiSprite } from './snooki.js';
 import { ryanSprite, ryanSide, needleSvg } from './cast.js';
+import { personSprite, CIRCLE_KINDS } from './circle.js';
 
 const svgUrl = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -21,7 +22,7 @@ export function withSize(svg, height) {
 }
 
 /** Rasterisation height (px) per character kind. */
-export const RASTER_HEIGHT = { anji: 300, snooki: 170, husky: 160, ryan: 300, shadow: 300, needle: 220 };
+export const RASTER_HEIGHT = { anji: 300, snooki: 170, husky: 160, ryan: 300, shadow: 300, needle: 220, ...Object.fromEntries(CIRCLE_KINDS.map((k) => [k, 300])) };
 
 /** Story Pack 01: the white husky — Snooki's build, icy-blue eyes, rose collar, a flower. */
 export const HUSKY_LOOK = { eye: '#7fd0ff', collar: 'rose', hat: 'blossom' };
@@ -117,6 +118,13 @@ export function frameTable(kind, cos = {}) {
         sneaky: [needleSvg({ expr: 'sneaky' })],
       };
     default:
+      // Season 2's circle (characters/circle.js): a slow breath while standing, a walk
+      if (CIRCLE_KINDS.includes(kind)) {
+        return {
+          idle: [personSprite(kind, { t: 0 }), personSprite(kind, { t: 0.25 })],
+          walk: WALK.map((t) => personSprite(kind, { pose: 'walk', t })),
+        };
+      }
       throw new Error(`Unknown sprite kind ${kind}`);
   }
 }

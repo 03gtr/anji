@@ -135,7 +135,8 @@ export function openSettings(app) {
         }),
       );
       scope.on(el.querySelector('[data-export]'), 'click', () => {
-        const blob = new Blob([saves.exportText(game.state)], { type: 'application/json' });
+        // Season 2 travels in the same file (older builds import the main save and ignore it)
+        const blob = new Blob([saves.exportText(game.state, game.s2State)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -151,10 +152,11 @@ export function openSettings(app) {
         e.target.value = '';
         if (!file) return;
         try {
-          const state = saves.importText(await file.text());
+          const text = await file.text();
+          const state = saves.importText(text);
           const ok = await confirmBox(app, { title: 'استرجاع التقدم؟', text: 'راح يتبدل التقدم الحالي بالنسخة اللي اخترتيها.', yes: 'استرجعي' });
           if (!ok) return;
-          game.replace(state);
+          game.replace(state, { s2: saves.importS2(text) });
           close();
           app.toTitle({ message: 'رجع التقدم من النسخة الاحتياطية ✓' });
         } catch (err) {
@@ -268,7 +270,7 @@ export function openJournal(app, tab = 'notes') {
       function render(which) {
         el.querySelectorAll('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === which)));
         if (which === 'notes') {
-          const all = game.state.journal.filter((id) => JOURNAL[id]);
+          const all = game.journalIds().filter((id) => JOURNAL[id]);
           const entries = all.filter((id) => JOURNAL[id].group !== 'clues');
           const clues = all.filter((id) => JOURNAL[id].group === 'clues');
           const notes = game.state.collected.filter((id) => groupOf(id) === 'note');
@@ -507,7 +509,7 @@ export function openMap(app, { focus: asked, place } = {}) {
   const { game } = app;
   return app.overlays.open(
     (el, { close, scope }) => {
-      const here = game.state.location.scene;
+      const here = game.location().scene;
       // the same mission state as the journal and the HUD: without an explicit focus, the map
       // shows the current objective; each place says what it holds (open story / side / done)
       const entries = journalEntries(game);
@@ -530,12 +532,15 @@ export function openMap(app, { focus: asked, place } = {}) {
       if (place) targets.sort((a, b) => (b.id === place) - (a.id === place)); // a chosen place routes first
       const target = targets[0];
       const path = new Set(mapPath(hereWorld?.id, target?.id).map(([a, b]) => [a, b].sort().join('|')));
-      // Phase 04: two pages. The page shown is the target's, else where she is; the tabs appear
-      // once the deep garden has an open place (before that it does not exist for her)
-      const deepOpen = WORLDS.some((w) => regionOf(w) === 'deep' && open(w));
+      // Pages: the garden, the deep garden (Phase 04), the closed circle (Season 2). The page shown
+      // is the target's, else where she is; a page's tab appears once it has an open place (before
+      // that it does not exist for her)
+      const pages = REGIONS.filter((r) => r.id === 'garden' || WORLDS.some((w) => regionOf(w) === r.id && open(w)));
+      const deepOpen = pages.length > 1;
       let region = regionOf(target ?? hereWorld);
-      if (region === 'deep' && !deepOpen && !target) region = 'garden';
-      const unvisited = (w) => regionOf(w) === 'deep' && open(w) && !game.flag(`visited:${w.scene}`);
+      if (!pages.some((r) => r.id === region) && !target) region = 'garden';
+      // "not visited yet" is recorded for the later pages only (older saves never recorded visits)
+      const unvisited = (w) => regionOf(w) !== 'garden' && open(w) && !game.flag(`visited:${w.scene}`);
       const lines = (r) =>
         ROUTES.filter(([a, b]) => regionOf(worldById(a)) === r && regionOf(worldById(b)) === r)
           .map(([a, b]) => {
@@ -570,7 +575,7 @@ export function openMap(app, { focus: asked, place } = {}) {
         }
         ${
           deepOpen
-            ? `<div class="map-regions" role="group" aria-label="صفحات الخريطة">${REGIONS.map(
+            ? `<div class="map-regions" role="group" aria-label="صفحات الخريطة">${pages.map(
                 (r) => `<button type="button" data-region="${r.id}" aria-pressed="${r.id === region}">${esc(r.name)}${WORLDS.some((w) => regionOf(w) === r.id && unvisited(w)) ? '<span class="map-region-dot" aria-label="(بيها مكان جديد)"></span>' : ''}</button>`,
               ).join('')}</div>`
             : ''

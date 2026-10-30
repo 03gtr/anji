@@ -514,11 +514,12 @@ describe('in the app', () => {
     await app.toTitle();
     app.ui.openMap();
     await until(() => $('.map-board .map-node'));
-    expect($('.map-regions')).toBeNull(); // the deep garden does not exist for her yet
+    // the deep garden does not exist for her yet (Season 2's page may: it opens with the ending)
+    expect($('.map-regions [data-region="deep"]')).toBeNull();
     app.overlays.closeAll();
     app.game.setFlag('dg-box');
     app.ui.openMap();
-    await until(() => $('.map-regions'));
+    await until(() => $('.map-regions [data-region="deep"]'));
     // it opens on the page of the current objective (the silent clocks)
     expect($('.map-node.is-target')?.dataset.world).toBe('clockgarden');
     expect($('[data-region="deep"]').getAttribute('aria-pressed')).toBe('true');
