@@ -14,6 +14,7 @@
  *  - no wedding content, and neither private nickname appears.
  */
 import { describe, it, expect } from 'vitest';
+import { createHash } from 'node:crypto';
 import { createGame, isS2 } from '../../src/game/core/game.js';
 import { createSaveManager, defaultState, SAVE_KEY } from '../../src/game/core/save.js';
 import { createS2Store, S2_KEY } from '../../src/game/core/s2-store.js';
@@ -260,6 +261,18 @@ describe('Ryan’s reactions are contextual, never control', () => {
     expect(CATEGORIES).toEqual(['greeting', 'professional', 'compliment', 'flirt', 'repeat']);
   });
 });
+
+/** The owner’s private nicknames, never in the game: SHA-256 of each word and its length (no plaintext in a public repo). */
+const PRIVATE_NAMES = [
+  { n: 6, sha256: 'def2be71a3c5b311bbee2f8fd0cf7afb25b8cf4b995e5af098cc99827607760e' },
+  { n: 5, sha256: '2573ae4737831c12194b4da708064c83f4e4beaca82a6a55db1c9c266bb117b6' },
+];
+const sha256 = (s) => createHash('sha256').update(s).digest('hex');
+/** Whether any substring of `text` of length `n` hashes to `sha256` (the word appears anywhere, as a regex would find it). */
+function containsHashed(text, { n, sha256: want }) {
+  for (let i = 0; i + n <= text.length; i++) if (sha256(text.slice(i, i + n)) === want) return true;
+  return false;
+}
 
 /* ── a scripted player: M1 from the ending to «يتبع…» ── */
 function setup(storage = memoryStorage(), mainState = null) {
@@ -546,7 +559,16 @@ describe('around the season', () => {
   it('no wedding content, and neither private nickname, anywhere in Season 2', () => {
     const text = JSON.stringify([DIALOGUE_S2, JOURNAL_S2, MISSIONS_S2, PUZZLES_S2, EVIDENCE_S2, S2_SCENES.map((s) => [s.title, s.ambient])]);
     expect(text).not.toMatch(/زفاف|عرس|خطوبة|خطبة|مهر|زواج|نتزوج|تتزوج|wedding|marriage/);
-    expect(text).not.toMatch(/تحميلة|كوبرا/);
+    // the owner’s two private nicknames, as SHA-256 of the exact word (this repository is public, so never the
+    // words themselves); every substring of that length is checked, as strict as matching the word anywhere
+    expect(PRIVATE_NAMES.filter((p) => containsHashed(text, p))).toEqual([]);
+  });
+
+  it('the hashed nickname check finds a word anywhere — alone, inside a longer word, at either end — and nothing else', () => {
+    const word = { n: 5, sha256: sha256('فانوس') }; // a stand-in word, hashed the same way
+    for (const text of ['فانوس', 'الفانوسة', '{"a":"x فانوس"}', 'فانوس…']) expect(containsHashed(text, word), text).toBe(true);
+    for (const text of ['', 'فانو', 'فانوز', 'سونآف']) expect(containsHashed(text, word), text).toBe(false);
+    expect(PRIVATE_NAMES.map((p) => [p.n, p.sha256.length])).toEqual([[6, 64], [5, 64]]);
   });
 
   it('Snooki only speaks in Season 2 where Ryan is in the scene (never a line from someone not there)', () => {

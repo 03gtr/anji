@@ -124,7 +124,7 @@ He is a partner, investigator and occasional chaos.
 ### Rabi' (fictional development)
 - **Who he is:** a warm, slightly formal colleague who is helpful to a fault.
 - **In the case:** he offers one friendly compliment, and possibly a second, more playful one, which is the jealousy test. His role in the mystery comes only from the wax evidence.
-- **Not used:** the private nickname «ربيع تحميلة», unless the owner asks. His height, looks and coat are never jokes.
+- **Not used:** his private nickname (on the owner’s private list, never written in this repository), unless the owner asks. His height, looks and coat are never jokes.
 
 ### Lama (fictional development)
 - **Who she is:** quick, sociable and loyal to Anji. She counts things and writes everything down, and is cheerful about her mistakes («سنوكي ضيف رسمي، شبيكم؟»).
