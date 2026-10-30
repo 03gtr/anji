@@ -51,9 +51,15 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
   liftS2(state, s2);
   let lastSaveError = null;
   // «كمّلي» goes to Season 2 when its document says she is there (`here`, written as she enters or leaves a
-  // Season 2 place) and it was written after the main save. A document without `here` (written before the
-  // marker existed) goes by the newer document alone.
-  const resumesInS2 = () => Boolean(s2.location.scene) && s2.here !== false && (s2.updatedAt ?? 0) > (state.updatedAt ?? 0);
+  // Season 2 place) and the main save was not written after it (a write in the same millisecond is a tie:
+  // the marker decides). A document without `here` (written before the marker existed) goes by the newer
+  // document alone.
+  const resumesInS2 = () => {
+    if (!s2.location.scene || s2.here === false) return false;
+    const s2At = s2.updatedAt ?? 0;
+    const mainAt = state.updatedAt ?? 0;
+    return s2.here === true ? s2At >= mainAt : s2At > mainAt;
+  };
   let inS2 = resumesInS2(); // she is in a Season 2 place (play time and location go to its document)
   let mainDirty = false; // a change not written yet (play time, or a write that failed)
   let s2Dirty = false;

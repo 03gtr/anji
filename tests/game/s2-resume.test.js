@@ -84,6 +84,22 @@ describe('D1: «كمّلي» resumes where she was, however the last session end
     expect(session(storage, clock).resumeLocation()).toEqual({ scene: 'final', x: 900 });
   });
 
+  it('REGRESSION: both documents written in the same millisecond — the Season 2 marker decides, not the tie', () => {
+    const storage = freshStorage();
+    const clock = { t: T0 };
+    const now = () => clock.t; // a stopped clock: every write gets the same updatedAt
+    const saveManager = createSaveManager({ storage, now });
+    const loaded = saveManager.load();
+    const s2Store = createS2Store({ storage, now });
+    const g = createGame({ saveManager, s2Store, initial: loaded.state, s2Initial: s2Store.load(loaded.state.createdAt).state, now });
+    g.setFlag('husky-name', 'لولو'); // a main write…
+    g.setLocation('s2-home', 600); // …and the Season 2 place, in the same millisecond
+    expect(JSON.parse(storage.getItem(SAVE_KEY)).updatedAt).toBe(JSON.parse(storage.getItem(S2_KEY)).updatedAt);
+    expect(session(storage, { t: T0 }).resumeLocation()).toEqual({ scene: 's2-home', x: 600 });
+    g.setLocation('final', 900); // she leaves, still in the same millisecond
+    expect(session(storage, { t: T0 }).resumeLocation()).toEqual({ scene: 'final', x: 900 });
+  });
+
   it('a Season 2 document written before this fix (no marker) resumes as before: by which document is newer', () => {
     const storage = freshStorage();
     const clock = { t: T0 };
