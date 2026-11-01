@@ -3,6 +3,7 @@
  * journal entries and cosmetic unlocks. Stable ids: they are stored in saves.
  */
 import { JOURNAL_S2 } from './evidence-s2.js';
+import { JOURNAL_S2_M2 } from './evidence-s2-m2.js';
 export const ITEMS = {
   'map-1': { name: 'قطعة خريطة (١)', icon: 'map', text: 'مرسوم عليها طريق المتاهة بخط إيد ريان.' },
   'map-2': { name: 'قطعة خريطة (٢)', icon: 'map', text: 'طريق بين البيت والكراج.' },
@@ -282,6 +283,7 @@ export const JOURNAL = {
   'dg-lights': { title: 'منارة الذكريات', icon: 'heart', text: 'المنارة ضوت، وبان على حايطها رسم صغير: طريقين بيهم أشجار، يمشون جنب بعض.' },
   // Season 2 «ملف الدائرة المغلقة» (its entries are kept in Season 2's own save)
   ...JOURNAL_S2,
+  ...JOURNAL_S2_M2,
 };
 
 /** Cosmetic unlocks: id → { slot, value, name } */

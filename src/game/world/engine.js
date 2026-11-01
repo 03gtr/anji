@@ -16,10 +16,57 @@ import { frameTable } from '../characters/sprites.js';
 import { spriteFrames } from './sprite-cache.js';
 import { reaction as socialReaction } from '../progression/social.js';
 import { check } from '../core/conditions.js';
+import { isS2 } from '../core/game.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
 import { dogsIn } from '../data/companions.js';
+import { PERSONAS } from '../data/personas.js';
+import { CIRCLE_GESTURES } from '../characters/circle.js';
+
+const CIRCLE_GESTURE_NAMES = new Set(Object.keys(CIRCLE_GESTURES));
+
+/**
+ * The key of a rotating line counter (which of the dogs' lines comes next) for a scene: in a Season 2 place it is
+ * kept in Season 2's own save (`s2:…`) — Season 2 never writes the original campaign's save, not even a counter
+ * (REGRESSION: tapping her husky in the office wrote `hub.lines` in the original save).
+ */
+export const lineKey = (sceneId, key) => (isS2(sceneId) ? `s2:${key}` : key);
+
+/**
+ * The sound of a reaction (core/audio.js, synthesised; silent when sound is off): a gasp on a surprised face,
+ * a comic slide when someone is caught out, a thud on a squash, a giggle on a laugh, paper on flying papers.
+ */
+/**
+ * The animation states every character can be put in (`pose`), resolved from the frames each one has — no new art:
+ * a state a character has no frames for borrows the nearest frames it does have, and the engine adds the motion
+ * (a hide crouches lower and fades a little, a search looks one way then the other, a celebration bounces, a run
+ * without run frames is a faster, leaning walk).
+ */
+export const STATE_FRAMES = {
+  run: ['run', 'walk'],
+  hide: ['crouch', 'sit', 'idle'],
+  search: ['think', 'sniff', 'idle'],
+  interact: ['crouch', 'point', 'idle'],
+  celebrate: ['celebrate', 'excited', 'laugh', 'idle'],
+  embarrassed: ['shy', 'idle'],
+  carry: ['idle'],
+  react: ['surprised', 'idle'],
+  gesture: ['handsup', 'point', 'idle'],
+};
+/** The frames a character shows for a state (pure: tested for every character). */
+export function framesFor(table, anim) {
+  if (table[anim]) return table[anim];
+  for (const name of STATE_FRAMES[anim] || []) if (table[name]) return table[name];
+  return table.idle;
+}
+
+export const REACT_SFX = {
+  mood: { surprised: 'gasp' },
+  jolt: { shake: 'oops', squash: 'land' },
+  puff: { papers: 'paper', sparkle: 'sparkle' },
+  pose: { laugh: 'giggle' },
+};
 
 /**
  * A speech bubble's text, broken at spaces into lines no wider than `maxW` (a single word wider than
@@ -149,6 +196,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       anim: 'idle',
       animT: Math.random(),
       pose: null, // scripted animation override
+      mood: def.mood ?? null, // a face kept while standing (a dialogue line's expression sets it); walking shows over it
+      jolt: null, // a short runtime motion (hop, shake, lunge, squash, tilt): drawn, never baked
+      puffs: [], // small drawn particles (sweat, steam, sparkle, dust)
       alpha: def.alpha ?? 1,
       visible: true,
       z: def.z ?? 1,
@@ -199,6 +249,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   let interactTarget = null;
   let autoWalk = null; // { x, then }
   let idleTime = 0;
+  let stride = 0; // distance since her last footstep sound
+  const letterbox = { k: 0, to: 0 }; // cinema bars (0 hidden … 1 shown)
   let nextWatch = 8; // Snooki's first look around (beside Ryan)
   let lastAmbient = 0;
   let lastLocationSave = 0;
@@ -207,7 +259,14 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
 
   const platforms = () => (scene.platforms || []).filter((p) => check(p.if, game));
   const solids = () => (scene.blockers || []).filter((b) => check(b.if, game));
-  const interactables = () => (scene.interact || []).filter((it) => check(it.if, game));
+  const interactables = () => (scene.interact || []).filter((it) => check(it.if, game) && (!it.actor || actors.get(it.actor)?.visible !== false));
+  /** A person she can talk to stays talkable wherever they walk: the interactable follows its actor. */
+  const followActors = () => {
+    for (const it of scene.interact || []) {
+      const a = it.actor && actors.get(it.actor);
+      if (a) it.x = Math.round(a.x);
+    }
+  };
 
   // ── layout ──
   function resize() {
@@ -271,10 +330,11 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
 
   async function runOne(act) {
     if (typeof act === 'function') return act(api);
-    if (act.if !== undefined && !('then' in act) && !('else' in act) && !act.puzzle && !act.game && act.memory === undefined) {
+    if (act.if !== undefined && !('then' in act) && !('else' in act) && !act.puzzle && !act.game && !act.testimony && act.memory === undefined) {
       if (!check(act.if, game)) return;
     }
-    if ('then' in act && !act.puzzle && !act.game && act.memory === undefined) {
+    // (a puzzle, minigame, memory or testimony has its own then/else: what follows it, not a branch)
+    if ('then' in act && !act.puzzle && !act.game && !act.testimony && act.memory === undefined) {
       return runActions(check(act.if, game) ? act.then : act.else || []);
     }
     if (act.say) return app.ui.dialogue(act.say);
@@ -307,8 +367,24 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (act.move) {
       const a = actors.get(act.move);
       if (!a) return;
-      const p = moveActor(a, act.x, act.speed);
+      // { move: 'sister', to: 'anji', gap: 70 } — walk up to someone and stop beside them (wherever they stand)
+      const to = act.to && actors.get(act.to);
+      const x = to ? to.x - Math.sign(to.x - a.x || 1) * (act.gap ?? 60) : act.x;
+      const p = moveActor(a, x, act.speed);
       return act.async ? undefined : p;
+    }
+    if (act.letterbox !== undefined) {
+      // { letterbox: true } — cinema bars for a set piece (they slide in and out; off again with false)
+      letterbox.to = act.letterbox ? 1 : 0;
+      return;
+    }
+    if (act.exit) {
+      // { exit: 'sabri', side: 'right', speed } — walks out of the place on that side and is gone
+      const a = actors.get(act.exit);
+      if (!a) return;
+      await moveActor(a, act.side === 'left' ? camX - 80 : camX + viewW + 80, act.speed ?? 150);
+      actors.delete(a.id);
+      return;
     }
     if (act.face) {
       const a = actors.get(act.face);
@@ -319,11 +395,42 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       const a = actors.get(act.pose);
       if (!a) return;
       a.pose = act.anim;
+      if (REACT_SFX.pose[act.anim]) audio.play(REACT_SFX.pose[act.anim]);
       if (act.for) {
         await scope.wait(act.for);
         a.pose = null;
       }
       return;
+    }
+    if (act.mood !== undefined) {
+      // { mood: 'jojo', expr: 'shy' } — a face that stays until changed (null: back to neutral)
+      const a = actors.get(act.mood);
+      if (a) a.mood = act.expr ?? null;
+      if (a && REACT_SFX.mood[act.expr]) audio.play(REACT_SFX.mood[act.expr]);
+      return;
+    }
+    if (act.jolt) {
+      // { jolt: 'jojo', type: 'hop'|'shake'|'lunge'|'squash'|'tilt'|'nod'|'rise', ms } — drawn on the canvas, costs no art
+      const a = actors.get(act.jolt);
+      if (a && !app.reduced()) a.jolt = { type: act.type, t0: t, ms: act.ms ?? 420 };
+      if (a && REACT_SFX.jolt[act.type]) audio.play(REACT_SFX.jolt[act.type]);
+      return;
+    }
+    if (act.puff) {
+      // { puff: 'jojo', type: 'sweat'|'steam'|'sparkle'|'dust', ms }
+      const a = actors.get(act.puff);
+      if (a) a.puffs.push({ type: act.type, t0: t, until: t + (act.ms ?? 1600) / 1000 });
+      if (a && REACT_SFX.puff[act.type]) audio.play(REACT_SFX.puff[act.type]);
+      return;
+    }
+    if (act.all) {
+      // several things at once (two people walking, a reaction while someone talks), then on together
+      return Promise.all(act.all.map((a) => runOne(a)));
+    }
+    if (act.testimony) {
+      // a witness's account, acted out in this world; she stops it where it breaks (ui/testimony.js)
+      const res = await app.ui.testimony(act.testimony, { run: runActions, actors: (id) => actors.get(id) });
+      return runActions(res?.solved ? act.then || [] : act.else || []);
     }
     if (act.emote) {
       const a = actors.get(act.emote);
@@ -336,6 +443,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       return;
     }
     if (act.spawn) {
+      if (actors.has(act.spawn.id)) return; // already here (e.g. she came in on an earlier visit)
       await ensureFrames(act.spawn.kind);
       const a = addActor(act.spawn);
       if (act.spawn.fadeIn) {
@@ -374,6 +482,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     }
     if (act.camera !== undefined) {
       if (act.camera === null) camTarget = null;
+      else if (act.camera.between) camTarget = { between: act.camera.between }; // two people in one shot
       else camTarget = typeof act.camera === 'string' ? { actor: act.camera } : { x: act.camera };
       return scope.wait(act.ms ?? 600);
     }
@@ -408,6 +517,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       if (cutsceneDepth === 0 && !scope.disposed) {
         camTarget = null;
         for (const a of actors.values()) a.pose = null;
+        player.mood = null; // her face goes back to her own; the others keep the mood the story left them in
         setMode('play');
         saveLocation(true);
       }
@@ -422,10 +532,39 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (!it || mode !== 'play') return;
     audio.play('tap');
     game.markSeen(seenKey(it));
+    // talking to someone: they turn to her, she turns to them
+    const who = it.actor && actors.get(it.actor);
+    if (who) {
+      who.facing = Math.sign(player.x - who.x) || who.facing;
+      player.facing = Math.sign(who.x - player.x) || player.facing;
+    }
     const cases = it.cases || [{ run: it.run }];
-    const chosen = cases.find((c) => check(c.if, game));
+    // a case may also depend on who is looking at her right now (`unseenBy` / `seenBy`: an actor id) —
+    // a timing window in the world, never written to the save
+    const chosen = cases.find((c) => check(c.if, game) && (!c.unseenBy || !watching(c.unseenBy)) && (!c.seenBy || watching(c.seenBy)));
     if (chosen) run(chosen.run);
   }
+
+  // the world follows the dialogue: the speaker shows the line's expression and turns to her; a line's
+  // `act` (actions) plays while it is read — people move and react during a conversation, not only after it
+  const ANJI_FACE = { surprised: 'surprised', thinking: 'think', shy: 'shy', pout: 'pout', annoyed: 'pout' };
+  const MOOD_OF = { happy: 'smile', curious: 'thinking', smug: 'suspicious', sad: 'worried', scared: 'worried' };
+  scope.sub(
+    app.bus.on('dialogue-line', ({ speaker, expr, act, text }) => {
+      const a = speaker && actors.get(speaker);
+      for (const x of actors.values()) x.talkUntil = 0;
+      if (a) a.talkUntil = t + Math.min(4, 0.8 + (text?.length ?? 20) * 0.045); // the mouth moves while the line is read
+      if (a === player) player.mood = ANJI_FACE[expr] ?? null;
+      else if (a) {
+        const m = expr === 'neutral' ? null : MOOD_OF[expr] ?? expr;
+        if (m === null) a.mood = null;
+        else if (frames[a.kind]?.[m]) a.mood = m;
+        if (!a.moveTo) a.facing = Math.sign(player.x - a.x) || a.facing;
+        player.facing = Math.sign(a.x - player.x) || player.facing;
+      }
+      if (act) runActions(act).catch((err) => console.error('[world] line action failed', err));
+    }),
+  );
 
   function saveLocation(force = false) {
     if (!force && t - lastLocationSave < 8) return;
@@ -437,7 +576,7 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const busyUntil = {};
   function dogReact(a, list, key) {
     if (!a || t < (busyUntil[a.id] ?? 0) || !a.visible) return false;
-    const r = list[game.nextLine(key, list.length)];
+    const r = list[game.nextLine(lineKey(scene.id, key), list.length)];
     busyUntil[a.id] = t + 1.6;
     a.pose = r.pose;
     a.bubble = { text: r.text, until: t + 2.6 };
@@ -455,6 +594,73 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const snookiReact = () => dogReact(snooki, snookiWithRyan ? SNOOKI_RYAN_TAPS : SNOOKI_TAPS, snookiWithRyan ? 'snooki-ryan-tap' : 'snooki-tap');
   const huskyReact = () => dogReact(actors.get('husky'), HUSKY_TAPS, 'husky-tap');
   const onDog = (a, p) => a && a.visible && Math.abs(p.x - a.x) < 30 && p.y > a.y - a.h && p.y < a.y + 8;
+
+  /** Whether someone is looking at her right now (they face her side). */
+  const watching = (id) => {
+    const a = actors.get(id);
+    return Boolean(a && a.visible && Math.sign(player.x - a.x) === Math.sign(a.facing));
+  };
+  /**
+   * A person's routine while she plays (not during a cutscene): `routines: [{ if?, steps: [{ face, pose?, ms }] }]`.
+   * The first routine whose condition holds runs, step after step, round and round; `face` is someone's id
+   * ('anji', 'lama'…), 'away' (from her) or ±1. Only the actor's look and facing change; nothing is saved.
+   */
+  function routine(a) {
+    const list = a.def?.routines;
+    if (!list || a.moveTo) return;
+    const i = list.findIndex((r) => check(r.if, game));
+    if (i < 0) {
+      a.rt = null; // no routine applies now: they are free to fidget (habits)
+      return;
+    }
+    if (a.rt?.i !== i) a.rt = { i, step: -1, until: 0 };
+    const steps = list[i].steps;
+    const lookAt = (s) => (s.face === 'away' ? -Math.sign(player.x - a.x) : typeof s.face === 'number' ? s.face : Math.sign((actors.get(s.face)?.x ?? a.x) - a.x));
+    if (t >= a.rt.until) {
+      a.rt.step = (a.rt.step + 1) % steps.length;
+      const s = steps[a.rt.step];
+      a.rt.until = t + s.ms / 1000;
+      if (s.pose) a.pose = s.pose;
+      else if (a.pose && a.rt.pose) a.pose = null;
+      a.rt.pose = Boolean(s.pose);
+    }
+    // the look is kept every frame: someone watching her follows her as she moves (no gap to slip through)
+    const look = lookAt(steps[a.rt.step]);
+    if (look) a.facing = look;
+  }
+  /** Small habits while standing about (data/personas.js): a gesture now and then, never during a story beat. */
+  function habit(a) {
+    const p = PERSONAS[a.kind];
+    if (!p?.habits || a.def?.habits === false || a.rt || a.moveTo || Math.abs(a.vx) > 1) return;
+    if (a.habitEnd && t > a.habitEnd) {
+      if (a.pose === a.habitPose) a.pose = null;
+      a.habitEnd = 0;
+    }
+    if (a.habitAt === undefined) a.habitAt = t + 3 + Math.random() * 5;
+    if (t < a.habitAt || a.pose) return;
+    const h = p.habits[Math.floor(Math.random() * p.habits.length)];
+    a.pose = a.habitPose = h.pose;
+    a.habitEnd = t + h.ms / 1000;
+    a.habitAt = t + 5 + Math.random() * 5;
+  }
+
+  /**
+   * People who notice her: an actor with `notice: { dist, emote?, jolt? }` turns to her when she comes
+   * close (and reacts once per approach); they look away again only when she has gone.
+   */
+  function noticeHer() {
+    for (const a of actors.values()) {
+      const n = a.def?.notice;
+      if (!n || !a.visible || a.moveTo || a === player) continue;
+      const d = Math.abs(player.x - a.x);
+      if (d < (n.dist ?? 110) && !a.noticed) {
+        a.noticed = true;
+        a.facing = Math.sign(player.x - a.x) || a.facing;
+        if (n.emote) a.emote = { icon: n.emote, until: t + 1.2 };
+        if (n.jolt) a.jolt = { type: n.jolt, t0: t, ms: 420 };
+      } else if (d > (n.dist ?? 110) + 70) a.noticed = false;
+    }
+  }
 
   // ── input: tap a thing to walk to it and use it; tap ground to walk there ──
   /** A tap at world point p. Her husky scouts ahead, often right over the thing Anji means to
@@ -485,6 +691,8 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   function update(dt) {
     t += dt;
     const playing = mode === 'play' && !paused;
+    followActors();
+    if (playing) noticeHer();
 
     // player control
     let dir = 0;
@@ -511,6 +719,15 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     if (player.moveTo) dir = 0;
     const ev = stepBody(player, { dir, jump }, world, dt);
     if (ev.jumped) audio.play('jump');
+    if (ev.landed) audio.play('land');
+    // her steps: one sound per stride on the ground (quieter and slower when walking, firmer when running)
+    if (player.onGround && Math.abs(player.vx) > 20) {
+      stride += Math.abs(player.vx) * dt;
+      if (stride > 52) {
+        stride = 0;
+        audio.play(Math.abs(player.vx) > 230 ? 'run' : 'footstep');
+      }
+    } else stride = 40; // the first step sounds soon after she starts
     if (dir !== 0) player.facing = dir;
 
     // actors: scripted moves, companion follow, fades
@@ -529,6 +746,9 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
           a.x += a.vx * dt;
           a.facing = Math.sign(d);
         }
+      } else if (a.companion && autoWalk?.then?.actor === a.id) {
+        // she is walking over to talk to this companion: they wait for her instead of keeping their distance
+        a.vx = approach(a.vx, 0, 900 * dt);
       } else if (a.companion && a.visible && mode === 'play' && (!a.leader || actors.get(a.leader)?.visible)) {
         // a companion walks with its own person: her, or (Snooki on a shared outing) Ryan
         const lead = a.leader ? actors.get(a.leader) : player;
@@ -556,9 +776,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       let anim = a.pose;
       if (!anim) {
         if (a === player && !player.onGround) anim = player.vy < 0 ? 'jump' : 'fall';
-        else if (moving) anim = Math.abs(a.vx) > 175 && frames[a.kind].run ? 'run' : 'walk';
+        else if (moving) anim = Math.abs(a.vx) > 175 ? 'run' : 'walk';
         else if (a === snooki && idleTime > 16 && frames.snooki.sleep) anim = 'sleep';
         else if (a === snooki && idleTime > 5) anim = Math.floor(idleTime / 4) % 3 === 2 && frames.snooki.wag ? 'wag' : 'sit';
+        else if (a.mood && frames[a.kind][a.mood]) anim = a.mood; // a face that stays (a story beat, a reaction)
         else anim = a.def?.view && frames[a.kind][a.def.view] ? a.def.view : 'idle'; // e.g. Ryan waiting with his back turned
       }
       if (anim !== a.anim) {
@@ -566,6 +787,32 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
         a.animT = 0;
       }
       a.animT += dt;
+      // searching: a look one way, then the other
+      if (a.anim === 'search' && !moving) {
+        a.searchFacing ??= a.facing;
+        a.facing = Math.floor(a.animT / 0.8) % 2 ? -a.searchFacing : a.searchFacing;
+      } else a.searchFacing = undefined;
+      // a watchful one (`watch: true`): standing still with nobody to face, a glance over the shoulder now and then
+      const persona = PERSONAS[a.kind];
+      // (someone shown from the back, `view`, keeps still: that moment is staged)
+      const still = !moving && !a.pose && !a.moveTo && !a.rt && a !== player && !a.companion && !a.def?.view && playing;
+      if ((a.def?.watch ?? persona?.watch) && still) {
+        a.watchFacing ??= a.facing;
+        a.facing = (t + a.x * 0.013) % 3.6 < 0.9 ? -a.watchFacing : a.watchFacing;
+      } else if (persona?.glance && still && player) {
+        // he notices her: a look toward her now and then, then back to what he was doing
+        a.glanceFacing ??= a.facing;
+        a.facing = (t + a.x * 0.017) % 5.2 < 1.3 ? Math.sign(player.x - a.x) || a.glanceFacing : a.glanceFacing;
+      } else {
+        a.watchFacing = undefined;
+        a.glanceFacing = undefined;
+      }
+      if (a.lastFacing !== undefined && a.lastFacing !== a.facing) a.turnT = t; // a turn is drawn, not snapped
+      a.lastFacing = a.facing;
+      if (playing && a !== player) {
+        routine(a);
+        habit(a);
+      }
     }
 
     // collectibles in the world
@@ -653,12 +900,15 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const husky = actors.get('husky');
     if (playing && !snooki.companion && husky?.companion && husky.visible && !husky.bubble && idleTime > 7 && t - lastAmbient > 14) {
       lastAmbient = t;
-      husky.bubble = { text: HUSKY_AMBIENT[game.nextLine('husky-ambient', HUSKY_AMBIENT.length)], until: t + 3.6 };
+      husky.bubble = { text: HUSKY_AMBIENT[game.nextLine(lineKey(scene.id, 'husky-ambient'), HUSKY_AMBIENT.length)], until: t + 3.6 };
     }
 
     // camera
     let focus = player.x + player.facing * viewW * 0.08;
-    if (camTarget) focus = camTarget.actor ? actors.get(camTarget.actor)?.x ?? focus : camTarget.x;
+    if (camTarget?.between) {
+      const xs = camTarget.between.map((id) => actors.get(id)?.x).filter(Number.isFinite);
+      if (xs.length) focus = (Math.min(...xs) + Math.max(...xs)) / 2;
+    } else if (camTarget) focus = camTarget.actor ? actors.get(camTarget.actor)?.x ?? focus : camTarget.x;
     const target = Math.max(0, Math.min(Math.max(0, width - viewW), focus - viewW / 2));
     camX += (target - camX) * Math.min(1, dt * (camTarget ? 3 : 5));
     // follow her upward when she climbs (her visible head ≈ 62 % of the sprite box)
@@ -673,8 +923,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   function drawActor(a) {
     if (!a.visible || a.alpha <= 0.01) return;
     const k = KIND[a.kind];
-    let list = frames[a.kind][a.anim] || frames[a.kind].idle;
-    let img = list[Math.floor(a.animT * k.fps) % list.length];
+    let list = framesFor(frames[a.kind], a.anim);
+    // a run drawn with walk frames goes faster (a run with its own frames keeps its pace)
+    const fps = a.anim === 'run' && !frames[a.kind].run ? k.fps * 1.7 : k.fps;
+    let img = list[Math.floor(a.animT * fps) % list.length];
     if (a.anim === 'idle') {
       // slow breathing + occasional blink
       img = list[Math.floor(a.animT * 1.6) % list.length];
@@ -687,22 +939,169 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const h = a.h;
     const w = (img.width / img.height) * h;
     ctx.save();
-    ctx.globalAlpha = a.alpha;
+    ctx.globalAlpha = a.alpha * (a.anim === 'hide' ? 0.62 : 1); // hiding: low, and half lost in the cover
     // soft shadow
     ctx.fillStyle = 'rgba(8,10,30,.35)';
     ctx.beginPath();
     ctx.ellipse(a.x, a.onGround === false ? GROUND + 2 : a.y + 2, w * 0.32, 4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.translate(a.x, a.y + h * (1 - k.feet));
+    motion(a);
     ctx.scale(a.facing < 0 ? -1 : 1, 1);
     ctx.drawImage(img, -w / 2, -h, w, h);
+    // talking: a small mouth that opens and closes over a front-facing face (Season 2's people)
+    if (t < (a.talkUntil ?? 0) && PERSONAS[a.kind]?.front && !CIRCLE_GESTURE_NAMES.has(a.anim) && a.anim !== 'walk' && !app.reduced()) {
+      const open = Math.floor(t * 8) % 2 === 0;
+      ctx.fillStyle = '#7a3530';
+      ctx.beginPath();
+      ctx.ellipse(0, -h * 0.8 + h * 0.006, w * 0.035, open ? h * 0.014 : h * 0.005, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
+  }
+
+  /**
+   * Runtime body language, drawn around the feet (no new art, no memory): a short jolt (hop, shake,
+   * lunge toward where they face, squash, tilt) and, for someone with `idleFx: 'sway'`, a slow sway.
+   */
+  function motion(a) {
+    if (app.reduced()) return;
+    // a turn: a brief squeeze as they swing round, instead of a mirror-snap
+    const turn = (t - (a.turnT ?? -9)) / 0.14;
+    if (turn < 1) ctx.scale(0.65 + 0.35 * turn, 1);
+    // each person's own walk (data/personas.js): a light bob, a bounce, a glide
+    const gait = PERSONAS[a.kind]?.bob;
+    if (gait && a.anim === 'walk') ctx.translate(0, -Math.abs(Math.sin(a.animT * 9)) * gait);
+    if (a.anim === 'run') {
+      // a run: a lean into it, and a quicker bounce
+      ctx.rotate(a.facing * 0.07);
+      ctx.translate(0, -Math.abs(Math.sin(a.animT * 15)) * (gait || 2) * 1.4);
+    }
+    if (a.anim === 'hide') ctx.scale(1, 0.86);
+    if (a.anim === 'celebrate' && !frames[a.kind].celebrate) ctx.translate(0, -Math.abs(Math.sin(a.animT * 7)) * 12);
+    if (a.anim === 'carry') ctx.rotate(a.facing * 0.03);
+    if (a.def?.idleFx === 'sway' && a.anim !== 'walk' && a.anim !== 'run') ctx.rotate(Math.sin(t * 1.7 + a.x) * 0.035);
+    const j = a.jolt;
+    if (!j) return;
+    const p = (t - j.t0) / (j.ms / 1000);
+    if (p >= 1) {
+      a.jolt = null;
+      return;
+    }
+    const arc = Math.sin(Math.PI * p);
+    if (j.type === 'hop') ctx.translate(0, -18 * arc);
+    else if (j.type === 'shake') ctx.translate(Math.sin(p * 44) * 3.2 * (1 - p), 0);
+    else if (j.type === 'lunge') {
+      ctx.translate(a.facing * 16 * arc, 0);
+      ctx.rotate(a.facing * 0.12 * arc);
+    } else if (j.type === 'squash') ctx.scale(1 + 0.12 * arc, 1 - 0.12 * arc);
+    else if (j.type === 'tilt') ctx.rotate(-a.facing * 0.14 * arc);
+    else if (j.type === 'nod') ctx.rotate(a.facing * 0.06 * Math.abs(Math.sin(p * Math.PI * 2)));
+    else if (j.type === 'rise') {
+      // drawing herself up when challenged: taller and narrower, held, then a quick lean-in at the end
+      const hold = Math.min(1, p * 4) * (p < 0.8 ? 1 : (1 - p) / 0.2);
+      ctx.scale(1 - 0.05 * hold, 1 + 0.11 * hold);
+      if (p > 0.8) ctx.translate(a.facing * 10 * Math.sin(Math.PI * (p - 0.8) * 5), 0);
+    }
+  }
+
+  /** Little drawn particles over someone: sweat drops, a puff of steam, sparkles, dust at the feet. */
+  function drawPuffs(a, head) {
+    a.puffs = a.puffs.filter((p) => t < p.until);
+    for (const p of a.puffs) {
+      const age = t - p.t0;
+      ctx.save();
+      if (p.type === 'sweat') {
+        ctx.fillStyle = '#8fd3ff';
+        for (const [dx, dl] of [[14, 0], [-12, 0.35]]) {
+          const f = ((age + dl) % 0.9) / 0.9;
+          ctx.globalAlpha = 1 - f;
+          ctx.beginPath();
+          ctx.ellipse(a.x + dx, head + 18 + f * 16, 2.4, 3.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (p.type === 'steam') {
+        ctx.fillStyle = '#f2f2f7';
+        for (let i = 0; i < 3; i++) {
+          const f = ((age * 1.4 + i / 3) % 1);
+          ctx.globalAlpha = 0.8 * (1 - f);
+          ctx.beginPath();
+          ctx.arc(a.x + (i - 1) * 9, head - 4 - f * 22, 4 + f * 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (p.type === 'sparkle') {
+        ctx.fillStyle = '#ffd86b';
+        for (let i = 0; i < 4; i++) {
+          const ang = age * 3 + (i * Math.PI) / 2;
+          ctx.globalAlpha = 0.5 + 0.5 * Math.sin(age * 10 + i);
+          ctx.fillRect(a.x + Math.cos(ang) * 20 - 1.5, head + 10 + Math.sin(ang) * 10 - 1.5, 3, 3);
+        }
+      } else if (p.type === 'papers') {
+        // sheets thrown up, turning, drifting down
+        for (let i = 0; i < 7; i++) {
+          const f = Math.min(1, age / 1.6);
+          const dx = (i - 3) * 16 * f + Math.sin(age * 3 + i) * 8;
+          const dy = -60 * Math.sin(Math.PI * Math.min(1, f * 1.4)) + f * 40;
+          ctx.save();
+          ctx.globalAlpha = 1 - Math.max(0, f - 0.8) * 5;
+          ctx.translate(a.x + dx, a.y - 40 + dy);
+          ctx.rotate(age * (2 + i * 0.4));
+          ctx.fillStyle = '#f7f5ee';
+          ctx.fillRect(-6, -8, 12, 16);
+          ctx.fillStyle = '#b9c2d6';
+          ctx.fillRect(-4, -5, 8, 1.4);
+          ctx.fillRect(-4, -1, 8, 1.4);
+          ctx.restore();
+        }
+      } else if (p.type === 'dust') {
+        ctx.fillStyle = '#c8b9a2';
+        for (let i = 0; i < 4; i++) {
+          const f = Math.min(1, age / 0.6);
+          ctx.globalAlpha = 0.7 * (1 - f);
+          ctx.beginPath();
+          ctx.arc(a.x + (i - 1.5) * 10 * (1 + f), a.y - 4 - f * 8, 3 + f * 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
   }
 
   function drawOverlays() {
     for (const a of actors.values()) {
       if (!a.visible) continue;
       const head = a.y - a.h - 8;
+      if (a.puffs.length) drawPuffs(a, head);
+      // what she carries (Season 2: `hold:<thing>`), at her hand
+      if (a === player && game.flag('s2:hold')) {
+        ctx.save();
+        ctx.translate(a.x + a.facing * 15, a.y - a.h * 0.45);
+        if (/lamp|lantern/.test(String(game.flag('s2:hold')))) {
+          // a hand lamp: a warm glow, a small glass body on a handle
+          const glow = ctx.createRadialGradient(0, 4, 2, 0, 4, 46);
+          glow.addColorStop(0, 'rgba(255, 214, 140, 0.55)');
+          glow.addColorStop(1, 'rgba(255, 214, 140, 0)');
+          ctx.fillStyle = glow;
+          ctx.fillRect(-46, -42, 92, 92);
+          ctx.strokeStyle = '#4a3a2a';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, -8, 5, Math.PI, 0);
+          ctx.stroke();
+          ctx.fillStyle = '#ffd98a';
+          ctx.fillRect(-5, -6, 10, 13);
+          ctx.fillStyle = '#4a3a2a';
+          ctx.fillRect(-6, 7, 12, 3);
+        } else {
+          ctx.rotate(a.facing * 0.2);
+          ctx.fillStyle = '#f7f5ee';
+          ctx.fillRect(-7, -9, 14, 18);
+          ctx.strokeStyle = '#8b93a8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-7, -9, 14, 18);
+        }
+        ctx.restore();
+      }
       if (a.emote && t < a.emote.until) {
         const bob = Math.sin(t * 8) * 2;
         ctx.save();
@@ -815,10 +1214,15 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     const sx = shake > 0 ? Math.sin(t * 60) * 3 * shake : 0;
     ctx.translate(-camX + sx, 0);
     for (const pl of platforms()) if (!pl.hidden) P.stoneLedge(ctx, pl.x, pl.y, pl.w);
-    for (const d of scene.dynamic || []) {
-      if (d.x + (d.reach ?? 200) < camX || d.x - (d.reach ?? 200) > camX + viewW) continue;
-      if (check(d.if, game)) d.draw(ctx, { t, game, P, x: d.x, world: api });
-    }
+    // scene drawings: behind the people, or (`front: true`) over them — darkness and light pools, for one
+    const drawDynamic = (front) => {
+      for (const d of scene.dynamic || []) {
+        if (!d.front !== !front) continue;
+        if (d.x + (d.reach ?? 200) < camX || d.x - (d.reach ?? 200) > camX + viewW) continue;
+        if (check(d.if, game)) d.draw(ctx, { t, game, P, x: d.x, world: api, camX, viewW });
+      }
+    };
+    drawDynamic(false);
     for (const item of scene.items || []) {
       if (game.has(item.id) || !check(item.if, game)) continue;
       const iy = item.y ?? GROUND - 40;
@@ -828,12 +1232,25 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
       else P.star(ctx, item.x, iy, 8, '#ffe28a', t);
     }
     [...actors.values()].sort((a, b) => a.z - b.z).forEach(drawActor);
+    drawDynamic(true);
     ctx.restore();
     painter.drawFront(ctx, camX, viewW);
     ctx.save();
     ctx.translate(-camX + sx, 0);
     drawOverlays();
     ctx.restore();
+    // cinema bars for a set piece, eased in and out (back to play: they always leave)
+    letterbox.k = approach(letterbox.k, mode === 'play' ? 0 : letterbox.to, 1 / 30);
+    if (mode === 'play') letterbox.to = 0;
+    if (letterbox.k > 0.001) {
+      ctx.save();
+      ctx.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+      ctx.fillStyle = '#05060f';
+      const bar = viewH * 0.1 * letterbox.k;
+      ctx.fillRect(0, 0, viewW, bar);
+      ctx.fillRect(0, viewH - bar, viewW, bar);
+      ctx.restore();
+    }
   }
 
   const loop = scope.loop((dt) => {
@@ -845,6 +1262,10 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
   const api = {
     canvas,
     scene,
+    /** Whether the cinema bars are wanted (a set piece is on). */
+    get letterbox() {
+      return letterbox.to;
+    },
     get mode() {
       return mode;
     },

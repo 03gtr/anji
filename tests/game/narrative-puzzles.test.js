@@ -198,7 +198,9 @@ describe('puzzle content', () => {
       expect(def.title && def.intro && def.goal).toBeTruthy();
       // the shared solver (used by «شوفي الحل») must also finish it
       expect(replay(def.type, def.config, solve(def.type, def.config)).outcome).toBe('solved');
-      expect(def.hints?.length).toBeGreaterThanOrEqual(2);
+      // the original game's puzzles keep their hint ladder; Season 2's strict ones have none at all
+      if (def.strict) expect(def.hints, `${id}: a strict puzzle has no hints`).toBeUndefined();
+      else expect(def.hints?.length).toBeGreaterThanOrEqual(2);
       expect(RULES[def.type]).toBeTruthy();
       const moves = def.solution ?? SOLVERS[def.type]?.(def.config) ?? solve(def.type, def.config);
       expect(moves, `add a solution for ${id}`).toBeTruthy();

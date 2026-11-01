@@ -144,3 +144,136 @@
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
+
+/* ── Season 2 overhaul: a witness's testimony (ui/testimony.js) ──
+   A bar at the bottom; the world stays visible and live above it (the account is acted out there).
+   Every control at least 44 px; it wraps on a 320 px phone and scrolls inside itself when tall. */
+.overlay-testimony {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 calc(var(--safe-r) + 8px) calc(var(--safe-b) + 8px) calc(var(--safe-l) + 8px);
+  background: linear-gradient(0deg, rgba(5, 6, 26, 0.5), transparent 45%);
+  pointer-events: none;
+}
+
+.tm {
+  pointer-events: auto;
+  width: min(100%, 720px);
+  max-height: 62%;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 10px 12px 12px;
+  border-radius: 18px;
+  color: var(--cream);
+  background: var(--panel);
+  box-shadow: var(--shadow), inset 0 0 0 1px var(--line);
+}
+
+.tm-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.tm-head .btn {
+  min-height: 44px;
+}
+
+.tm-line {
+  margin: 6px 0 8px;
+  font-size: 16px;
+  line-height: 1.55;
+  font-weight: 700;
+}
+
+.tm-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.tm-nav .dial-btn {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+}
+
+.tm-dots {
+  letter-spacing: 2px;
+  opacity: 0.85;
+}
+
+.tm-act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tm-act .btn {
+  flex: 1 1 120px;
+  min-height: 44px;
+}
+
+.tm-pick {
+  margin-top: 8px;
+}
+
+.tm-pick-q {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.tm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.tm-chip {
+  display: grid;
+  flex: 1 1 130px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--cream);
+  background: rgba(255, 214, 140, 0.1);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.tm-chip small {
+  opacity: 0.75;
+  font-size: 11.5px;
+}
+
+.tm-feedback {
+  min-height: 1.2em;
+  margin: 6px 0 0;
+  font-size: 13.5px;
+}
+
+.tm-feedback[data-kind='bad'] {
+  color: #ffb3b3;
+}
+
+/* the clock you can turn by hand */
+.clk-face {
+  touch-action: none;
+  cursor: grab;
+}
+
+.clk-how {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.85;
+}

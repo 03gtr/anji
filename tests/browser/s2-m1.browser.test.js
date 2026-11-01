@@ -84,7 +84,10 @@ async function open(browser, { width = 390, height = 844, touch = true, scene, s
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('crash', () => errors.push('the page crashed'));
   const flags = [...AFTER, ...s2].join(',');
-  await page.goto(`${base}?timer=1&scene=${scene}&flags=${flags}`, { waitUntil: 'load', timeout: 90000 });
+  // WebKit plays on the game's own animation frames: the dev-only timer loop (?timer=1) starves headless WebKit's
+  // rendering on Windows until the page hangs (measured in tests/browser/s2-m02.browser.test.js); Edge keeps it
+  const timer = browser.browserType().name() === 'webkit' ? '' : 'timer=1&';
+  await page.goto(`${base}?${timer}scene=${scene}&flags=${flags}`, { waitUntil: 'load', timeout: 90000 });
   await page.waitForFunction(() => window.__game?.screen?.world?.mode === 'play' || document.querySelector('.overlay-dialogue'), null, { timeout: 60000 });
   await page.evaluate((ev) => {
     for (const e of ev) window.__game.game.collect(`s2.ev.${e}`);
@@ -97,12 +100,21 @@ const centre = (page, sel) =>
   page.evaluate((s) => {
     const el = document.querySelector(s);
     if (!el) return null;
-    el.scrollIntoView({ block: 'center', inline: 'center' });
+    // (inline 'nearest': 'center' would scroll the right-to-left game root sideways — a test artefact, not play)
+    el.scrollIntoView({ block: 'center', inline: 'nearest' });
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }, sel);
 async function press(t, sel) {
-  const p = await centre(t.page, sel);
+  // a player taps a button that has stopped moving: wait until two measurements agree (a line above it may
+  // have just appeared or cleared)
+  let p = await centre(t.page, sel);
+  for (let i = 0; i < 20 && p; i++) {
+    await t.page.waitForTimeout(50);
+    const q = await centre(t.page, sel);
+    if (q && Math.abs(q.x - p.x) < 0.5 && Math.abs(q.y - p.y) < 0.5) break;
+    p = q;
+  }
   expect(p, `${sel} is on screen`).toBeTruthy();
   if (t.touch) await t.page.touchscreen.tap(p.x, p.y);
   else await t.page.mouse.click(p.x, p.y);
@@ -179,8 +191,14 @@ for (const [name, engine] of Object.entries(engines)) {
       await playing(t.page);
       await tapObject(t, 520); // the comparison
       await t.page.waitForSelector('.panel.puzzle');
-      await press(t, '.ct-claim[data-claim="1"]');
+      // the copy's claims: the false one, and what she read that breaks it
+      await press(t, '.ct-claim[data-claim="2"]');
       await press(t, '[data-evidence="register"]');
+      await press(t, '[data-submit]');
+      // then the register's own claims (the second part): the torn stub
+      await t.page.waitForFunction(() => /السجل نفسه/.test(document.querySelector('.panel.puzzle .ded-h')?.textContent || ''), null, { timeout: 15000 });
+      await press(t, '.ct-claim[data-claim="1"]');
+      await press(t, '[data-evidence="stub"]');
       await press(t, '[data-submit]');
       await t.page.waitForSelector('.panel.puzzle.is-solved');
       await press(t, '.panel.puzzle .panel-foot .btn-primary');
@@ -225,7 +243,10 @@ for (const [name, engine] of Object.entries(engines)) {
         }
         await press(t, '[data-submit]');
         expect(await t.page.evaluate(() => document.querySelectorAll('.sort-placed').length)).toBe(5);
-        expect(await t.page.evaluate(() => document.querySelector('.puzzle-feedback').textContent)).toMatch(/من/);
+        // a neutral line: never how many fit (no digits), never which card
+        const said = await t.page.evaluate(() => document.querySelector('.puzzle-feedback').textContent);
+        expect(said.length).toBeGreaterThan(0);
+        expect(said).not.toMatch(/[0-9٠-٩]/);
         // put them right by tapping back and placing again
         for (const id of ['register', 'blank', 'moved']) {
           await press(t, `[data-unplace="${id}"]`);
@@ -242,10 +263,21 @@ for (const [name, engine] of Object.entries(engines)) {
         await t.page.waitForFunction(() => window.__game?.screen?.world?.mode === 'play' && window.__game.screen.world.scene.id === 's2-caseroom', null, { timeout: 60000 });
         await tapObject(t, 720);
         await t.page.waitForSelector('[data-choose="needs"]', { timeout: 20000 });
+        // REGRESSION: the tap that opened the board ticked the statement under her finger (a phone's compatibility click)
+        await t.page.waitForTimeout(400);
+        expect(await t.page.evaluate(() => document.querySelectorAll('[data-choose][aria-pressed="true"]').length)).toBe(0);
+        // tick every true statement: one false one ticked is wrong (a neutral line), untick it and add the rest
         await press(t, '[data-choose="proven"]');
-        await press(t, '[data-submit]');
-        expect(await t.page.evaluate(() => document.querySelector('.puzzle-feedback').textContent)).toMatch(/سبب/);
         await press(t, '[data-choose="needs"]');
+        await press(t, '[data-submit]');
+        expect(await t.page.evaluate(() => document.querySelector('.panel.puzzle.is-solved'))).toBeNull();
+        expect(await t.page.evaluate(() => document.querySelector('.puzzle-feedback').textContent)).not.toMatch(/سبب|منو|ليش/);
+        // a wrong check shakes the panel; she taps again once it is still (a tap mid-shake lands beside its target)
+        await t.page.evaluate(() => Promise.all(document.querySelector('.panel.puzzle').getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)));
+        await press(t, '[data-choose="proven"]');
+        await press(t, '[data-choose="real"]');
+        await press(t, '[data-choose="talk"]');
+        expect(await t.page.evaluate(() => [...document.querySelectorAll('[data-choose][aria-pressed="true"]')].map((b) => b.dataset.choose).sort())).toEqual(['needs', 'real', 'talk']);
         await press(t, '[data-submit]');
         await t.page.waitForSelector('.panel.puzzle.is-solved');
         await press(t, '.panel.puzzle .panel-foot .btn-primary');

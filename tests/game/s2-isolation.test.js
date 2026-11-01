@@ -23,6 +23,8 @@ import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { WORLDS } from '../../src/game/data/worlds.js';
 import { JOURNAL_S2 } from '../../src/game/data/evidence-s2.js';
 import { PUZZLES_S2 } from '../../src/game/data/puzzles-s2.js';
+import { JOURNAL_S2_M2 } from '../../src/game/data/evidence-s2-m2.js';
+import { PUZZLES_S2_M2 } from '../../src/game/data/puzzles-s2-m2.js';
 
 const T0 = 1_800_000_000_000;
 function setup() {
@@ -51,8 +53,8 @@ describe('Season 2 ids are routed to their own document', () => {
   it('no id of the original game, its packs or the deep garden routes to Season 2', () => {
     // everything that is not Season 2's own content (whose ids SHOULD route: tested above and in s2-m1)
     const ids = [
-      ...Object.keys(JOURNAL).filter((k) => !(k in JOURNAL_S2)), ...Object.keys(COLLECTIBLES), ...Object.keys(ITEMS), ...Object.keys(COSMETICS),
-      ...Object.keys(PUZZLES).filter((k) => !(k in PUZZLES_S2)),
+      ...Object.keys(JOURNAL).filter((k) => !(k in JOURNAL_S2) && !(k in JOURNAL_S2_M2)), ...Object.keys(COLLECTIBLES), ...Object.keys(ITEMS), ...Object.keys(COSMETICS),
+      ...Object.keys(PUZZLES).filter((k) => !(k in PUZZLES_S2) && !(k in PUZZLES_S2_M2)),
       ...MISSIONS.filter((m) => m.pack !== 's2').flatMap((m) => [`mission:${m.id}`, `mission-seen:${m.id}`]),
       ...Object.keys(SCENES).filter((s) => !s.startsWith('s2-')).flatMap((s) => [`visited:${s}`, `t.${s}.enter`, `it.${s}.x`]),
       ...Object.keys(DIALOGUE).filter((k) => !k.startsWith('s2.')).map((k) => `dlg:${k}`),

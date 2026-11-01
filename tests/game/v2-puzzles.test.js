@@ -142,7 +142,14 @@ describe('puzzle help ladder', () => {
   it('with hints turned off, skip appears after the first mistake', () => {
     expect(canSkip(def, { hintsOn: false, mistakes: 1 })).toBe(true);
   });
-  it('every story puzzle keeps a hint ladder of at least three steps', () => {
-    for (const [id, p] of Object.entries(PUZZLES)) expect(p.hints.length, id).toBeGreaterThanOrEqual(3);
+  it('every story puzzle keeps a hint ladder of at least three steps (Season 2 strict puzzles: none)', () => {
+    for (const [id, p] of Object.entries(PUZZLES)) {
+      if (p.strict) expect(p.hints, id).toBeUndefined();
+      else expect(p.hints.length, id).toBeGreaterThanOrEqual(3);
+    }
+  });
+  it('a strict puzzle can never be skipped, whatever happened', () => {
+    const strict = { strict: true, hints: ['a', 'b', 'c'] };
+    for (const opts of [{}, { hintsUsed: 3 }, { mistakes: 99 }, { hintsOn: false, mistakes: 5 }]) expect(canSkip(strict, opts)).toBe(false);
   });
 });

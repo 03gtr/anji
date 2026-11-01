@@ -40,7 +40,7 @@ export function createDialogue(script, { check = () => true, apply = () => {} } 
         return { type: 'choice', speaker: node.s ?? null, expr: node.e ?? null, text: node.t ?? null, options: options.map((o) => o.t) };
       }
       if (node.do) apply(node.do);
-      if (node.t != null) return { type: 'line', speaker: node.s ?? null, expr: node.e ?? null, text: node.t, cue: node.cue ?? null };
+      if (node.t != null) return { type: 'line', speaker: node.s ?? null, expr: node.e ?? null, text: node.t, cue: node.cue ?? null, act: node.act ?? null };
       if (node.cue) return { type: 'cue', cue: node.cue };
     }
     ended = true;

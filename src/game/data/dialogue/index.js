@@ -12,6 +12,7 @@ import { SP2 } from './sp2.js';
 import { DEEP } from './deep.js';
 import { TEAM } from './team.js';
 import { S2 } from './s2.js';
+import { S2_M2 } from './s2-m2.js';
 
 export const DIALOGUE = {
   ...ACT1,
@@ -27,4 +28,5 @@ export const DIALOGUE = {
   ...DEEP,
   ...TEAM,
   ...S2,
+  ...S2_M2,
 };

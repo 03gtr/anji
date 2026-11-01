@@ -4,7 +4,7 @@
  *  - the case file: every `ev:` / `dec:` / `num:` used anywhere is in Season 2's registries, every
  *    Season 2 id routes to its own save, and the M1 data agrees with the approved graph
  *    (docs/season-2/graph.mjs): same missions, same prerequisites, same evidence;
- *  - every puzzle: exactly three hints, solvable through its own rules — the handwriting comparison
+ *  - every puzzle: strict (no hints, no skip, no solution), solvable through its own rules — the handwriting comparison
  *    with ANY three (or more) of the five samples;
  *  - the new rules (`sort`, `rubbing`): a wrong try keeps what she set and never gives the answer;
  *  - Ryan's reactions: a greeting never draws one, work only sends him back to work, "none" is always
@@ -24,6 +24,7 @@ import { syncMissions, missionState } from '../../src/game/progression/missions.
 import { MISSIONS_S2, S2_OPEN } from '../../src/game/data/missions-s2.js';
 import { PUZZLES_S2 } from '../../src/game/data/puzzles-s2.js';
 import { S2_SCENES } from '../../src/game/data/scenes/s2.js';
+import { S2_M2_SCENES } from '../../src/game/data/scenes/s2-m2.js';
 import { S2 as DIALOGUE_S2 } from '../../src/game/data/dialogue/s2.js';
 import { DIALOGUE } from '../../src/game/data/dialogue/index.js';
 import { EVIDENCE_S2, DECISIONS_S2, JOURNAL_S2, CASE_S2 } from '../../src/game/data/evidence-s2.js';
@@ -146,10 +147,11 @@ describe('the case file and its ids', () => {
 
   it('the season opens with the original ending only, and nothing in M1 points past it', () => {
     expect(MISSIONS_S2[0].unlock).toBe(S2_OPEN);
-    for (const m of MISSIONS_S2) for (const s of m.steps) expect(s.text && s.hint, `${m.id} step`).toBeTruthy();
+    for (const m of MISSIONS_S2) for (const s of m.steps) expect(s.text && !s.hint, `${m.id} step: text, and no hint`).toBeTruthy();
     expect(MISSIONS_S2.find((m) => m.id === 's2-11').reward).toContain('journal:s2-m1-end');
     for (const s of S2_SCENES) for (const e of s.exits || []) expect(e.to === 'garden' || S2_SCENES.some((x) => x.id === e.to), `${s.id} → ${e.to}`).toBe(true);
-    for (const w of WORLDS.filter((x) => x.region === 's2')) expect(S2_SCENES.some((s) => s.id === w.scene), w.id).toBe(true);
+    // every Season 2 place on the map has its scene (M1's, or M2's — the Living Story)
+    for (const w of WORLDS.filter((x) => x.region === 's2')) expect([...S2_SCENES, ...S2_M2_SCENES].some((s) => s.id === w.scene), w.id).toBe(true);
   });
 });
 
@@ -158,9 +160,10 @@ const hasAll = { has: () => true, flag: () => true, hasItem: () => true, seen: (
 const gameWith = (evidence) => ({ ...hasAll, has: (id) => evidence.includes(String(id).replace('s2.ev.', '')) });
 
 describe('M1 puzzles', () => {
-  it('every one has exactly three hints and is solvable by its own rules', () => {
+  it('every one is strict (no hints) and is solvable by its own rules', () => {
     for (const [id, p] of Object.entries(PUZZLES_S2)) {
-      expect(p.hints, id).toHaveLength(3);
+      expect(p.strict, id).toBe(true);
+      expect(p.hints, id).toBeUndefined();
       const config = resolveConfig(p.config, hasAll);
       expect(replay(p.type, config, solve(p.type, config)).outcome, id).toBe('solved');
     }
@@ -178,7 +181,7 @@ describe('M1 puzzles', () => {
       const config = resolveConfig(PUZZLES_S2['s2-hands'].config, gameWith(s));
       expect(config.stages[0].cards).toHaveLength(s.length);
       expect(replay('sort', config, solve('sort', config)).outcome, s.join(',')).toBe('solved');
-      expect(config.stages[1].answer).toBe('elim');
+      expect(config.stages[1].answers.sort()).toEqual(['elim', 'like']);
     }
   });
 
@@ -201,24 +204,27 @@ describe('M1 puzzles', () => {
     }
     const next = RULES.sort.submit(config, st);
     expect(next.outcome).toBe('progress');
-    st = RULES.sort.choose(config, next.state, 'proven').state;
-    const pick = RULES.sort.submit(config, st);
-    expect(pick.outcome).toBe('wrong');
-    expect(pick.message).not.toMatch(/سبب، وما عدنا سبب بعد\.$/); // not the right answer's words
-    expect(pick.message).toMatch(/سبب/); // but what is true: no motive yet
-    expect(RULES.sort.submit(config, RULES.sort.choose(config, pick.state, 'needs').state).outcome).toBe('solved');
+    // the last stage: tick every true statement — exactly that set; a subset or a superset is wrong
+    const tick = (state, ids) => ids.reduce((x, id) => RULES.sort.choose(config, x, id).state, state);
+    const { answers } = config.stages[1];
+    expect(answers.length).toBeGreaterThanOrEqual(2);
+    expect(RULES.sort.submit(config, next.state).outcome).toBe('noop'); // nothing ticked
+    expect(RULES.sort.submit(config, tick(next.state, answers.slice(1))).outcome).toBe('wrong'); // one missing
+    expect(RULES.sort.submit(config, tick(next.state, [...answers, 'proven'])).outcome).toBe('wrong'); // one too many
+    expect(RULES.sort.submit(config, tick(next.state, [...answers, 'proven', 'proven'])).outcome).toBe('solved'); // ticked twice = off
   });
 
-  it('rubbing: nothing to answer until every part is rubbed; a guess past the evidence is wrong, with a reason', () => {
+  it('rubbing: nothing to answer until every part is rubbed; then exactly what it proves — no more, no less', () => {
     const { config } = PUZZLES_S2['s2-rubbing'];
     let st = RULES.rubbing.init(config);
-    expect(RULES.rubbing.choose(config, st, 'for-anji').outcome).toBe('noop');
+    expect(RULES.rubbing.choose(config, st, 'to-anji').outcome).toBe('noop');
     for (const r of config.regions) st = RULES.rubbing.rub(config, st, r.id).state;
     expect(RULES.rubbing.rub(config, st, config.regions[0].id).outcome).toBe('noop'); // once each
-    const guess = RULES.rubbing.submit(config, RULES.rubbing.choose(config, st, 'who').state);
-    expect(guess.outcome).toBe('wrong');
-    expect(guess.message).toMatch(/توقيع/);
-    expect(RULES.rubbing.submit(config, RULES.rubbing.choose(config, st, 'for-anji').state).outcome).toBe('solved');
+    const tick = (ids) => ids.reduce((x, id) => RULES.rubbing.choose(config, x, id).state, st);
+    expect(RULES.rubbing.submit(config, tick(['to-anji'])).outcome).toBe('wrong'); // half of it
+    expect(RULES.rubbing.submit(config, tick(['to-anji', 'erased', 'signed'])).outcome).toBe('wrong'); // past the evidence
+    expect(RULES.rubbing.submit(config, tick(['to-anji', 'erased'])).outcome).toBe('solved');
+    expect(config.options.length).toBeGreaterThanOrEqual(6); // 2⁶ sets to guess from
   });
 
   it('a multi-stage board resumes at its stage (the host keeps pstage:)', () => {
@@ -311,16 +317,29 @@ function playDialogue(game, key, choices = {}) {
 /** Runs scene actions like the engine (say, fx, puzzle — solved by its reward —, if/then, social: nothing to change). */
 function run(game, actions, choices) {
   for (const a of [].concat(actions || [])) {
-    if (a.if !== undefined && !('then' in a) && !a.puzzle) {
+    if (a.if !== undefined && !('then' in a) && !a.puzzle && !a.testimony) {
       if (!check(a.if, game)) continue;
     }
-    if ('then' in a && !a.puzzle) {
+    if ('then' in a && !a.puzzle && !a.testimony) {
       run(game, check(a.if, game) ? a.then : a.else, choices);
       continue;
     }
     if (a.say) playDialogue(game, a.say, choices);
     else if (a.fx) applyEffects(a.fx, game);
-    else if (a.puzzle) {
+    else if (a.all) run(game, a.all, choices);
+    else if (a.testimony) {
+      // played as she would: each version breaks only on the evidence that breaks it — which she must HOLD
+      const p = PUZZLES_S2[a.testimony];
+      const from = Number(game.flag(`pstage:${a.testimony}`)) || 0;
+      for (const v of p.versions.slice(from)) {
+        expect(game.has(`s2.ev.${v.breaks[1]}`), `${a.testimony} ${v.id}: she holds ${v.breaks[1]}`).toBe(true);
+        run(game, v.broken, choices);
+      }
+      game.setFlag(`pstage:${a.testimony}`, false);
+      applyEffects(p.reward, game);
+      game.recordResult(`puzzle:${a.testimony}`, { completed: true });
+      run(game, a.then, choices);
+    } else if (a.puzzle) {
       const p = PUZZLES_S2[a.puzzle];
       applyEffects(p.reward, game);
       game.recordResult(`puzzle:${a.puzzle}`, { completed: true });
@@ -384,9 +403,10 @@ const WITNESS_PLAY = {
     tap(g, 's2-gym', 'sabri');
     tap(g, 's2-gym', 'receipt', { 's2.receipt': 1 });
   },
-  's2-08': (g) => {
+  // s2-08 as first shipped (Jojo's versions are played in the Living Story's Mission 03)
+  's2-08': (g, choices = { 's2.jojo-1': 0 }) => {
     enter(g, 's2-lamphouse');
-    tap(g, 's2-lamphouse', 'jojo', { 's2.jojo-1': 0 });
+    tap(g, 's2-lamphouse', 'jojo', choices);
     tap(g, 's2-lamphouse', 'clock');
   },
   's2-09': (g) => {
@@ -491,9 +511,7 @@ describe('M1, played through', () => {
             tap(t.game, 's2-gym', 'sabri');
             tap(t.game, 's2-gym', 'receipt', choices);
           } else if (id === 's2-08') {
-            enter(t.game, 's2-lamphouse');
-            tap(t.game, 's2-lamphouse', 'jojo', choices);
-            tap(t.game, 's2-lamphouse', 'clock');
+            WITNESS_PLAY['s2-08'](t.game, choices);
           } else if (id === 's2-09') {
             enter(t.game, 's2-home');
             tap(t.game, 's2-home', 'sister');

@@ -103,8 +103,10 @@ export function createExplore(app, scene, { spawnX } = {}) {
   });
 
   // real-time play pauses under menus, puzzles, minigames and cinematics;
-  // during dialogue the scene keeps breathing (idle animation) behind the box
-  const heavyOverlay = (kinds) => kinds.some((k) => k !== 'overlay-dialogue');
+  // during dialogue the scene keeps breathing (idle animation) behind the box, and a testimony is
+  // acted out in the world behind its bar (ui/testimony.js)
+  const LIGHT = ['overlay-dialogue', 'overlay-testimony'];
+  const heavyOverlay = (kinds) => kinds.some((k) => !LIGHT.includes(k));
   scope.sub(
     bus.on('overlay', ({ kinds }) => {
       // menus get the arrow keys / space back (for scrolling) while play is paused

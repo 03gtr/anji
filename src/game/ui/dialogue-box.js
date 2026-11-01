@@ -82,6 +82,8 @@ export function playDialogue(app, script, { id } = {}) {
         const side = s.speaker === 'anji' ? 'start' : 'end';
         root.dataset.side = side;
         root.dataset.speaker = s.speaker || 'narrator';
+        // the world behind the box follows the line: the speaker's face, people turning, a line's actions
+        app.bus?.emit('dialogue-line', { speaker: s.speaker, expr: s.expr, act: s.act ?? null, text: s.text });
         const svg = s.speaker ? portraitSvg(s.speaker, s.expr, game.state.cosmetics) : '';
         portrait.innerHTML = svg;
         portrait.hidden = !svg;

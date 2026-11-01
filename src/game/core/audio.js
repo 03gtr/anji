@@ -24,6 +24,17 @@ const SFX = {
   sparkle: [[96, 0, 0.1, 'sine', 0.15], [100, 0.07, 0.12, 'sine', 0.12], [103, 0.14, 0.16, 'sine', 0.1]],
   boing: 'boing',
   hit: [[43, 0, 0.12, 'square', 0.12]],
+  // Season 2's living world: original, synthesised here (filtered noise and pitch sweeps), nothing downloaded
+  footstep: 'footstep', // a soft step (walking)
+  run: 'run', // a quicker, firmer step
+  land: 'land', // a soft thud after a jump
+  paper: 'paper', // a sheet rustles
+  printer: 'printer', // a printer buzzes … and jams
+  lantern: 'lantern', // a wick catches
+  gasp: 'gasp', // a surprised breath (a reaction)
+  oops: 'oops', // a comic slide down (caught out)
+  giggle: 'giggle', // three little rising chirps (comedy)
+  click: [[88, 0, 0.025, 'square', 0.05]], // a dial or a hand on a clock
 };
 
 // Gentle pentatonic phrases for the optional music bed.
@@ -123,6 +134,71 @@ export function createAudio(settings) {
     osc.stop(t0 + 0.32);
   }
 
+  /** A burst of filtered white noise (steps, paper, a wick). The noise buffer is made once. */
+  let noiseBuf = null;
+  function noise(ac, at, dur, { type = 'bandpass', freq = 1000, to = null, q = 1, vol = 0.1 } = {}) {
+    if (!noiseBuf) {
+      noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.6), ac.sampleRate);
+      const data = noiseBuf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const t0 = ac.currentTime + at;
+    const src = ac.createBufferSource();
+    const filter = ac.createBiquadFilter();
+    const g = ac.createGain();
+    src.buffer = noiseBuf;
+    filter.type = type;
+    filter.frequency.setValueAtTime(freq, t0);
+    if (to) filter.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+    filter.Q.value = q;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + Math.min(0.012, dur / 3));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filter).connect(g).connect(master);
+    src.start(t0, Math.random() * 0.3);
+    src.stop(t0 + dur + 0.02);
+  }
+  /** One oscillator gliding from f0 to f1 Hz (gasps, comic slides). */
+  function sweep(ac, at, f0, f1, dur, type = 'sine', vol = 0.14) {
+    const t0 = ac.currentTime + at;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(f0, t0);
+    osc.frequency.exponentialRampToValueAtTime(f1, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g).connect(master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.05);
+  }
+  const SYNTH = {
+    footstep: (ac) => noise(ac, 0, 0.05, { type: 'lowpass', freq: 500 + Math.random() * 200, vol: 0.05 }),
+    run: (ac) => noise(ac, 0, 0.045, { type: 'lowpass', freq: 750 + Math.random() * 250, vol: 0.075 }),
+    land: (ac) => {
+      sweep(ac, 0, 140, 60, 0.12, 'sine', 0.16);
+      noise(ac, 0, 0.08, { type: 'lowpass', freq: 400, vol: 0.08 });
+    },
+    paper: (ac) => {
+      noise(ac, 0, 0.12, { type: 'bandpass', freq: 3200, q: 0.8, vol: 0.08 });
+      noise(ac, 0.09, 0.16, { type: 'bandpass', freq: 2600, q: 0.8, vol: 0.06 });
+    },
+    printer: (ac) => {
+      for (let i = 0; i < 6; i++) tone(ac, 40 + (i % 2) * 2, i * 0.09, 0.07, 'square', 0.05);
+      noise(ac, 0.56, 0.22, { type: 'bandpass', freq: 900, q: 2, vol: 0.09 }); // the jam
+    },
+    lantern: (ac) => {
+      noise(ac, 0, 0.35, { type: 'bandpass', freq: 400, to: 2200, q: 1.2, vol: 0.07 });
+      tone(ac, 79, 0.18, 0.4, 'sine', 0.05);
+    },
+    gasp: (ac) => sweep(ac, 0, 320, 720, 0.16, 'sine', 0.1),
+    oops: (ac) => sweep(ac, 0, 900, 220, 0.45, 'triangle', 0.12),
+    giggle: (ac) => {
+      for (let i = 0; i < 3; i++) sweep(ac, i * 0.11, 520 + i * 60, 760 + i * 60, 0.08, 'sine', 0.08);
+    },
+  };
+
   function play(name) {
     const ac = ready();
     if (!ac) return;
@@ -130,6 +206,7 @@ export function createAudio(settings) {
     const def = SFX[name];
     if (def === 'bark') return bark(ac);
     if (def === 'boing') return boing(ac);
+    if (typeof def === 'string' && SYNTH[def]) return SYNTH[def](ac);
     for (const [m, at, dur, type, vol] of def || []) tone(ac, m, at, dur, type, vol);
   }
 

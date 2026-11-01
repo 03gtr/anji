@@ -47,6 +47,10 @@ export function applyEffects(effects, game) {
       case 'ev': // 'ev:e-wax' — evidence found (once)
         if (game.collect(`s2.ev.${id}`)) changes.push({ kind: 'evidence', id });
         break;
+      case 'hold':
+        // 'hold:paper-2' — she carries it (one thing at a time); '!hold:' — her hands are empty again
+        game.setFlag('s2:hold', neg || !id ? false : id);
+        break;
       case 'dec': {
         // 'dec:lead=anji' — a decision, stored once as a named value
         const cut = id.indexOf('=');
@@ -67,12 +71,13 @@ export function applyEffects(effects, game) {
   return changes;
 }
 
-const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num']);
+const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num', 'hold']);
 export function isValidEffect(fx) {
   if (typeof fx !== 'string' || !fx.includes(':')) return false;
   const kind = fx.replace(/^[!-]/, '').split(':')[0];
   if (!KINDS.has(kind)) return false;
   if (kind === 'dec') return /^dec:[\w-]+=[\w-]+$/.test(fx);
+  if (kind === 'hold') return /^(hold:[\w-]+|!hold:)$/.test(fx); // a thing she carries, or empty hands
   if (kind === 'num') return /^num:s2:[\w:-]+?[+-]\d+$/.test(fx);
   return true;
 }
