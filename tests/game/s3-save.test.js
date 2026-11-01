@@ -10,6 +10,8 @@ import { createGame, isS2, isS3, seasonOf } from '../../src/game/core/game.js';
 import { createSaveManager, defaultState, SAVE_KEY } from '../../src/game/core/save.js';
 import { createS2Store, createSeasonStore, S2_KEY, S3_KEY, S2_VERSION } from '../../src/game/core/s2-store.js';
 import { memoryStorage } from '../helpers.js';
+import { S3_SCENES } from '../../src/game/data/scenes/s3.js';
+import { MISSIONS_S3 } from '../../src/game/data/missions-s3.js';
 
 const T0 = 1_800_000_000_000;
 const MAIN_KEYS = [SAVE_KEY, `${SAVE_KEY}:backup`, `${SAVE_KEY}:shadow`];
@@ -94,6 +96,10 @@ describe('routing: which document an id belongs to', () => {
     // Story Pack 01's «ماكنة الأفكار» has slots 's1' 's2' 's3' inside its config; a draft is saved under its puzzle id
     // (`pdraft:sp1-build-steps`), so the slot names never route a save (Season 2 has lived with its 's2' slot)
     const allowed = [path.join('src', 'game', 'data', 'puzzles-sp1.js') + ': s3'];
+    // Season 3 registering itself on the map (data/worlds.js): its own pack/region name and its own places
+    const worlds = path.join('src', 'game', 'data', 'worlds.js');
+    // (and each Season 3 place opens when a Season 3 mission is done: its own completion flag)
+    allowed.push(`${worlds}: s3`, ...S3_SCENES.map((s) => `${worlds}: ${s.id}`), ...MISSIONS_S3.map((m) => `${worlds}: flag:mission:${m.id}`));
     expect(hits.filter((h) => !allowed.includes(h.replace(/\//g, path.sep)) && !/[/\\]data[/\\]s3[/\\]|missions-s3|evidence-s3|puzzles-s3|dialogue[/\\]s3|scenes[/\\]s3/.test(h))).toEqual([]);
   });
 });

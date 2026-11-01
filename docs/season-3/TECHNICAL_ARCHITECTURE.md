@@ -44,7 +44,24 @@ implemented; `IMPLEMENTATION_LOG.md` has the commits.
   router; the frozen deployed-client baseline still passes).
 - **App wiring:** `app.js` creates the Season 3 store beside Season 2's; a `change` with `doc: 's3'` syncs only Season
   3's missions and never achievements; `syncMissions(game, { season })` (the old `{ season2 }` still accepted);
-  `herePack` knows `s3`; `lineKey` prefixes `s3:` for Season 3 places; backups export and import an `s3` section.
+  `herePack` knows `s3`; `lineKey` prefixes `s3:` for Season 3 places; backups export and import an `s3` section;
+  another tab's write to `snooki-game:s3`, and a Season 3 document from a newer build, raise the same protections as
+  the main and Season 2 saves (the "open elsewhere" and "newer version" messages; nothing overwritten).
+
+### 2.1 Restart policy: `all` (owner decision, 2026-11-01) [built — verified, no restart code changed]
+
+- **What restarts:** both ways of starting over — «مغامرة جديدة» on the title (one confirmation) and the settings'
+  «مسح التقدم» (two confirmations) — call `newGame()`, which replaces the main state with a new playthrough. Every
+  season document follows the playthrough (`replace()`): each is rebound to the new `createdAt` and starts empty. So
+  the original game, Season 2 and Season 3 always restart **together**; there is no per-season restart.
+- **What is kept:** nothing is deleted by a restart. A season's old document stays where it is until the new
+  playthrough first writes that season; that write moves it to `<key>:previous` (the store's existing rule for
+  "another playthrough's document"). It never resurfaces: a document whose `owner` is not the current playthrough is
+  never loaded as current.
+- **Never without confirmation:** the restart only happens after the game's own confirmation; «لا» changes nothing.
+- **No partial state:** after a restart every document written belongs to the same playthrough (`owner` =
+  the main save's `createdAt`); a reload before any season is written is still the new playthrough.
+- **Tests:** `tests/game/s3-restart.test.js` (through the real app, with all three saves present).
 
 ## 3. Ids (all owned by one module each; duplicates fail a test)
 
@@ -65,7 +82,7 @@ implemented; `IMPLEMENTATION_LOG.md` has the commits.
 ```
 src/game/data/s3/
   index.js            S3_MODULES, gather(key), withS3(scene) — the Season 2 module contract, one owner per id
-  cast.js             Season 3 people (Marius, Jalal's display name) — added to the procedural cast
+  cast.js             Season 3 people (Marius; Jalal) — added to the procedural cast
   m01-sabri.js        Mission 01 (scene s3-clinic, dialogue, puzzle s3-office, evidence, decisions, journal)
   m02-camaro.js …     one module per mission
 src/game/data/missions-s3.js, evidence-s3.js, puzzles-s3.js, dialogue/s3.js, scenes/s3.js   registries (gather)
@@ -126,3 +143,21 @@ Registration mirrors Season 2: `missions.js`, `puzzles.js`, `dialogue/index.js`,
 Shared registries (`missions.js`, `puzzles.js`, `dialogue/index.js`, `scenes/index.js`, `items.js`, `worlds.js`,
 `core/game.js`, `app.js`) are edited **only by the integrator** (this session), once each. A mission builder owns only
 its `data/s3/mNN-*.js`, its tests and its assets. No two builders touch the same file.
+
+## As built — the season's code (2026-11-01)
+
+| File | What it is |
+|---|---|
+| `src/game/data/s3/m01-sabri.js` … `m08-silence.js` | one module per mission (missions, scenes, interactables, dialogue, evidence, decisions, puzzles, board `links`, `patches` to earlier places), gathered by `data/s3/index.js` |
+| `src/game/data/s3/board.js` | the board's rules (pure): relations, `linkFlag` (symmetric relations read both ways), `linkHolds`, `reliability()` as a state, the neutral refusals |
+| `src/game/ui/board-s3.js` · `styles/s3.css` | the board as a journal tab «لوحة التحقيق» (shown only once `s3:board-open`); touch first, ≥ 44 px, reliability in words and marks (never colour alone) |
+| `src/game/core/engine-voice.js` | the V8 model (pure): Zefiro's cross-plane burble vs the other engine; one source for the sound (`render`) and for the drawn waveforms (`strokes`); `peak` and `clarity` for the tests |
+| `src/game/core/audio.js` | named sounds `v8-start`, `v8-idle`, `v8-blip`, `v8-off`, `v8-other`, `shutter`, `relay` (rendered once from the model, then replayed) and the finale's layers `hush-*` (each fades and stays faded); additive — every existing sound is unchanged |
+| `src/game/data/s3/art.js` · `recordings.js` | Zefiro drawn properly (an original muscle-car silhouette, in `cosmetics.carColor`), the street's details, the waveform SVG; the five recordings of Friday night |
+| `src/game/world/painter.js` | one new theme, `street-night` (additive) |
+| `src/game/characters/circle.js` · `world/engine.js` · `data/personas.js` | Jalal (fiction) as a new look, size and habits (additive; the existing looks are byte-identical) |
+| `src/game/puzzles/views.js` | a `sort` card may carry `art` (the waveform); a card without it renders exactly as before |
+| `src/game/ui/menus.js` | the board tab, added only when Season 3's board is open |
+| `src/game/data/worlds.js` | Season 3's six places on its map page, each unlocked by the previous mission |
+
+No change to the save format, the stores, or the restart. Season 3's data lives in `snooki-game:s3` (§2).

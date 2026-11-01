@@ -1,9 +1,10 @@
 # Season 3 — «أصداء الـV8» (Echoes of the V8)
 ### «الأسرار بين السطور» · The Secrets Between the Lines
 
-**Status:** Phase A design, 2026-11-01, on `feature/season-3-echoes` (from production `a2decf3`). Nothing here is
-implemented unless `IMPLEMENTATION_LOG.md` says so. Companion documents: `TECHNICAL_ARCHITECTURE.md`,
-`EVIDENCE_GRAPH.md`, `DECISION_FLOW.md`, `PUZZLE_SPECIFICATIONS.md`, `CREATIVE_PROPOSALS.md`.
+**Status (2026-11-01):** all eight missions are built on `feature/season-3-echoes` (`IMPLEMENTATION_LOG.md`, Steps 2
+and 3). Where the build differs from the Phase A plan below, the difference is listed in **§9, as built**. Companion
+documents: `TECHNICAL_ARCHITECTURE.md`, `EVIDENCE_GRAPH.md`, `DECISION_FLOW.md`, `PUZZLE_SPECIFICATIONS.md`,
+`CREATIVE_PROPOSALS.md`.
 
 ---
 
@@ -49,8 +50,16 @@ municipal noise notice; the bakery; the neighbour's camera; every record in Miss
 | **{husky}** | Anji's dog; reacts to the street at night, to Zefiro's engine (ears back, then curious) | ears, head tilt, sits |
 | **Jalal** *(fiction)* | car-club acquaintance Ryan trusted; the person behind the story | see Mission 04; not a villain — a frightened man who let a lie stand and then fed it |
 
-**Jalal is fiction.** He is not modelled on anyone. His display name lives in one place (`data/s3/cast.js`) so the
-owner can rename him with a single edit before release.
+**Jalal is fiction** (name approved by the owner, 2026-11-01; it is the only name the season uses for him). He is not
+modelled on anyone, and nothing about him refers to a real person. He is not presented as a villain: what he did, and
+why, is reached only through the evidence (Missions 04–08), and the story never decides it for the player.
+
+**Decided by the owner (2026-11-01):**
+- **Restart policy: `all`.** Starting over (a new game, or the settings' wipe) restarts every season together — the
+  original game, Season 2 and Season 3 — always after the game's own confirmation. There is no "restart Season 3
+  only". Nothing of the old playthrough is deleted by a restart (`TECHNICAL_ARCHITECTURE.md` §2.1).
+- **Zefiro's spare key: later.** Not in the story or any puzzle for now; the idea (`CREATIVE_PROPOSALS.md` C-11) is
+  kept for review when the ending is designed. Nothing depends on the key.
 
 ## 4. The story (what really happened — the player reconstructs it)
 
@@ -233,3 +242,21 @@ road is completable from any save (`DECISION_FLOW.md` §3 proves it per combinat
 - **Audio-only clues are never required:** every audio clue has a visible counterpart (P-02).
 - **Fiction that touches real people:** only Jalal and the records are fiction; nobody real is accused of anything.
 - **Size:** eight missions is the full season; the release can be staged (like Season 2's M1/M2) if the owner prefers.
+
+## 9. As built (2026-11-01)
+
+What changed from the Phase A plan, and why:
+
+| Plan | As built | Why |
+|---|---|---|
+| Mission 03: «Lama's voice note» among the recordings | her **own** voice note to Lama from her room at 23:11 (Lama replies «شنو هالصوت ورا صوتچ؟») | it puts the revving inside Anji's own evidence; Lama still hears it |
+| Mission 03: the clip carries an anchor | the clip has **no anchor and no time**: it is cut out of the 23:10 event, so only its engine identifies it | keeps the recordings consistent with the uncut original (Mission 07) |
+| Mission 04: `e-caption-edit` | the forward chain itself (`e-forward-chain`, logic grid P-04): the one message with no «forwarded» mark is the original | one clean deduction instead of two overlapping ones |
+| Mission 07: Lama's road is «the clinic's camera log» | her **aunt's** camera log (the neighbour on Anji's street); the puzzle is still played at the clinic | the clinic is not on Anji's street |
+| Mission 07: Sabri's road is «who he told» | his phone's **first copy**, exactly as Jalal sent it | the same truth, one clear puzzle |
+| Mission 08: the street, then the rose garden (`s3-roses`) | the whole finale on **her street**; no `s3-roses` place | the silence belongs where the blip was |
+| Decision `jalal-way` | **not built**; the finale does not branch on how Jalal is confronted | five decisions already shape the finale; see `DECISION_FLOW.md` |
+| Places | `s3-clinic`, `s3-street`, `s3-home`, `s3-garage`, `s3-lane`, `s3-archive` | — |
+
+Every puzzle meets the fairness floor (≥ 8 a stage, ≥ 20 a puzzle). A "tick every statement that holds" stage counts
+2ⁿ guesses. Logic grids are unique with every clue needed (enumerated). See `PUZZLE_SPECIFICATIONS.md`.

@@ -82,7 +82,8 @@ until it is in the code and tested.
 - **Narrative:** Season 1 gave Anji Zefiro's spare key («للطريق للبيت»). If she still has it, Mission 08 has one extra
   quiet beat: she can give it back, or keep it.
 - **Risks:** must never imply a promise; it is a callback, not a vow.
-- **Status:** proposed (needs the owner's view).
+- **Status:** **deferred** — owner decision `later` (2026-11-01). Not implemented; kept here to review when the ending
+  is designed. It is not a condition of any puzzle, mission or decision.
 
 ### C-12 · Canon reconciliation: Sabri at the clinic as a visitor
 - **Narrative:** the canon says Sabri is Ryan's coworker; the brief places him at Anji's workplace. He is there for his

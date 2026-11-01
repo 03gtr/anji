@@ -21,6 +21,7 @@ import { MISSIONS_DEEP } from './missions-deep.js';
 import { MISSIONS_TEAM } from './missions-team.js';
 import { MISSIONS_S2 } from './missions-s2.js';
 import { MISSIONS_S2_M2 } from './missions-s2-m2.js';
+import { MISSIONS_S3 } from './missions-s3.js';
 
 export const KIND_NAMES = { side: 'مهمة جانبية', arcade: 'سباق', challenge: 'تحدي', collect: 'مجموعة', story: 'حكاية', puzzle: 'لغز', together: 'سوا' };
 
@@ -224,6 +225,8 @@ export const MISSIONS = [
   ...MISSIONS_S2,
   // …and M2, the Living Story missions (after M1)
   ...MISSIONS_S2_M2,
+  // Season 3 «أصداء الـV8» (its own save, after Season 2's finale)
+  ...MISSIONS_S3,
 ];
 
 export const missionById = (id) => MISSIONS.find((m) => m.id === id);

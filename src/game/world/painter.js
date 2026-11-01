@@ -680,6 +680,84 @@ export const THEMES = {
     ],
   },
 
+  // Season 3: her street at night — flat roofs and lit windows, garden walls and gates, a pavement and the road
+  'street-night': {
+    sky: nightSky('#0b0f2e', '#1c2357', '#3a3570'),
+    stars: 50,
+    moon: [0.18, 0.16, 12],
+    layers: [
+      {
+        name: 'far',
+        f: 0.25,
+        draw(ctx, u0, u1, seed) {
+          each(u0, u1, 64, 30, seed, (i, x, r) => {
+            const h = 50 + r() * 60;
+            ctx.fillStyle = r() < 0.5 ? '#161b44' : '#1b2150';
+            ctx.fillRect(x - 30, 214 - h, 60, h + 4);
+            for (let k = 0; k < 3; k++) {
+              if (r() < 0.45) continue;
+              ctx.fillStyle = r() < 0.7 ? 'rgba(255,214,140,.55)' : 'rgba(160,200,255,.45)';
+              ctx.fillRect(x - 22 + k * 16, 214 - h + 12 + (r() * (h - 30)) | 0, 7, 9);
+            }
+          });
+        },
+      },
+      {
+        name: 'mid',
+        f: 0.55,
+        draw(ctx, u0, u1, seed) {
+          // the houses of her street: a wall, a gate, a lit window above; palms between
+          each(u0, u1, 230, 60, seed, (i, x, r) => {
+            const h = 120 + r() * 40;
+            ctx.fillStyle = '#262c5c';
+            ctx.fillRect(x - 90, GROUND - h, 180, h - 16);
+            ctx.fillStyle = '#2f3668';
+            ctx.fillRect(x - 96, GROUND - h - 6, 192, 8);
+            for (let k = 0; k < 3; k++) {
+              const lit = r() < 0.6;
+              ctx.fillStyle = lit ? 'rgba(255,208,130,.75)' : '#1a1f45';
+              ctx.fillRect(x - 70 + k * 52, GROUND - h + 22, 30, 26);
+              ctx.fillStyle = '#1a1f45';
+              ctx.fillRect(x - 56 + k * 52, GROUND - h + 22, 2, 26);
+            }
+            ctx.fillStyle = '#3a3f6e';
+            ctx.fillRect(x - 100, GROUND - 52, 200, 36);
+            ctx.fillStyle = '#2a2e58';
+            ctx.fillRect(x - 18, GROUND - 58, 36, 42);
+            if (r() < 0.7) {
+              ctx.fillStyle = '#2a3a2e';
+              ctx.fillRect(x + 120, GROUND - 150, 6, 134);
+              for (let k = 0; k < 5; k++) P.leafBlob(ctx, x + 123 + Math.cos(k * 1.26) * 22, GROUND - 152 + Math.sin(k * 1.26) * 8, 22, 6, k % 2 ? '#1f3a2e' : '#24452f');
+            }
+          });
+        },
+      },
+      {
+        name: 'near',
+        f: 1,
+        draw(ctx, u0, u1, seed) {
+          // the pavement, the kerb, the road with its centre line
+          ctx.fillStyle = '#3b3f5e';
+          ctx.fillRect(u0 - 2, GROUND, u1 - u0 + 4, 10);
+          ctx.fillStyle = '#4c5070';
+          for (let u = Math.floor(u0 / 40) * 40; u < u1 + 40; u += 40) ctx.fillRect(u, GROUND, 1.5, 10);
+          ctx.fillStyle = '#8a8ca8';
+          ctx.fillRect(u0 - 2, GROUND + 10, u1 - u0 + 4, 3);
+          ctx.fillStyle = '#25273d';
+          ctx.fillRect(u0 - 2, GROUND + 13, u1 - u0 + 4, VIEW_H - GROUND - 13);
+          ctx.fillStyle = 'rgba(233,220,192,.55)';
+          for (let u = Math.floor(u0 / 70) * 70; u < u1 + 70; u += 70) ctx.fillRect(u, GROUND + 34, 34, 2.4);
+          each(u0, u1, 90, 30, seed + 3, (i, x, r) => {
+            ctx.fillStyle = `rgba(255,214,150,${0.04 + r() * 0.05})`;
+            ctx.beginPath();
+            ctx.ellipse(x, GROUND + 22 + r() * 14, 40 + r() * 30, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        },
+      },
+    ],
+  },
+
   // V2: the meadow behind the sanctuary — dusk, wildflowers
   meadow: {
     sky: nightSky('#283070', '#8a5fa0', '#f0a882'),

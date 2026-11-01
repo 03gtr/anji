@@ -10,6 +10,7 @@ import './styles/sp2.css';
 import './styles/deep.css';
 import './styles/team.css';
 import './styles/s2.css';
+import './styles/s3.css';
 import { createGameApp } from './app.js';
 
 if (import.meta.env.DEV && new URLSearchParams(location.search).has('timer')) globalThis.__timerLoop = true;

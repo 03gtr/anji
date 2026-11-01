@@ -1,42 +1,48 @@
 # Season 3 — evidence graph
 
-Evidence ids are `s3.ev.<id>`. **Reliability** is the card's state on the board (§7 of `TECHNICAL_ARCHITECTURE.md`):
-`fact` (confirmed), `claim` (unverified statement), `contra` (contradicted by a fact she holds), `hyp` (her hypothesis),
-`disproved`. A claim's state changes when the deduction that tests it is made — listed in "becomes". The data form is
-`docs/season-3/graph.mjs` (written with each mission; validated like Season 2's: no cycles, nothing needed before it is
-yielded, no orphan evidence, every reference registered).
+Evidence ids are `s3.ev.<id>`, collected with the effect `ev3:<id>`. The data lives in each mission module
+(`src/game/data/s3/m0N-*.js`, `evidence`).
 
-| Id | Mission | Kind | Starts as | Becomes | Needed by |
-|---|---|---|---|---|---|
-| `e-visitor-log` | 01 | object | fact | — | P-01 |
-| `e-appointments` | 01 | document | fact | — | P-01 |
-| `e-test-schedule` | 01 | document | fact | — | P-01 |
-| `e-print-queue` | 01 | document | fact | — | P-01 |
-| `e-lama-note` | 01 | testimony | fact (Lama's first-hand habit note) | — | P-01 |
-| `e-sabri-count` | 01 | claim | claim | disproved by `d-office` | P-01 |
-| `e-group-msg` | 01 | object (his sent message) | fact (the message exists — not that it is true) | — | 04 (chain start) |
-| `d-office` | 01 | deduction | fact | — | 04, 08 |
-| `e-light-timer` | 02 | observation | fact | — | P-02 |
-| `e-bakery-hours` | 02 | observation | fact | — | P-02 |
-| `e-neighbour-cam` | 02 | observation | fact | — | 03 (unlocks `e-rec-cam`), P-04 |
-| `e-plate` | 02 | observation | fact | — | 04 (the notice) |
-| `e-blip` | 02 | witnessed | fact | — | P-02 |
-| `e-clip` | 03 | claim | claim | disproved by `d-two-engines` | P-02 |
-| `e-rec-cam` · `e-rec-gate` · `e-rec-lama` | 03 | recordings | fact | — | P-02 |
-| `t-ryan` | 03 | testimony | claim («لا تصدّكين كلشي ينقال») | fact after `d-source` | 08 |
-| `d-two-engines` | 03 | deduction | fact | — | 04, 06 |
-| `e-forward-chain` · `e-caption-edit` | 04 | metadata | fact | — | P-04 |
-| `e-noise-notice` | 04 | document | fact (plate «…٤٧», no colour) | — | 05, 06 |
-| `e-receipt` | 04 | object | fact (23:20, two streets away) | — | 06 |
-| `t-jalal` | 04 | testimony | claim («رجعت للبيت قبل ١٠:٣٠») | contra by `e-receipt`, disproved by `d-seven` | 06 |
-| `d-source` | 04 | deduction | fact | — | 06 |
-| `e-keyring` · `e-tyre-marks` | 05 | objects | fact | — | P-05 |
-| `d-second-car` | 05 | deduction | fact | — | 06 |
-| `d-seven` | 06 | deduction (two independent chains) | fact | — | 07, 08 |
-| `e-original` | 07 | recording | fact | — | 08 |
-| `e-dashcam` · `e-cctv-log` · `e-sabri-sender` | 07 | road pieces | fact | — | (one of them) 07 |
-| `d-truth` | 08 | deduction | fact | — | — |
+**Reliability** is a card's *state* on the board (`src/game/data/s3/board.js`, `reliability()`). It is never a fixed
+label:
+- `fact` and `deduction` stay as they are;
+- a `claim` starts unverified;
+- it becomes **contradicted** when she holds its `contradictedBy`;
+- it becomes **disproved** when she holds its `disprovedBy`.
 
-**Independence (P-06).** Each evidence has a `source`: `clinic-records`, `street-observation`, `neighbour-camera`,
-`her-phone`, `lama-phone`, `car-club`, `municipality`, `petrol-station`, `snooky`. Two chains are independent when
-they share no source.
+| Id | Mission | Kind | Source | Starts as | Becomes | Needed by |
+|---|---|---|---|---|---|---|
+| `e-visitor-log` · `e-appointments` · `e-test-schedule` · `e-print-queue` | 01 | records | clinic-records | fact | — | P-01 |
+| `e-lama-note` | 01 | Lama's note | lama | fact | — | P-01 |
+| `e-sabri-count` | 01 | claim | sabri | claim | disproved by `d-office` | P-01, P-06 (a statement) |
+| `e-group-msg` | 01 | his sent message | sabri | fact (it exists, not that it is true) | — | — |
+| `d-office` | 01 | deduction | clinic-records | deduction | — | — |
+| `e-light-timer` · `e-bakery-hours` | 02 | observations | street | fact | — | P-02 (anchors; Mission 03 sends her back if she walked past them) |
+| `e-neighbour-cam` · `e-plate` | 02 | observations | street | fact | — | board threads |
+| `e-blip` | 02 | witnessed | anji | fact | — | board threads |
+| `e-clip` | 03 | the circulated clip | clip | claim | disproved by `d-two-engines` | P-02, P-09 (a statement) |
+| `e-rec-cam` | 03 | recordings | camera | fact | — | P-02, P-06 |
+| `e-rec-gate` · `e-rec-lama` | 03 | her recordings | anji | fact | — | P-02 |
+| `t-ryan` | 03 | testimony | ryan | claim | — | — |
+| `d-two-engines` | 03 | deduction | recordings | deduction | — | P-06, the board's first thread |
+| `e-forward-chain` | 04 | phones' metadata | phones | fact | — | P-04 |
+| `e-noise-notice` | 04 | document (plate «…٤٧», **no colour**) | municipality | fact | — | P-06, P-09 |
+| `e-receipt` | 04 | object (23:20, two streets away) | petrol-station | fact | — | P-06, P-09 |
+| `t-jalal` | 04 | testimony («رجعت للبيت ١٠:٣٠») | jalal | claim | contradicted by `e-receipt`; disproved by `d-truth` | P-04, P-06, P-09 (a statement) |
+| `d-source` · `d-twisted` | 04 | deductions | phones | deduction | — | P-09 |
+| `e-keyring` · `e-tyre-marks` · `e-oil` | 05 | objects | lane | fact | — | P-05, P-06, P-09 |
+| `d-second-car` | 05 | deduction | lane | deduction | — | — |
+| `d-seven` | 06 | deduction (two independent chains) | board | deduction | — | — |
+| `e-original` | 07 | the uncut recording (any road) | original | fact | — | P-09 |
+| `e-dashcam` · `e-cctv-log` · `e-sabri-sender` | 07 | the road's own piece (one of them) | original | fact | — | — |
+| `d-truth` | 08 | deduction | board | deduction | — | — |
+
+**Independence (P-06).** Two chains are independent when they share no `source`. In «غرفة الحقائق السبعة»:
+- the sound chain is `d-two-engines` (recordings) and `e-rec-cam` (camera);
+- the paper chain is `e-noise-notice` (municipality), `e-keyring` (lane) and `e-receipt` (petrol-station).
+
+The test computes this from the data, and it also checks that no statement sits in either chain.
+
+**The board's relation table** is the `links` of each module: `[a, relation, b]`, with `contradicts`,
+`same-source` and `different-source` symmetric. Every thread names evidence that exists, and the soft-lock validator
+accepts a board thread only if it is in this table.

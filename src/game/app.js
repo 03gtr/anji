@@ -311,9 +311,9 @@ export function createGameApp(root, opts = {}) {
   });
   // another tab saved: say so before this one tries (the stores refuse to overwrite it anyway)
   globalThis.window?.addEventListener('storage', (e) => {
-    if ((e.key === SAVE_KEY || e.key === S2_KEY) && e.newValue != null) saveBlocked('other-tab');
+    if ((e.key === SAVE_KEY || e.key === S2_KEY || e.key === S3_KEY) && e.newValue != null) saveBlocked('other-tab');
   });
-  if (loaded.status === 'future' || s2Loaded.status === 'future') saveBlocked('future');
+  if (loaded.status === 'future' || s2Loaded.status === 'future' || s3Loaded.status === 'future') saveBlocked('future');
   if (loaded.status === 'overwritten') {
     // an older version of the game, still open somewhere, wrote over newer progress: ask, keep both
     queueMicrotask(async () => {

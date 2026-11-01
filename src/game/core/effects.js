@@ -57,6 +57,16 @@ export function applyEffects(effects, game) {
         game.setFlag(`s2:dec:${id.slice(0, cut)}`, id.slice(cut + 1));
         break;
       }
+      // Season 3 (its own document): the same two, under their own names, so Season 2's data never changes meaning
+      case 'ev3': // 'ev3:e-visitor-log' — evidence found (once)
+        if (game.collect(`s3.ev.${id}`)) changes.push({ kind: 'evidence', id, season: 's3' });
+        break;
+      case 'dec3': {
+        // 'dec3:sabri-reply=deny' — a decision, stored once as a named value
+        const cut = id.indexOf('=');
+        game.setFlag(`s3:dec:${id.slice(0, cut)}`, id.slice(cut + 1));
+        break;
+      }
       case 'num': {
         // 'num:s2:quiz+1' — add to a number kept in a Season 2 flag
         const m = id.match(/^(s2:[\w:-]+?)([+-]\d+)$/);
@@ -71,12 +81,13 @@ export function applyEffects(effects, game) {
   return changes;
 }
 
-const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num', 'hold']);
+const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num', 'hold', 'ev3', 'dec3']);
 export function isValidEffect(fx) {
   if (typeof fx !== 'string' || !fx.includes(':')) return false;
   const kind = fx.replace(/^[!-]/, '').split(':')[0];
   if (!KINDS.has(kind)) return false;
   if (kind === 'dec') return /^dec:[\w-]+=[\w-]+$/.test(fx);
+  if (kind === 'dec3') return /^dec3:[\w-]+=[\w-]+$/.test(fx);
   if (kind === 'hold') return /^(hold:[\w-]+|!hold:)$/.test(fx); // a thing she carries, or empty hands
   if (kind === 'num') return /^num:s2:[\w:-]+?[+-]\d+$/.test(fx);
   return true;
