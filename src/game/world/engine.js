@@ -16,7 +16,7 @@ import { frameTable } from '../characters/sprites.js';
 import { spriteFrames } from './sprite-cache.js';
 import { reaction as socialReaction } from '../progression/social.js';
 import { check } from '../core/conditions.js';
-import { isS2 } from '../core/game.js';
+import { seasonOf } from '../core/game.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
@@ -27,11 +27,14 @@ import { CIRCLE_GESTURES } from '../characters/circle.js';
 const CIRCLE_GESTURE_NAMES = new Set(Object.keys(CIRCLE_GESTURES));
 
 /**
- * The key of a rotating line counter (which of the dogs' lines comes next) for a scene: in a Season 2 place it is
- * kept in Season 2's own save (`s2:…`) — Season 2 never writes the original campaign's save, not even a counter
- * (REGRESSION: tapping her husky in the office wrote `hub.lines` in the original save).
+ * The key of a rotating line counter (which of the dogs' lines comes next) for a scene: in a season's place it is
+ * kept in that season's own save (`s2:…`, `s3:…`) — a season never writes the original campaign's save, not even a
+ * counter (REGRESSION: tapping her husky in the office wrote `hub.lines` in the original save).
  */
-export const lineKey = (sceneId, key) => (isS2(sceneId) ? `s2:${key}` : key);
+export const lineKey = (sceneId, key) => {
+  const s = seasonOf(sceneId);
+  return s ? `${s}:${key}` : key;
+};
 
 /**
  * The sound of a reaction (core/audio.js, synthesised; silent when sound is off): a gasp on a surprised face,

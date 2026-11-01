@@ -135,8 +135,8 @@ export function openSettings(app) {
         }),
       );
       scope.on(el.querySelector('[data-export]'), 'click', () => {
-        // Season 2 travels in the same file (older builds import the main save and ignore it)
-        const blob = new Blob([saves.exportText(game.state, game.s2State)], { type: 'application/json' });
+        // the seasons travel in the same file (older builds import the main save and ignore them)
+        const blob = new Blob([saves.exportText(game.state, game.s2State, game.s3State)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -156,7 +156,7 @@ export function openSettings(app) {
           const state = saves.importText(text);
           const ok = await confirmBox(app, { title: 'استرجاع التقدم؟', text: 'راح يتبدل التقدم الحالي بالنسخة اللي اخترتيها.', yes: 'استرجعي' });
           if (!ok) return;
-          game.replace(state, { s2: saves.importS2(text) });
+          game.replace(state, { s2: saves.importS2(text), s3: saves.importS3(text) });
           close();
           app.toTitle({ message: 'رجع التقدم من النسخة الاحتياطية ✓' });
         } catch (err) {

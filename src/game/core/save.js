@@ -84,6 +84,15 @@ function normalizeHub(raw) {
 }
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+/** A season's document (`s2`, `s3`) inside a backup file, or null (not there, or not a backup at all). */
+function seasonOfBackup(text, season) {
+  try {
+    const data = JSON.parse(text);
+    return isObj(data?.[season]) ? data[season] : null;
+  } catch {
+    return null;
+  }
+}
 const strList = (v) => (Array.isArray(v) ? [...new Set(v.filter((x) => typeof x === 'string'))] : []);
 const finite = (v, d) => (Number.isFinite(v) ? v : d);
 
@@ -342,20 +351,20 @@ export function createSaveManager({
       readOnly = false;
       reason = null;
     },
-    /** A backup file; with Season 2's document when given (older builds import the main save only). */
-    exportText(state, s2 = null) {
+    /** A backup file; with each season's document when given (older builds import the main save only). */
+    exportText(state, s2 = null, s3 = null) {
       const data = { game: GAME_ID, exportedAt: new Date(now()).toISOString(), save: { ...state, v: version } };
       if (s2) data.s2 = s2;
+      if (s3) data.s3 = s3;
       return JSON.stringify(data, null, 2);
     },
     /** Season 2's document inside a backup file, or null (older backups have none). */
     importS2(text) {
-      try {
-        const data = JSON.parse(text);
-        return isObj(data?.s2) ? data.s2 : null;
-      } catch {
-        return null;
-      }
+      return seasonOfBackup(text, 's2');
+    },
+    /** Season 3's document inside a backup file, or null (older backups have none). */
+    importS3(text) {
+      return seasonOfBackup(text, 's3');
     },
     /** Parse an exported backup. Throws SaveError on anything unusable. */
     importText(text) {

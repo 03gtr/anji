@@ -10,7 +10,7 @@
 import { createBus } from './core/bus.js';
 import { createScope } from './core/scope.js';
 import { createSaveManager, defaultState, SAVE_KEY } from './core/save.js';
-import { createS2Store, S2_KEY } from './core/s2-store.js';
+import { createS2Store, createSeasonStore, S2_KEY, S3_KEY } from './core/s2-store.js';
 import { createSettings } from './core/settings.js';
 import { createGame } from './core/game.js';
 import { createAudio } from './core/audio.js';
@@ -63,7 +63,19 @@ export function createGameApp(root, opts = {}) {
   // Season 2 keeps its own document (core/s2-store.js), bound to this playthrough
   const s2Store = createS2Store({ storage: opts.storage, now: opts.now });
   const s2Loaded = s2Store.load(loaded.state.createdAt);
-  const game = createGame({ saveManager: saves, s2Store, bus, initial: loaded.state, s2Initial: s2Loaded.state, now: opts.now });
+  // and Season 3 its own (the same store under its own key, docs/season-3/TECHNICAL_ARCHITECTURE.md §2)
+  const s3Store = createSeasonStore({ storage: opts.storage, key: S3_KEY, now: opts.now });
+  const s3Loaded = s3Store.load(loaded.state.createdAt);
+  const game = createGame({
+    saveManager: saves,
+    s2Store,
+    s3Store,
+    bus,
+    initial: loaded.state,
+    s2Initial: s2Loaded.state,
+    s3Initial: s3Loaded.state,
+    now: opts.now,
+  });
   const totals = {};
   for (const id of Object.keys(COLLECTIBLES)) totals[groupOf(id)] = (totals[groupOf(id)] || 0) + 1;
   game.totalOf = (group) => totals[group] || 0;
@@ -106,8 +118,10 @@ export function createGameApp(root, opts = {}) {
     offline,
     tips,
     s2Store,
+    s3Store,
     loadStatus: loaded.status,
     s2LoadStatus: s2Loaded.status,
+    s3LoadStatus: s3Loaded.status,
     reduced: () => settings.reducedMotion(),
     applyMotion() {
       shell.classList.toggle('reduce-motion', settings.reducedMotion());
@@ -241,11 +255,11 @@ export function createGameApp(root, opts = {}) {
     if (syncing || (c.kind === 'flag' && /^(ach|mission|mission-seen):/.test(String(c.id)))) return;
     if (c.kind === 'replace') return; // a new game / restored backup is not "progress"
     syncing = true;
-    // a change to Season 2's own save: only Season 2's missions, and no achievements (they live in
-    // the original campaign's save, which Season 2 never writes)
-    const season2 = c.doc === 's2';
+    // a change to a season's own save: only that season's missions, and no achievements (they live in
+    // the original campaign's save, which a season never writes)
+    const season = c.doc === 's2' || c.doc === 's3' ? c.doc : null;
     try {
-      const missions = syncMissions(game, { season2 });
+      const missions = syncMissions(game, { season });
       if (missions.unlocked.length > 2) toasts.toast(`🧭 انفتحت ${missions.unlocked.length} مهمات جديدة بالدفتر`, 'hint');
       else for (const m of missions.unlocked) toasts.toast(`🧭 مهمة جديدة: ${m.title}`, 'hint');
       if (missions.unlocked.length) tips.show('missions');
@@ -260,7 +274,7 @@ export function createGameApp(root, opts = {}) {
         if (!guided) toasts.toast(`✅ خلصت المهمة: ${m.title}`, 'unlock');
         toasts.announce(m.changes);
       }
-      for (const a of season2 ? [] : syncAchievements(game)) {
+      for (const a of season ? [] : syncAchievements(game)) {
         toasts.toast(`🏆 إنجاز: ${a.name}`, 'unlock');
         toasts.announce(a.changes);
       }

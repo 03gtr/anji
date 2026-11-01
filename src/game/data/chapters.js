@@ -8,7 +8,7 @@ import { MISSIONS } from './missions.js';
 import { missionState } from '../progression/missions.js';
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 import { WORLDS } from './worlds.js';
-import { isS2 } from '../core/game.js';
+import { seasonOf } from '../core/game.js';
 
 export const ACTS = [
   {
@@ -137,7 +137,7 @@ export function currentObjective(game) {
   // first (the deep garden used to show the archives' step; Season 2 would have shown another pack's)
   const here = (typeof game.location === 'function' ? game.location() : game.state?.location)?.scene;
   // (a place off the map — a Season 2 loft or room reached from another — is still Season 2's)
-  const herePack = here ? WORLDS.find((w) => w.scene === here)?.pack ?? (isS2(here) ? 's2' : null) : null;
+  const herePack = here ? WORLDS.find((w) => w.scene === here)?.pack ?? seasonOf(here) : null;
   const story = MISSIONS.filter((x) => x.kind === 'story');
   for (const m of herePack ? [...story.filter((x) => x.pack === herePack), ...story.filter((x) => x.pack !== herePack)] : story) {
     const st = missionState(m, game);
