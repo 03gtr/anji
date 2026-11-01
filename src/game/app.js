@@ -23,6 +23,7 @@ import { playCinematic } from './ui/cinematic.js';
 import { chapterCard, openJournal, openMap, openSettings, openHelp, confirmBox } from './ui/menus.js';
 import { worldOfScene, regionOf } from './data/worlds.js';
 import { openPuzzle } from './puzzles/host.js';
+import { openTestimony } from './ui/testimony.js';
 import { openMinigame } from './minigames/host.js';
 import { createTitle } from './scenes/title.js';
 import { createExplore } from './scenes/explore.js';
@@ -129,6 +130,15 @@ export function createGameApp(root, opts = {}) {
         // activities like the picnic can be dressed with the owner's local memories
         const dressed = def.memoryObjects ? withMemoryLabels(def, id) : def;
         return openPuzzle(app, { id, ...dressed });
+      },
+      /** A witness's testimony, acted out in the scene it is played in (ui/testimony.js). */
+      testimony: (id, world) => {
+        const def = PUZZLES[id];
+        if (def?.type !== 'testimony') {
+          console.error('[testimony] missing', id);
+          return Promise.resolve({ solved: false });
+        }
+        return openTestimony(app, { id, ...def }, world);
       },
       minigame: (id, options) => openMinigame(app, id, options),
       /**

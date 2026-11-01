@@ -59,6 +59,8 @@ export function check(cond, game) {
     // Season 2 (stored in its own document by core/game.js):
     case 'ev': // 'ev:e-wax' — a piece of evidence she has (data/evidence-s2.js)
       return game.has(`s2.ev.${arg}`);
+    case 'hold': // 'hold:paper-2' — she carries it; 'hold:' — her hands are empty
+      return arg ? game.flag('s2:hold') === arg : !game.flag('s2:hold');
     case 'dec': {
       // 'dec:lead=anji' — a decision she made (registry: data/evidence-s2.js DECISIONS)
       const cut = arg.indexOf('=');

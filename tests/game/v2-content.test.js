@@ -53,6 +53,8 @@ function allEffects() {
     for (const o of n.choice || []) pushFx(o.do);
   });
   for (const p of Object.values(PUZZLES)) pushFx(p.reward);
+  // a testimony's versions act in the world as they break (Season 2's overhaul): their effects count too
+  for (const p of Object.values(PUZZLES)) for (const v of p.versions || []) for (const list of [v.intro, v.onWrong, v.broken, ...v.beats.map((b) => b.stage)]) visitActions(list);
   for (const m of Object.values(MINIGAMES)) pushFx([...(m.reward || []), ...(m.goldReward || [])]);
   for (const m of MISSIONS) pushFx(m.reward);
   return out;
@@ -82,7 +84,12 @@ describe('missions', () => {
       expect(KIND_NAMES[m.kind], m.id).toBeTruthy();
       expect(m.title && m.where && m.summary && m.rewardText, m.id).toBeTruthy();
       expect(m.steps.length, m.id).toBeGreaterThanOrEqual(2);
-      for (const s of m.steps) expect(s.text && s.hint, `${m.id}: every step has text and a hint`).toBeTruthy();
+      for (const s of m.steps) {
+        expect(s.text, `${m.id}: every step has text`).toBeTruthy();
+        // the original game's steps each have a hint; Season 2's have none (no help with the story)
+        if (m.pack === 's2') expect(s.hint, `${m.id}: a Season 2 step has no hint`).toBeUndefined();
+        else expect(s.hint, `${m.id}: every step has a hint`).toBeTruthy();
+      }
       for (const e of [].concat(m.reward)) expect(typeof e).toBe('string');
     }
   });

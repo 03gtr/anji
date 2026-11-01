@@ -26,6 +26,8 @@ if (import.meta.env.DEV) {
   const q = new URLSearchParams(location.search);
   for (const f of (q.get('flags') || '').split(',').filter(Boolean)) app.game.setFlag(f);
   window.__game = app;
+  //   &playtest=1   measure a session (dev/playtest.js): window.__playtest.report()
+  if (q.has('playtest')) import('./dev/playtest.js').then(({ startPlaytest }) => startPlaytest(app));
   const open = () => {
     if (q.get('game')) app.ui.minigame(q.get('game'));
     if (q.get('puzzle')) app.ui.puzzle(q.get('puzzle'));

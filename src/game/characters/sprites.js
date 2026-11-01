@@ -6,7 +6,7 @@
 import { anjiSprite } from './anji.js';
 import { snookiSprite } from './snooki.js';
 import { ryanSprite, ryanSide, needleSvg } from './cast.js';
-import { personSprite, CIRCLE_KINDS } from './circle.js';
+import { personSprite, CIRCLE_KINDS, CIRCLE_MOODS, CIRCLE_GESTURES } from './circle.js';
 
 const svgUrl = (svg) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -118,11 +118,15 @@ export function frameTable(kind, cos = {}) {
         sneaky: [needleSvg({ expr: 'sneaky' })],
       };
     default:
-      // Season 2's circle (characters/circle.js): a slow breath while standing, a walk
+      // Season 2's circle (characters/circle.js): a slow breath while standing, a blink, a walk,
+      // a face per mood (a dialogue line's expression shows in the world) and the staged gestures
       if (CIRCLE_KINDS.includes(kind)) {
         return {
           idle: [personSprite(kind, { t: 0 }), personSprite(kind, { t: 0.25 })],
+          blink: [personSprite(kind, { expr: 'blink' })],
           walk: WALK.map((t) => personSprite(kind, { pose: 'walk', t })),
+          ...Object.fromEntries(CIRCLE_MOODS.map((m) => [m, [personSprite(kind, { expr: m })]])),
+          ...Object.fromEntries(Object.entries(CIRCLE_GESTURES).map(([g, expr]) => [g, [personSprite(kind, { pose: g, expr })]])),
         };
       }
       throw new Error(`Unknown sprite kind ${kind}`);

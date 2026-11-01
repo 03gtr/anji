@@ -20,10 +20,15 @@ import { confirmBox } from '../ui/menus.js';
 import { fillNames } from '../core/names.js';
 
 export const SKIP_AFTER_MISTAKES = 3;
+/**
+ * What a strict (Season 2) puzzle says to a wrong try — the same few lines for every puzzle, so no reply can
+ * carry a clue, a count or the answer. (Per-puzzle `wrong` lines and the rules' messages are not used.)
+ */
+export const STRICT_WRONG = ['ما ركبت. ارجعي للي لگيتيه وفكري مرة ثانية.', 'مو هيچ. خذي وقتچ.', 'بعد ما ركبت. اللي ضبطتيه بقى مثل ما هو.'];
 
 /** Whether the skip option is offered (pure: tested). */
 export function canSkip(def, { hintsUsed = 0, mistakes = 0, hintsOn = true } = {}) {
-  if (def.noSkip) return false;
+  if (def.noSkip || def.strict) return false;
   const hints = def.hints?.length || 0;
   return mistakes >= SKIP_AFTER_MISTAKES || (hintsOn && hints > 0 && hintsUsed >= hints) || (!hintsOn && mistakes >= 1);
 }
@@ -80,11 +85,13 @@ export function openPuzzle(app, input) {
           <div class="puzzle-body"></div>
           <p class="puzzle-feedback" role="status" aria-live="polite"></p>
           <ol class="puzzle-hints" hidden></ol>
-          <footer class="panel-foot">
-            <button type="button" class="btn btn-ghost" data-act="hint">${ICONS.hint}<span></span></button>
+          <footer class="panel-foot">${
+            def.strict
+              ? '' // Season 2's story puzzles: no hint, no "show the answer", no skip — not hidden, not there at all
+              : `<button type="button" class="btn btn-ghost" data-act="hint">${ICONS.hint}<span></span></button>
             <button type="button" class="btn btn-ghost" data-act="solution" hidden>🔍 <span>شوفي الحل</span></button>
-            <button type="button" class="btn btn-ghost" data-act="skip" hidden>${ICONS.skip}<span>تخطّي اللغز</span></button>
-          </footer>
+            <button type="button" class="btn btn-ghost" data-act="skip" hidden>${ICONS.skip}<span>تخطّي اللغز</span></button>`
+          }</footer>
         </section>`),
       );
       const body = el.querySelector('.puzzle-body');
@@ -94,9 +101,26 @@ export function openPuzzle(app, input) {
       const solBtn = el.querySelector('[data-act="solution"]');
       const skipBtn = el.querySelector('[data-act="skip"]');
       const panel = el.querySelector('.panel');
-      const hasSolution = Boolean(view.solution || def.solutionText);
+      // A phone's tap that OPENED the panel is followed by a compatibility click at the same point — on whatever
+      // button now lies under the finger (it ticked a statement on its own). A pointer click counts only when its
+      // press began inside the panel; keyboard clicks (detail 0) always count.
+      let pressedInside = false;
+      el.addEventListener('pointerdown', () => (pressedInside = true), true);
+      el.addEventListener(
+        'click',
+        (e) => {
+          if (e.detail > 0 && !pressedInside) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        },
+        true,
+      );
+      // Season 2's story puzzles have no "show the answer" (noSolution): help ends at the method, never the answer
+      const hasSolution = !def.noSolution && Boolean(view.solution || def.solutionText);
 
       const updateButtons = () => {
+        if (def.strict) return; // (no help controls exist)
         const hintsOn = settings.get().hints;
         const left = (def.hints?.length || 0) - hintsUsed;
         hintBtn.querySelector('span').textContent = left <= 0 ? 'خلصت التلميحات' : hintArmed ? 'متأكدة؟ المسي مرة ثانية' : `تلميح (${left})`;
@@ -158,7 +182,10 @@ export function openPuzzle(app, input) {
             if (!app.reduced()) panel.classList.add('shake');
             const replies = def.wrong?.length ? def.wrong : ['مو هيچ… جرّبي مرة ثانية.'];
             const option = def.config.options?.find((o) => o.id === args[0]);
-            say(res.message || option?.reply || replies[(mistakes - 1) % replies.length], 'bad');
+            // a strict (Season 2) puzzle answers a wrong try neutrally: never how many are right, never which
+            // option to prefer, never a clue
+            if (def.strict) say(STRICT_WRONG[(mistakes - 1) % STRICT_WRONG.length], 'bad');
+            else say(res.message || option?.reply || replies[(mistakes - 1) % replies.length], 'bad');
           } else if (res.outcome === 'progress') {
             audio.play('tap');
             say(res.message || '', res.message ? 'good' : '');
@@ -178,7 +205,7 @@ export function openPuzzle(app, input) {
       };
 
       scope.on(el.querySelector('[data-act="close"]'), 'click', () => close({ solved, hintsUsed }));
-      scope.on(hintBtn, 'click', () => {
+      if (!def.strict) scope.on(hintBtn, 'click', () => {
         const next = nextHint(def.hints || [], hintsUsed);
         if (!next) return;
         if (hintsUsed === 0 && !hintArmed) {
@@ -194,7 +221,7 @@ export function openPuzzle(app, input) {
         view.render(body, api);
         updateButtons();
       });
-      scope.on(solBtn, 'click', () => {
+      if (!def.strict) scope.on(solBtn, 'click', () => {
         showSolution = true;
         if (def.solutionText) {
           hintsEl.hidden = false;
@@ -204,7 +231,7 @@ export function openPuzzle(app, input) {
         view.render(body, api);
         updateButtons();
       });
-      scope.on(skipBtn, 'click', async () => {
+      if (!def.strict) scope.on(skipBtn, 'click', async () => {
         const ok = await confirmBox(app, {
           title: 'تتخطّين اللغز؟',
           text: 'القصة تكمل عادي وتاخذين نفس الشي. تگدرين ترجعين تحلّينه بعدين من الدفتر ← التحديات.',
@@ -222,7 +249,7 @@ export function openPuzzle(app, input) {
       if (state.stage > 0 && resumable) say(`رجعتي للمستوى ${state.stage + 1} — اللي حلّيتيه محفوظ.`, 'good');
       else if (typeof savedDraft === 'string') say('رجعتي — اللي ضبطتيه محفوظ.', 'good');
       el.querySelector('h2').focus({ preventScroll: true });
-      app.tips?.show('hint');
+      if (!def.strict) app.tips?.show('hint');
     },
     { className: 'overlay-panel', label: tx(def.title) },
   );

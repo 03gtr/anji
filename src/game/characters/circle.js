@@ -22,10 +22,15 @@ export const CIRCLE = {
   lama: { name: 'لمى', skin: '#e9c3a3', skinShade: '#cfa284', hair: '#4a2e22', hairStyle: 'bob', top: '#d9a53a', topShade: '#b8862a', coat: null, legs: '#5a4a6e', shoes: '#3a2c3c', clip: '#e86a8a' },
   sabri: { name: 'صبري', skin: '#d8a982', skinShade: '#bd8d68', hair: '#1f1a17', hairStyle: 'curly', top: '#24406e', topShade: '#1b3155', coat: null, legs: '#2c2f38', shoes: '#e9e9ef', stripe: '#f08a3c' },
   jojo: { name: 'العم جوجو', skin: '#e3bb9c', skinShade: '#c79c7c', hair: '#f2f2ee', hairStyle: 'white', top: '#e9e2d0', topShade: '#cfc6b0', coat: '#7a5a3e', coatShade: '#5f4530', legs: '#4a4038', shoes: '#2e2620', moustache: '#f2f2ee' },
-  sister: { name: 'أخت أنجي', skin: '#ecc7a8', skinShade: '#d2a688', hair: '#3a2219', hairStyle: 'tied', top: '#8e5a8a', topShade: '#704470', coat: null, legs: '#2f3a52', shoes: '#4a2a3a' },
+  // her own silhouette (owner's brief): hair that frames her face like a hood, a patterned scarf, emerald and gold
+  sister: { name: 'أخت أنجي', skin: '#ecc7a8', skinShade: '#d2a688', hair: '#1f1a17', hairStyle: 'hood', top: '#2f6b55', topShade: '#22513f', coat: null, legs: '#24323a', shoes: '#3a2a20', scarf: '#c9a64a', scarfMark: '#8a6a24' },
 };
 export const CIRCLE_KINDS = Object.keys(CIRCLE);
-export const CIRCLE_EXPRESSIONS = ['neutral', 'smile', 'thinking', 'surprised', 'worried', 'shy'];
+export const CIRCLE_EXPRESSIONS = ['neutral', 'smile', 'thinking', 'surprised', 'worried', 'shy', 'suspicious', 'angry', 'laugh'];
+/** Moods shown in the world (one frame each); a dialogue line's expression sets the speaker's mood. */
+export const CIRCLE_MOODS = ['smile', 'surprised', 'worried', 'thinking', 'suspicious', 'angry', 'shy'];
+/** Body gestures for staged scenes, each with the face it is drawn with. */
+export const CIRCLE_GESTURES = { point: 'neutral', handsup: 'surprised', cross: 'suspicious', think: 'thinking', facepalm: 'shy', laugh: 'laugh', lean: 'suspicious', shrug: 'worried' };
 
 function hairBack(L, cx = 50) {
   switch (L.hairStyle) {
@@ -34,9 +39,20 @@ function hairBack(L, cx = 50) {
     case 'tied':
       return `<path d="M${cx - 17} 30 C${cx - 19} 13 ${cx + 19} 13 ${cx + 17} 30 L${cx + 16} 40 C${cx + 8} 44 ${cx - 8} 44 ${cx - 16} 40Z" fill="${L.hair}"/>
         <path d="M${cx + 14} 34 C${cx + 26} 40 ${cx + 24} 64 ${cx + 16} 76 C${cx + 14} 64 ${cx + 15} 50 ${cx + 10} 40Z" fill="${L.hair}"/>`;
+    case 'hood':
+      // flares out from the crown and widens down to the shoulders, framing the face
+      return `<path d="M${cx} 6 C${cx - 22} 6 ${cx - 28} 26 ${cx - 30} 44 C${cx - 31} 56 ${cx - 26} 64 ${cx - 18} 66 L${cx + 18} 66 C${cx + 26} 64 ${cx + 31} 56 ${cx + 30} 44 C${cx + 28} 26 ${cx + 22} 6 ${cx} 6Z" fill="${L.hair}"/>`;
     default:
       return '';
   }
+}
+
+/** A scarf over the shoulders, with a small repeating pattern. */
+function scarf(L) {
+  if (!L.scarf) return '';
+  const marks = [36, 43, 50, 57, 64].map((x, i) => `<path d="M${x - 3} ${66 + (i % 2)} Q${x} ${62 + (i % 2)} ${x + 3} ${66 + (i % 2)}" stroke="${L.scarfMark}" stroke-width="1.3" fill="none"/>`).join('');
+  return `<path d="M30 64 C38 70 62 70 70 64 L68 72 C60 77 40 77 32 72Z" fill="${L.scarf}"/>${marks}
+    <path d="M60 70 L64 96 L57 94 L55 72Z" fill="${L.scarf}"/>`;
 }
 
 function hairFront(L, cx = 50) {
@@ -53,6 +69,8 @@ function hairFront(L, cx = 50) {
         <rect x="${cx + 8}" y="17" width="7" height="3.4" rx="1.6" fill="${L.clip}"/>`;
     case 'tied':
       return `<path d="M${cx - 17} 29 C${cx - 18} 3 ${cx + 18} 3 ${cx + 17} 28 C${cx + 8} 19 ${cx - 6} 19 ${cx - 17} 29Z" fill="${L.hair}"/>`;
+    case 'hood':
+      return `<path d="M${cx - 17} 30 C${cx - 18} 4 ${cx + 18} 4 ${cx + 17} 30 C${cx + 9} 18 ${cx - 9} 18 ${cx - 17} 30Z" fill="${L.hair}"/>`;
     default:
       return '';
   }
@@ -60,20 +78,35 @@ function hairFront(L, cx = 50) {
 
 function face(L, expr, cx = 50, cy = 32, s = 1) {
   const eyeY = cy - 1;
-  const ey = expr === 'smile' ? 1.1 : expr === 'surprised' ? 2.4 : 1.8;
-  const eyes = [-6, 6]
-    .map((d) => `<ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${1.7 * s}" ry="${ey * s}" fill="#2a1d18"/><circle cx="${cx + (d + 0.6) * s}" cy="${eyeY - 0.6 * s}" r="${0.5 * s}" fill="#fff"/>`)
-    .join('');
+  const ink = '#2a1d18';
+  const ey = expr === 'smile' ? 1.1 : expr === 'surprised' ? 2.4 : expr === 'suspicious' ? 0.8 : expr === 'angry' ? 1.4 : 1.8;
+  const eyes =
+    expr === 'blink' || expr === 'laugh'
+      ? // closed: a line, or happy arcs when she laughs
+        [-6, 6].map((d) => (expr === 'laugh' ? `<path d="M${cx + (d - 2.2) * s} ${eyeY + 0.6 * s} Q${cx + d * s} ${eyeY - 2 * s} ${cx + (d + 2.2) * s} ${eyeY + 0.6 * s}" stroke="${ink}" stroke-width="${1.3 * s}" fill="none" stroke-linecap="round"/>` : `<path d="M${cx + (d - 2) * s} ${eyeY} H${cx + (d + 2) * s}" stroke="${ink}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`)).join('')
+      : [-6, 6].map((d) => `<ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${1.7 * s}" ry="${ey * s}" fill="${ink}"/><circle cx="${cx + (d + 0.6) * s}" cy="${eyeY - 0.6 * s}" r="${0.5 * s}" fill="#fff"/>`).join('');
   const browY = eyeY - 4.6 * s;
+  const browInk = L.hairStyle === 'white' ? '#cfcfc8' : ink;
   const brows =
     expr === 'worried'
-      ? `<path d="M${cx - 9 * s} ${browY + 1} L${cx - 3 * s} ${browY - 0.6} M${cx + 3 * s} ${browY - 0.6} L${cx + 9 * s} ${browY + 1}" stroke="${L.hairStyle === 'white' ? '#cfcfc8' : '#2a1d18'}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`
+      ? `<path d="M${cx - 9 * s} ${browY + 1} L${cx - 3 * s} ${browY - 0.6} M${cx + 3 * s} ${browY - 0.6} L${cx + 9 * s} ${browY + 1}" stroke="${browInk}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`
       : expr === 'thinking'
-        ? `<path d="M${cx - 9 * s} ${browY} L${cx - 3 * s} ${browY} M${cx + 3 * s} ${browY - 1.4} L${cx + 9 * s} ${browY + 0.4}" stroke="${L.hairStyle === 'white' ? '#cfcfc8' : '#2a1d18'}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`
-        : `<path d="M${cx - 9 * s} ${browY + 0.4} Q${cx - 6 * s} ${browY - 1.4} ${cx - 3 * s} ${browY + 0.2} M${cx + 3 * s} ${browY + 0.2} Q${cx + 6 * s} ${browY - 1.4} ${cx + 9 * s} ${browY + 0.4}" stroke="${L.hairStyle === 'white' ? '#cfcfc8' : '#2a1d18'}" stroke-width="${1.2 * s}" fill="none" stroke-linecap="round"/>`;
+        ? `<path d="M${cx - 9 * s} ${browY} L${cx - 3 * s} ${browY} M${cx + 3 * s} ${browY - 1.4} L${cx + 9 * s} ${browY + 0.4}" stroke="${browInk}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`
+        : expr === 'angry'
+          ? `<path d="M${cx - 9 * s} ${browY - 0.8} L${cx - 3 * s} ${browY + 1.4} M${cx + 3 * s} ${browY + 1.4} L${cx + 9 * s} ${browY - 0.8}" stroke="${browInk}" stroke-width="${1.6 * s}" stroke-linecap="round"/>`
+          : expr === 'suspicious'
+            ? // one brow down, one up: "really?"
+              `<path d="M${cx - 9 * s} ${browY + 1.2} L${cx - 3 * s} ${browY + 1.6} M${cx + 3 * s} ${browY - 0.4} Q${cx + 6 * s} ${browY - 2.4} ${cx + 9 * s} ${browY - 0.6}" stroke="${browInk}" stroke-width="${1.4 * s}" fill="none" stroke-linecap="round"/>`
+            : `<path d="M${cx - 9 * s} ${browY + 0.4} Q${cx - 6 * s} ${browY - 1.4} ${cx - 3 * s} ${browY + 0.2} M${cx + 3 * s} ${browY + 0.2} Q${cx + 6 * s} ${browY - 1.4} ${cx + 9 * s} ${browY + 0.4}" stroke="${browInk}" stroke-width="${1.2 * s}" fill="none" stroke-linecap="round"/>`;
   const my = cy + 8 * s;
   const mouth =
-    expr === 'smile'
+    expr === 'laugh'
+      ? `<path d="M${cx - 5 * s} ${my - 0.6 * s} Q${cx} ${my + 6 * s} ${cx + 5 * s} ${my - 0.6 * s}Z" fill="#7a3530"/>`
+      : expr === 'angry'
+        ? `<path d="M${cx - 4 * s} ${my + 1.6 * s} L${cx + 4 * s} ${my + 1.6 * s}" stroke="#8a3b34" stroke-width="${1.5 * s}" stroke-linecap="round"/>`
+        : expr === 'suspicious'
+          ? `<path d="M${cx - 4 * s} ${my + 1.2 * s} Q${cx + 1 * s} ${my + 1.6 * s} ${cx + 4.4 * s} ${my - 0.4 * s}" stroke="#8a3b34" stroke-width="${1.3 * s}" fill="none" stroke-linecap="round"/>`
+          : expr === 'smile'
       ? `<path d="M${cx - 4.5 * s} ${my} Q${cx} ${my + 4 * s} ${cx + 4.5 * s} ${my}" stroke="#8a3b34" stroke-width="${1.4 * s}" fill="none" stroke-linecap="round"/>`
       : expr === 'surprised'
         ? `<ellipse cx="${cx}" cy="${my + 0.8 * s}" rx="${2 * s}" ry="${2.6 * s}" fill="#7a3530"/>`
@@ -88,7 +121,21 @@ function face(L, expr, cx = 50, cy = 32, s = 1) {
   return eyes + brows + mouth + extra;
 }
 
-/** The full figure for the world: idle (a slow breath) or walk (legs and arms swing). */
+/**
+ * The arms each gesture moves: side (-1 = the figure's right, drawn left; 1 = the side she faces) →
+ * [elbow, hand] in the 100×200 box. A side that is not listed hangs as usual.
+ */
+const GESTURE_ARMS = {
+  point: { 1: [[78, 70], [92, 70]] },
+  handsup: { [-1]: [[22, 56], [26, 34]], 1: [[78, 56], [74, 34]] },
+  cross: { [-1]: [[30, 98], [62, 90]], 1: [[70, 98], [38, 94]] },
+  think: { 1: [[76, 96], [56, 52]] },
+  facepalm: { 1: [[78, 70], [56, 24]] },
+  laugh: { [-1]: [[26, 100], [40, 106]], 1: [[74, 100], [60, 106]] },
+  shrug: { [-1]: [[22, 88], [10, 86]], 1: [[78, 88], [90, 86]] },
+};
+
+/** The full figure for the world: idle (a slow breath), walk (legs and arms swing), or a gesture (CIRCLE_GESTURES). */
 export function personSprite(kind, { pose = 'idle', t = 0, expr = 'neutral' } = {}) {
   const L = CIRCLE[kind];
   const id = `p${++uid}`;
@@ -107,22 +154,34 @@ export function personSprite(kind, { pose = 'idle', t = 0, expr = 'neutral' } = 
     ? `<path d="M29 64 C33 60 67 60 71 64 L74 140 L57 140 L50 72 L43 140 L26 140Z" fill="${L.coat}"/><path d="M50 72 L57 140 M50 72 L43 140" stroke="${L.coatShade}" stroke-width="1.6"/>`
     : '';
   const stripe = L.stripe ? `<path d="M32 90 H68" stroke="${L.stripe}" stroke-width="4"/>` : '';
+  // a gesture: the arms it moves are drawn in front of the body (shoulder → elbow → hand); the others hang
+  const g = GESTURE_ARMS[pose];
+  const limb = (side, [ex, ey], [hx, hy]) => {
+    const sleeve = L.coat ? (side < 0 ? L.coatShade : L.coat) : side < 0 ? L.topShade : L.top;
+    return `<path d="M${50 + side * 19} 68 Q${ex} ${ey} ${hx} ${hy}" stroke="${sleeve}" stroke-width="8.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${hx}" cy="${hy}" rx="4.4" ry="4.8" fill="${L.skin}"/>`;
+  };
+  const back = g ? [-1, 1].filter((side) => !g[side]).map((side) => arm(side, 0)).join('') : `${arm(-1, sw)}${arm(1, -sw)}`;
+  const front = g ? [-1, 1].filter((side) => g[side]).map((side) => limb(side, ...g[side])).join('') : '';
+  const lean = pose === 'lean' ? ' transform="rotate(9 50 192)"' : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
     <defs>${lightingDefs(id)}</defs>
-    <g filter="url(#v3d-${id})">
+    <g filter="url(#v3d-${id})"${lean}>
       <path d="M38 132 L36 ${186 - lf} L49 ${186 - lf} L50 136Z" fill="${L.legs}"/>
       <path d="M50 136 L51 ${186 + lf} L64 ${186 + lf} L62 132Z" fill="${L.legs}"/>
       <path d="M33 ${184 - lf} H49 V${193 - lf} H31Z" fill="${L.shoes}"/>
       <path d="M51 ${184 + lf} H67 L69 ${193 + lf} H51Z" fill="${L.shoes}"/>
-      ${arm(-1, sw)}${arm(1, -sw)}
+      ${back}
       <path d="M33 140 L31 ${96 + breathe} C29 84 28 72 31 66 C36 61 64 61 69 66 C72 72 71 84 69 ${96 + breathe} L67 140Z" fill="${L.top}"/>
       ${stripe}${coat}
       <path d="M44 50 H56 L57 63 H43Z" fill="${L.skinShade}"/>
       ${hairBack(L)}
+      ${scarf(L)}
       <ellipse cx="33.6" cy="33" rx="2.8" ry="4.6" fill="${L.skin}"/><ellipse cx="66.4" cy="33" rx="2.8" ry="4.6" fill="${L.skin}"/>
       <path d="M34 30 C33 16 42 11 50 11 C58 11 67 16 66 30 C66 43 59 52 50 52 C41 52 34 43 34 30Z" fill="${L.skin}"/>
       ${hairFront(L)}
       ${face(L, expr, 50, 32, 1)}
+      ${front}
     </g>
   </svg>`;
 }
@@ -140,6 +199,7 @@ export function personPortrait(kind, expr = 'neutral') {
       ${L.coat ? `<path d="M44 62 L50 74 L56 62" fill="${L.top}"/>` : ''}
       <path d="M45 48 H55 L56 62 H44Z" fill="${L.skinShade}"/>
       ${hairBack(L)}
+      ${scarf(L)}
       <ellipse cx="33.6" cy="33" rx="2.8" ry="4.6" fill="${L.skin}"/><ellipse cx="66.4" cy="33" rx="2.8" ry="4.6" fill="${L.skin}"/>
       <path d="M34 30 C33 16 42 11 50 11 C58 11 67 16 66 30 C66 43 59 52 50 52 C41 52 34 43 34 30Z" fill="${L.skin}"/>
       ${hairFront(L)}

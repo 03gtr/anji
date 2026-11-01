@@ -366,7 +366,8 @@ export function openJournal(app, tab = 'notes') {
           }).join('')}`;
         } else {
           const list = Object.entries(MINIGAMES).filter(([id]) => game.record(`game:${id}`)?.completed || (MINIGAMES[id].unlock && check(MINIGAMES[id].unlock, game)));
-          const puzzles = Object.entries(PUZZLES).filter(([id]) => game.record(`puzzle:${id}`)?.completed);
+          // (a testimony is played in its own scene, with its witness: it is not replayed from this list)
+          const puzzles = Object.entries(PUZZLES).filter(([id, p]) => p.type !== 'testimony' && game.record(`puzzle:${id}`)?.completed);
           body.innerHTML = list.length || puzzles.length
             ? `<p class="muted">العبي أي تحدي خلّصتيه مرة ثانية، وحاولي توصلين للذهبية.</p>${list
                 .map(([id, m]) => {
@@ -428,8 +429,9 @@ export function renderMissions(game, entries = journalEntries(game), filter = 'a
           ? `<p class="mission-locked">🔒 ${esc(e.locked)}</p>`
           : `${e.summary ? `<p class="mission-summary">${esc(fillNames(e.summary, game))}</p>` : ''}
              <p class="mission-next"><b>${e.status === 'available' ? 'للبدء:' : 'الخطوة الجاية:'}</b> ${esc(text)}</p>
-             ${e.hint ? `<button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button><p class="mission-hint" hidden>${esc(fillNames(e.hint, game))}</p>` : ''}
-             ${e.reward ? `<p class="mission-reward muted small">الجايزة: ${esc(e.reward)}</p>` : ''}`;
+             ${e.hint && e.pack !== 's2' ? `<button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button><p class="mission-hint" hidden>${esc(fillNames(e.hint, game))}</p>` : ''}
+             ${e.reward && e.pack !== 's2' ? `<p class="mission-reward muted small">الجايزة: ${esc(e.reward)}</p>` : ''}`;
+    // (Season 2's reward names what she will find out; it shows only once she has found it)
     return `<article class="mission status-${e.status} cat-${e.category} ${e.isCurrent ? 'is-current' : ''}" data-mission="${esc(e.id)}" ${e.isCurrent ? 'aria-current="step"' : ''}>
         <header>
           <span class="mission-no">${esc(displayNo(e, num))}</span>

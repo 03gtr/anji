@@ -2,8 +2,8 @@
  * Season 2 «ملف الدائرة المغلقة» — M1 puzzles (docs/season-2/SEASON_2_PUZZLE_SPEC.md).
  *  - every answer follows from evidence she has SEEN (named in each comment), and puzzles that use
  *    evidence list only what she has (`if: 'ev:…'`);
- *  - exactly three hints each: attention → which pieces to compare → nearly the answer (tested);
- *  - a wrong try keeps what she set and says only what is true about her choice, never the answer;
+ *  - no hints, no solution, no skip (strict: see the loop at the end);
+ *  - a wrong try keeps what she set and is answered neutrally, never with the answer or how close it was;
  *  - the case board accepts every consistent layout (a card lists every column it fits).
  * Fiction written for the game.
  */
@@ -17,54 +17,60 @@ const EV = {
 
 export const PUZZLES_S2 = {
   /* ── Act I ─────────────────────────────────────────────────────── */
-  // The register's stub ends at line 7 (e-register); the copy says eight (e-copy). Tutorial: one claim, one proof.
+  // The register's stub ends at line 7 (e-register); the copy says eight (e-copy). The tutorial: the copy's claims,
+  // then the register's own — each part one false claim and the one thing she read that breaks it.
   's2-compare': {
     type: 'contradict',
     title: 'السجل والنسخة',
-    goal: 'اختاري الجملة اللي ما تركب، والدليل اللي يثبت.',
+    goal: 'بكل جزء: اختاري الجملة اللي ما تركب، والدليل اللي يثبت.',
     intro: 'النسخة اللي باللوحة تگول شي، والسجل يگول شي ثاني. الدليل لازم يثبت، مو بس يشككچ.',
     config: {
-      evidence: [EV.register, EV.copy],
+      evidence: [EV.register, EV.copy, { id: 'stub', label: 'طرف الصفحة', icon: 'mark', note: 'صفحة ليلة الفوانيس انگطعت من السجل، وبقى طرفها.', if: 'ev:e-register' }],
       stages: [
         {
           who: 'نسخة لمى',
           icon: 'note',
-          claims: ['ليلة الفوانيس چانت بحديقتنا.', 'چان عدنا ثمان ضيوف.'],
-          answer: { claim: 1, evidence: 'register' },
+          claims: ['ليلة الفوانيس چانت بحديقتنا.', 'العم جوجو كتب السجل بإيده.', 'چان عدنا ثمان ضيوف.', 'كل ضيف علّگ فانوس.'],
+          answer: { claim: 2, evidence: 'register' },
           explain: 'سطور الضيوف بالسجل تنتهي بسبعة',
+        },
+        {
+          who: 'السجل نفسه',
+          icon: 'note',
+          claims: ['السجل انكتب كل ليلة بنفس الحبر.', 'سجل ليلة الفوانيس كامل، ما ناقصه شي.', 'سطور الضيوف مرقمة.'],
+          answer: { claim: 1, evidence: 'stub' },
+          explain: 'صفحة الليلة نفسها انگطعت',
         },
       ],
       labels: { none: 'كلها تركب', proof: 'الدليل', submit: 'هذا حكمي ⚖️' },
       messages: { wrong: 'هالدليل ما يثبت إن هالجملة غلط.', none: 'لا… وحدة منها يكذّبها شي شفتيه.' },
     },
-    hints: ['الأرقام هي المفتاح.', 'قارني عدد الضيوف بالنسخة ويا آخر رقم سطر بالسجل.', 'النسخة تگول ثمانية… والسجل وگف على سطر سبعة.'],
     wrong: [],
     success: 'السجل والنسخة ما يتفقون. يا ترى الشجرة شتگول؟',
     reward: ['flag:s2:01-compared'],
   },
 
-  // She tapped every lantern, the hidden seventh included (step 1 of s2-02): seven.
+  // She tapped every lantern, the hidden seventh included (step 1 of s2-02): seven on the tree; the register's
+  // guest lines end at seven (e-register); the copy says eight (e-copy). Three numbers, side by side: 13³ settings,
+  // and none of them is printed in the puzzle — she counted one and read the other two.
   's2-count': {
-    type: 'choice',
-    title: 'كم فانوس؟',
-    goal: 'جاوبي بالعد اللي سويتيه بنفسچ.',
-    intro: 'النسخة تگول ثمان ضيوف، وكل ضيف علّگ فانوس. الشجرة شتگول؟',
+    type: 'lock',
+    title: 'ثلاث أرقام',
+    goal: 'حطّي الأرقام الثلاثة جنب بعض: الشجرة، والسجل، والنسخة.',
+    intro: 'كل رقم من مكان: واحد عدّيتيه بنفسچ، واثنين قريتيهم. حطّيهم جنب بعض، وشوفي شنو ما يركب.',
     config: {
-      question: 'كم فانوس معلّگ بالشجرة؟',
-      options: [
-        { id: '6', label: 'ستة', reply: 'عدّي مرة ثانية… أكو فانوس ورا الغصن البعيد.' },
-        { id: '7', label: 'سبعة' },
-        { id: '8', label: 'ثمانية', reply: 'هذا رقم النسخة، مو رقم الشجرة. شنو شفتي بعينچ؟' },
-      ],
-      answer: '7',
+      symbols: ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '١٠', '١١', '١٢'],
+      answer: [7, 7, 8],
+      start: [0, 0, 0],
+      dialLabels: ['فوانيس الشجرة', 'سطور الضيوف بالسجل', 'ضيوف النسخة'],
+      labels: { submit: 'هاي الأرقام 📏' },
     },
-    hints: ['اللي شفتيه بعينچ أقوى من اللي مكتوب.', 'كم فانوس فحصتي بالشجرة، ويا اللي ورا الغصن؟', 'سبعة. والنسخة تگول ثمانية.'],
     wrong: [],
     success: 'سبع فوانيس. النسخة غلطانة بواحد… ليش؟',
     reward: ['flag:s2:02-counted', 'ev:e-count'],
   },
 
-  // The four things she has (s2-02, s2-03): what she saw herself vs what someone said.
+  // The five things she has (s2-02, s2-03): what she saw herself vs what someone said.
   's2-sort-1': {
     type: 'sort',
     title: 'دفتر التحقيق: أول صفحة',
@@ -84,13 +90,13 @@ export const PUZZLES_S2 = {
             { id: 'whisper', label: '«ريان يخبي شي»', accepts: ['claim'] },
             { id: 'note', label: 'الورقة اللي تحت الكوب', note: 'الورقة نفسها', accepts: ['fact'] },
             { id: 'notetext', label: 'اللي مكتوب بالورقة', note: '«إذا أكو سر…»', accepts: ['claim'] },
+            { id: 'blank', label: 'البطاقة البيضاء', note: 'بالفانوس الرابع', accepts: ['fact'] },
           ],
         },
       ],
     },
-    hints: ['شفتيه بعينچ؟ لو سمعتيه؟', 'الورقة نفسها شي، واللي مكتوب بيها شي ثاني.', 'البطاقة والورقة: دليل. الجملة الدايرة واللي مكتوب بالورقة: كلام.'],
     wrong: [],
-    success: 'دليلين، وكلامين. ريان ختم الصفحة: «تحقيق رسمي» 📎',
+    success: 'ثلاث أدلة، وكلامين. ريان ختم الصفحة: «تحقيق رسمي» 📎',
     reward: ['flag:s2:03-sorted'],
   },
 
@@ -120,17 +126,19 @@ export const PUZZLES_S2 = {
         },
         {
           kind: 'pick',
-          prompt: 'هسه: شنو ينگال عن A؟',
+          prompt: 'هسه، اللوحة كلها: شنو ينگال بثقة؟',
           options: [
-            { id: 'proven', label: 'A ثابتة: أكو مخرّب.', why: 'ثابتة؟ عدنا أشياء غريبة… بس منو؟ وليش؟ ما عدنا ولا سبب.' },
-            { id: 'needs', label: 'A تحتاج سبب، وما عدنا سبب بعد.' },
-            { id: 'wrong', label: 'A غلط.', why: 'غلط؟ ما عدنا ولا شي يكسرها بعد. لا تستعجلين بالاتجاهين.' },
+            { id: 'real', label: 'أشياء غريبة صدگ صارت بليلة الفوانيس.' },
+            { id: 'proven', label: 'A ثابتة: أكو مخرّب.' },
+            { id: 'needs', label: 'A تحتاج «منو» و«ليش»، وما عدنا ولا وحدة.' },
+            { id: 'wrong', label: 'A غلط.' },
+            { id: 'talk', label: 'B مبنية على كلام، مو على شي شفته بعيني.' },
+            { id: 'b-proven', label: 'B ثابتة: ريان يخبي شي يأذي أنجي.' },
           ],
-          answer: 'needs',
+          answers: ['real', 'needs', 'talk'],
         },
       ],
     },
-    hints: ['كل بطاقة: شنو تشبه؟ شي انخرب، لو شي انگال؟', 'الأشياء اللي تغيّرت (صفحة، بطاقة، فانوس) تروح للتخريب. الكلام عن ريان يروح للثانية.', 'بعد ما تعلّگين: التخريب يحتاج «منو» و«ليش». عدچ واحد منهم؟'],
     wrong: [],
     success: 'اللوحة تحچي: عدنا أسئلة، مو أجوبة. هذا زين — هسه نعرف شنو ندوّر.',
     reward: ['flag:s2:board-1'],
@@ -138,21 +146,31 @@ export const PUZZLES_S2 = {
 
   /* ── Act II ────────────────────────────────────────────────────── */
   // Wax only drips from a lit lantern; the drops on Ryan's card (seen at lantern 6) mean it sat in a lit one.
+  // A conclusion and the two observations that carry it (4 × 10 pairs): the drops on the card and the lit
+  // lantern it sits in. The intro names what she sees, never the rule that links them.
   's2-wax': {
-    type: 'choice',
+    type: 'deduction',
     title: 'شمع الفانوس السادس',
-    goal: 'شنو يگول الشمع، بالضبط؟',
-    intro: 'على حافة بطاقة ريان نقاط شمع جامد، نازلة لتحت. الشمع يقطر بس من فانوس مضوي.',
+    goal: 'شنو تگدرين تگولين عن مكان البطاقة؟ اختاري الجواب، ودليلين يثبتونه.',
+    intro: 'على حافة بطاقة ريان نقاط شمع جامد، نازلة لتحت. ربيع گال إنه نقلها. شنو تگول الأشياء نفسها؟',
     config: {
-      question: 'شنو تگدرين تگولين؟',
-      options: [
-        { id: 'lit', label: 'البطاقة گعدت بفانوس مضوي — يعني انتقلت لفانوس مضوي.' },
-        { id: 'dark', label: 'البطاقة چانت بفانوس مطفي من الأول.', reply: 'لو بقت بمطفي… منين إجا الشمع؟' },
-        { id: 'burn', label: 'أحد حاول يحرقها.', reply: 'ماكو سواد ولا حرق — بس نقاط شمع. لا تضيفين قصة ما عليها دليل.' },
+      need: 2,
+      labels: { who: 'شنو تگدرين تگولين؟', submit: 'هذا اللي يثبت 🕯️' },
+      suspects: [
+        { id: 'lit', label: 'البطاقة گعدت وقت بفانوس مضوي.' },
+        { id: 'dark', label: 'البطاقة بقت بفانوس مطفي طول الليل.' },
+        { id: 'burn', label: 'أحد قرّب البطاقة من نار عن قصد.' },
+        { id: 'none', label: 'الشمع ما يگول شي عن مكانها.' },
       ],
-      answer: 'lit',
+      evidence: [
+        { id: 'drops', label: 'نقاط الشمع', icon: 'drop', note: 'على حافة البطاقة، جامدة، نازلة لتحت.' },
+        { id: 'rabi', label: 'فانوس ربيع', icon: 'moon-full', note: 'السادس. مضوي، والبطاقة بداخله.' },
+        { id: 'seventh', label: 'الفانوس السابع', icon: 'moon-crescent', note: 'ورا الغصن، مطفي.' },
+        { id: 'blank', label: 'البطاقة البيضاء', icon: 'mark', note: 'بالفانوس الرابع، ولا حرف.' },
+        { id: 'copy', label: 'نسخة لمى', icon: 'note', note: '«كل البطاقات بفوانيس أصحابها.»' },
+      ],
+      answer: { suspect: 'lit', evidence: ['drops', 'rabi'] },
     },
-    hints: ['الشمع من وين يجي؟', 'قارني اللي على البطاقة ويا فانوس ريان (مطفي) وفانوس ربيع (مضوي).', 'الشمع ما يقطر إلا من فانوس مضوي. البطاقة انتقلت لفانوس مضوي.'],
     wrong: [],
     success: 'الشمع يثبت المكان، مو النية. ربيع گال ليش — والشمع يگول وين.',
     reward: ['ev:e-wax'],
@@ -167,14 +185,14 @@ export const PUZZLES_S2 = {
     config: {
       evidence: [EV.count, EV.register, EV.blank, EV.moved],
       stages: [
-        { who: 'نسخة لمى: الضيوف', icon: 'note', claims: ['ثمان ضيوف.', 'كل ضيف علّگ فانوس.'], answer: { claim: 0, evidence: ['count', 'register'] }, explain: 'سبع فوانيس وسبع سطور' },
-        { who: 'نسخة لمى: البطاقات', icon: 'note', claims: ['كل البطاقات مكتوبة.', 'الفوانيس انعلّگت قبل المغرب.'], answer: { claim: 0, evidence: 'blank' }, explain: 'أكو بطاقة بيضاء' },
-        { who: 'نسخة لمى: الأماكن', icon: 'note', claims: ['كل بطاقة بفانوس صاحبها.', 'العم جوجو كتب السجل.'], answer: { claim: 0, evidence: 'moved' }, explain: 'بطاقة ريان بفانوس ربيع' },
+        // three or four claims each (one false), four proofs: at least 13 ways per part, the false one never in the same place
+        { who: 'نسخة لمى: الضيوف', icon: 'note', claims: ['كل ضيف علّگ فانوس.', 'ثمان ضيوف.', 'الضيوف كتبوا أمنياتهم بإيدهم.', 'الحفلة بدت بعد المغرب.'], answer: { claim: 1, evidence: ['count', 'register'] }, explain: 'سبع فوانيس وسبع سطور' },
+        { who: 'نسخة لمى: البطاقات', icon: 'note', claims: ['الفوانيس انعلّگت قبل المغرب.', 'البطاقات انعلّگت وية الفوانيس.', 'كل البطاقات مكتوبة.'], answer: { claim: 2, evidence: 'blank' }, explain: 'أكو بطاقة بيضاء' },
+        { who: 'نسخة لمى: الأماكن', icon: 'note', claims: ['كل بطاقة بفانوس صاحبها.', 'العم جوجو كتب السجل.', 'الشجرة نفسها اللي بالحديقة.'], answer: { claim: 0, evidence: 'moved' }, explain: 'بطاقة ريان بفانوس ربيع' },
       ],
       labels: { none: 'كلها تركب', proof: 'الدليل', submit: 'هذا حكمي ⚖️' },
       messages: { wrong: 'هالدليل ما يثبت إن هالجملة غلط.', none: 'لا… وحدة منها يكذّبها شي شفتيه.' },
     },
-    hints: ['بكل جزء جملة وحدة بس تتعارض ويا اللي شفتيه.', 'الضيوف ← عدّ الفوانيس. البطاقات ← البطاقة البيضاء. الأماكن ← بطاقة ريان.', 'الجملة الأولى بكل جزء، ويا: الفوانيس السبعة، البطاقة الفارغة، بطاقة ريان بفانوس ربيع.'],
     wrong: [],
     success: 'ثلاث جمل ما تركب. لمى كتبتها من ذاكرتها… ومن عدّها.',
     reward: ['ev:e-copy-diff'],
@@ -203,22 +221,21 @@ export const PUZZLES_S2 = {
         { id: 'anji', label: 'عن أنجي', icon: 'heart' },
       ],
     },
-    hints: ['صبري گال أول وآخر كلمة بنفسه.', 'أربع كلمات: اسم، وشي سوّاه، ووين، وكيف.', 'ريان · راح · للعيادة · بالسر.'],
     wrong: [],
     success: '«ريان راح للعيادة بالسر.» كل كلمة صحيحة… والجملة اللي دارت تختلف.',
     reward: ['ev:t-sabri', 'ev:h-sabri'],
   },
 
-  // The lamp-change notice beside the clock: «from tonight the clocks go forward an hour»; the garden clock was not moved.
+  // The lamp-change notice on the lamphouse wall: «from tonight the clocks go forward an hour»; the garden clock
+  // was not moved. The puzzle says only what the clock shows: the rule is on the wall, for her to read and connect.
   's2-clock': {
     type: 'clock',
     title: 'ساعة الحديقة',
-    goal: 'دوّري العقارب للوقت الصحيح، لمن ساعة الحديقة چانت تگول ٩:٤٠.',
-    intro: 'الورقة جنب الساعة: «من ليلة الفوانيس: قدّموا الساعات ساعة.» ساعة الحديقة بعدها تگول ٩:٤٠.',
-    config: { target: [10, 40], tolerance: 0, step: 5, start: [9, 40] },
-    hints: ['الورقة جنب الساعة تگول شي عن كل الساعات.', 'ساعة الحديقة انقدّمت لو لا؟ إذا لا، شكد ناقصها؟', 'ساعة كاملة لقدّام: ١٠:٤٠.'],
-    wrong: ['العقارب تحركت… بس مو هذا الوقت.'],
-    success: 'كل وقت بالسجل متأخر ساعة. «التسعة» بالسجل چانت عشرة!',
+    goal: 'خلّي ساعة الحديقة تگول الوقت الصحيح.',
+    intro: 'ساعة الحديقة تگول ٩:٤٠. العم جوجو يگول هاي أدق ساعة بالحديقة.',
+    config: { target: [10, 40], tolerance: 0, step: 5, start: [9, 40], drag: true },
+    wrong: [],
+    success: 'الساعة صارت ويا الكل. يعني ليلة الفوانيس، كل وقت قريته عليها چان ناقص.',
     reward: ['ev:e-drift'],
   },
 
@@ -237,15 +254,18 @@ export const PUZZLES_S2 = {
         { id: 'r5', text: '(خدوش ما تنقرى)' },
         { id: 'r6', text: '… ما أعرف أگو…' },
       ],
+      // tick every statement the rubbing proves, and only those: 2⁶ sets
       question: 'شنو تگدرين تگولين بثقة؟',
       options: [
-        { id: 'for-anji', label: 'بطاقة انكتبت لأنجي، وبعدين انشالت.' },
-        { id: 'whole', label: 'الأمنية كاملة.', why: 'نص البطاقة خدوش. الباقي تخمين، مو قراءة.' },
-        { id: 'who', label: 'منو كتبها.', why: 'ماكو توقيع. والضغط ما يگول اسم.' },
+        { id: 'to-anji', label: 'البطاقة انكتبت لأنجي.' },
+        { id: 'signed', label: 'صاحب البطاقة وقّع بآخرها.' },
+        { id: 'erased', label: 'اللي انكتب انشال بعدين.' },
+        { id: 'wish', label: 'الأمنية كاملة تنقرى.' },
+        { id: 'ryan', label: 'ريان هو اللي كتبها.' },
+        { id: 'empty', label: 'البطاقة ما انكتب بيها شي أبد.' },
       ],
-      answer: 'for-anji',
+      answers: ['to-anji', 'erased'],
     },
-    hints: ['مرّي على كل مكان أول.', 'فرّقي بين الكلمات اللي بانت والخدوش.', 'ينقرى «إلى أنجي» وكم كلمة. يعني: بطاقة لأنجي، وانشالت.'],
     wrong: [],
     success: 'أحد كتب لأنجي… وشال كلامه. ليش؟',
     reward: ['ev:e-imprint'],
@@ -256,7 +276,8 @@ export const PUZZLES_S2 = {
     type: 'sort',
     title: 'الورقة اللي ما انوقّعت',
     goal: 'قارني كل خط عدچ بخط الورقة، بعدين گولي شنو تعرفين.',
-    intro: 'خط الورقة: حروف مايلة شوية، والياء ملفوفة لفة كاملة. «يشبه» مو «هو».',
+    // three features of the note's hand; every sample shares one or two of them, only one shares all three
+    intro: 'خط الورقة بيه ثلاث علامات: الحروف مايلة شوية، والياء ملفوفة، والنقاط لازگة بالحرف. «يشبه» مو «هو».',
     config: {
       stages: [
         {
@@ -267,11 +288,11 @@ export const PUZZLES_S2 = {
             { id: 'maybe', label: 'يشبه' },
           ],
           cards: [
-            { id: 'rabi', label: 'خط ربيع', note: 'مرتب ومايل، الياء قصيرة.', accepts: ['no'], if: 'ev:h-rabi' },
-            { id: 'lama', label: 'خط لمى', note: 'مدور كبير، نقاط دوائر.', accepts: ['no'], if: 'ev:h-lama' },
-            { id: 'sabri', label: 'خط صبري', note: 'حروف واگفة منفصلة.', accepts: ['no'], if: 'ev:h-sabri' },
-            { id: 'jojo', label: 'خط العم جوجو', note: 'صغير متصل، حبر أزرق.', accepts: ['no'], if: 'ev:h-jojo' },
-            { id: 'sister', label: 'خط أختي', note: 'الياء ملفوفة لفة كاملة.', accepts: ['maybe'], if: 'ev:h-sister' },
+            { id: 'rabi', label: 'خط ربيع', note: 'مرتب ومايل شوية. الياء قصيرة. النقاط لازگة بالحرف.', accepts: ['no'], if: 'ev:h-rabi' },
+            { id: 'lama', label: 'خط لمى', note: 'مدور كبير وواگف. الياء ملفوفة. النقاط دوائر بعيدة.', accepts: ['no'], if: 'ev:h-lama' },
+            { id: 'sabri', label: 'خط صبري', note: 'حروف واگفة منفصلة. الياء طويلة. النقاط لازگة بالحرف.', accepts: ['no'], if: 'ev:h-sabri' },
+            { id: 'jojo', label: 'خط العم جوجو', note: 'صغير متصل، مايل شوية. الياء ملفوفة. النقاط فوگ بعيد.', accepts: ['no'], if: 'ev:h-jojo' },
+            { id: 'sister', label: 'خط أختي', note: 'مايل شوية. الياء ملفوفة لفة كاملة. النقاط لازگة بالحرف.', accepts: ['maybe'], if: 'ev:h-sister' },
           ],
           done: 'كل خط بمكانه.',
         },
@@ -279,15 +300,16 @@ export const PUZZLES_S2 = {
           kind: 'pick',
           prompt: 'شنو تگدرين تگولين هسه؟',
           options: [
-            { id: 'who', label: 'لگيت منو كتبها.', why: '«يشبه» مو «هو». خطوط هواية تتشابه، وآني نفسي ألف الياء هيچ أحياناً.' },
-            { id: 'elim', label: 'الخطوط اللي استبعدتها مو خط الورقة. الباقي بعده مفتوح.' },
-            { id: 'none', label: 'ماكو أحد منهم كتبها.', why: 'ما قارنت كل خط بالحديقة. هذا أكثر من اللي عدچ.' },
+            { id: 'who', label: 'لگيت منو كتب الورقة.' },
+            { id: 'elim', label: 'الخطوط اللي استبعدتها مو خط الورقة.' },
+            { id: 'none', label: 'ماكو أحد بالحديقة كتبها.' },
+            { id: 'like', label: 'الخط اللي يشبه بعده «يشبه»، مو «هو».' },
+            { id: 'pen', label: 'الورقة انكتبت بقلم ريان.' },
           ],
-          answer: 'elim',
+          answers: ['elim', 'like'],
         },
       ],
     },
-    hints: ['قارني الياء، والميلان، والنقاط.', 'خط الورقة مايل شوية، وياءه ملفوفة. أي خط عدچ بيه نفس الشي؟', 'اللي ياءه قصيرة، أو حروفه واگفة، أو مدورة، أو متصلة صغيرة: مو هالخط. وبعدها: استبعاد، مو اسم.'],
     wrong: [],
     success: 'استبعدت، وما اتهمت. الورقة بعدها بلا صاحب أكيد.',
     reward: ['ev:d-elim'],
@@ -320,30 +342,41 @@ export const PUZZLES_S2 = {
         },
         {
           kind: 'pick',
-          prompt: 'شهادة ربيع: «نقلتها لفانوس مضوي حتى لا تضيع». شنو يسندها؟',
+          prompt: 'شهادة ربيع: «نقلتها لفانوس مضوي حتى لا تضيع». علّمي كل دليل يسندها.',
           options: [
+            { id: 'copy', label: 'نسخة لمى' },
             { id: 'wax', label: 'الشمع على حافة البطاقة' },
-            { id: 'copy', label: 'نسخة لمى', why: 'النسخة تگول البطاقات بفوانيس أصحابها — وهذا اللي ما صار.' },
-            { id: 'receipt', label: 'وصل الورد', why: 'الوصل يخص ريان، مو الفانوس.' },
+            { id: 'receipt', label: 'وصل الورد' },
+            { id: 'moved', label: 'بطاقة ريان بفانوس ربيع' },
+            { id: 'drift', label: 'ساعة الحديقة متأخرة ساعة' },
+            { id: 'blank', label: 'البطاقة البيضاء' },
           ],
-          answer: 'wax',
+          answers: ['wax', 'moved'],
           done: 'شهادة ربيع مسنودة بدليل.',
         },
         {
           kind: 'pick',
-          prompt: 'اللوحة كلها: شنو الصحيح هسه؟',
+          prompt: 'اللوحة كلها: علّمي كل جملة صحيحة هسه.',
           options: [
-            { id: 'b-proven', label: 'B ثابتة: ريان يخبي شي يأذي أنجي.', why: 'إنه يخبي شي — عدنا وصل. بس «يأذي»؟ هذا استنتاج ما عليه دليل.' },
-            { id: 'open', label: 'ولا نظرية ثابتة: A ضعفت، B بيها حقيقة واستنتاج ما انثبت، وC مفتوحة.' },
-            { id: 'c-proven', label: 'C ثابتة: الساعة تفسر كل شي.', why: 'الساعة تفسر الأوقات. والورقة اللي بلا توقيع؟ والبطاقة اللي انمسحت؟' },
+            { id: 'hides', label: 'ريان يخبي شي — وهذا عليه دليل.' },
+            { id: 'harms', label: 'ريان يخبي شي يأذي أنجي — وهذا عليه دليل.' },
+            { id: 'times', label: 'الساعة تفسر ليش الأوقات ما تركب.' },
+            { id: 'all', label: 'الساعة تفسر كل شي، حتى البطاقة البيضاء.' },
+            { id: 'rabi', label: 'ربيع نقل بطاقة ريان، وعنده سبب.' },
+            { id: 'none', label: 'ولا نظرية ثابتة لحد هسه.' },
           ],
-          answer: 'open',
+          answers: ['hides', 'times', 'rabi', 'none'],
         },
       ],
     },
-    hints: ['كل بطاقة جديدة: تخص شنو؟ شي انخرب، ريان، لو الوقت؟', 'شهادة ربيع تحچي عن شمع وفانوس. أي دليل عدچ يخص الشمع؟', 'النظرية تثبت لمن ما يبقى شي يكسرها. هسه كل وحدة بيها شي ناقص.'],
     wrong: [],
     success: 'ثلاث نظريات، ولا وحدة ثابتة — وهذا صدق، مو فشل. الخيوط الجاية راح تكشف.',
     reward: ['flag:s2:board-2'],
   },
 };
+
+// Season 2's story puzzles are solved, never skipped or shown: help ends at the method (owner decision,
+// Stage B). Closing a puzzle keeps what she did, so she can go and look, and come back.
+// Season 2's story puzzles are strict: no hint, no "show the answer", no skip, and a wrong try is answered
+// neutrally (puzzles/host.js) — they are solved by reasoning only.
+for (const p of Object.values(PUZZLES_S2)) Object.assign(p, { strict: true, noSkip: true, noSolution: true });

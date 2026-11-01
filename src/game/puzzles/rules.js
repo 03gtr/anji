@@ -9,6 +9,7 @@
  * the «شوفي الحل» button uses it to highlight the next moves.
  */
 import { rng } from '../core/rng.js';
+import { shadows, solveShadows } from './rules-shadows.js';
 
 /* ── sequence: press items in the right order ── */
 export const sequence = {
@@ -305,6 +306,13 @@ export const clock = {
     }
     return { state, outcome: 'noop' };
   },
+  /** The hands dragged to a time (rounded to the step). */
+  set(config, state, h, m) {
+    const step = config.step || 5;
+    const mm = ((Math.round(m / step) * step) % 60 + 60) % 60;
+    const hh = ((((Math.round(h) - 1) % 12) + 12) % 12) + 1;
+    return { state: { ...state, h: hh, m: mm }, outcome: 'progress' };
+  },
   submit(config, state) {
     const diff = Math.abs(minutesOf(state.h, state.m) - minutesOf(...config.target));
     const off = Math.min(diff, 720 - diff);
@@ -554,10 +562,16 @@ export function logicgridSolutions(config, clues = config.clues) {
   return found;
 }
 
+/** A "tick every true statement" choice: toggles one id in the list (Season 2 sort pick stages, rubbing). */
+const toggleIn = (list, id) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
+/** Exactly the right set: every true one ticked, nothing else. */
+const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+
 /* ── sort (Season 2): cards into columns, stage by stage — the case board and «دليل لو كلام» ──
  * config: { stages: [
  *   { kind: 'sort', prompt, bins: [{ id, label, icon? }], cards: [{ id, label, note?, accepts: [binId…] }] }
  *   { kind: 'pick', prompt, options: [{ id, label, why? }], answer: id }
+ *   { kind: 'pick', prompt, options: [{ id, label }], answers: [id…] }   tick EVERY true one (exact set)
  * ], messages? }
  * A card's `accepts` lists EVERY column it fits (a claim may fit two theories): any consistent
  * layout passes, never one developer layout. A wrong check keeps her layout and says only how many
@@ -583,6 +597,7 @@ export const sort = {
   choose(config, state, optionId) {
     const st = config.stages[state.stage];
     if (st?.kind !== 'pick' || !st.options.some((o) => o.id === optionId)) return { state, outcome: 'noop' };
+    if (st.answers) return { state: { ...state, choice: toggleIn(state.choice || [], optionId) }, outcome: 'progress' };
     return { state: { ...state, choice: optionId }, outcome: 'progress' };
   },
   submit(config, state) {
@@ -596,6 +611,9 @@ export const sort = {
       const right = st.cards.filter((c) => c.accepts.includes(state.placed[c.id])).length;
       ok = right === st.cards.length;
       message = ok ? null : `${right} من ${st.cards.length} بطاقات بمكان يركب. اللي حطيتيه باقي.`;
+    } else if (st.answers) {
+      if (!state.choice?.length) return { state, outcome: 'noop' };
+      ok = sameSet(state.choice, st.answers);
     } else {
       if (!state.choice) return { state, outcome: 'noop' };
       ok = state.choice === st.answer;
@@ -610,6 +628,7 @@ export const sort = {
 
 /* ── rubbing (Season 2): a pencil over a blank card brings out what was pressed into it ──
  * config: { regions: [{ id, text }], question, options: [{ id, label, why? }], answer }
+ *      or … options: [{ id, label }], answers: [id…]   tick EVERY statement that can be said for certain
  * Rub every region (any order; each shows its piece of the imprint as text, so nothing is colour-
  * only), then say what can really be read. Guessing past the evidence is a wrong answer with a reason. */
 export const rubbing = {
@@ -620,10 +639,16 @@ export const rubbing = {
   },
   choose(config, state, optionId) {
     if (state.rubbed.length < config.regions.length || !config.options.some((o) => o.id === optionId)) return { state, outcome: 'noop' };
+    if (config.answers) return { state: { ...state, choice: toggleIn(state.choice || [], optionId) }, outcome: 'progress' };
     return { state: { ...state, choice: optionId }, outcome: 'progress' };
   },
   submit(config, state) {
     if (state.rubbed.length < config.regions.length) return { state, outcome: 'noop', message: 'بعد أكو مكان بالبطاقة ما مرّيتي عليه.' };
+    if (config.answers) {
+      if (!state.choice?.length) return { state, outcome: 'noop' };
+      if (sameSet(state.choice, config.answers)) return { state, outcome: 'solved' };
+      return { state: { ...state, mistakes: state.mistakes + 1 }, outcome: 'wrong' };
+    }
     if (!state.choice) return { state, outcome: 'noop' };
     if (state.choice === config.answer) return { state, outcome: 'solved' };
     const why = config.options.find((o) => o.id === state.choice)?.why;
@@ -631,7 +656,24 @@ export const rubbing = {
   },
 };
 
-export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series, machine, contradict, logicgrid, sort, rubbing };
+/* ── testimony: a witness's account in versions; in each, ONE statement is broken by ONE piece of evidence ──
+ * config: { versions: [{ id, beats: [beatId…], breaks: [beatId, evidenceId] }] }
+ * She may present any evidence she holds at any statement. Only the true pair moves the witness on to his
+ * next version; a wrong pair says nothing about how close it was (no "warmer/colder"). */
+export const testimony = {
+  init: () => ({ v: 0, wrong: 0 }),
+  present(config, state, beat, evidence) {
+    const ver = config.versions[state.v];
+    if (!ver || !ver.beats.includes(beat)) return { state, outcome: 'noop' };
+    if (ver.breaks[0] === beat && ver.breaks[1] === evidence) {
+      const v = state.v + 1;
+      return { state: { ...state, v }, outcome: v >= config.versions.length ? 'solved' : 'progress' };
+    }
+    return { state: { ...state, wrong: state.wrong + 1 }, outcome: 'wrong' };
+  },
+};
+
+export const RULES = { sequence, choice, lock, cipher, switches, candles, code, connect, program, arrange, clock, rings, deduction, series, machine, contradict, logicgrid, sort, rubbing, testimony, shadows };
 
 /** Next hint to show (hints are revealed one by one, never skipped). */
 export function nextHint(hints, used) {
@@ -690,12 +732,13 @@ const SOLVE = {
     for (let k = s.stage; k < c.stages.length; k++) {
       const st = c.stages[k];
       if (st.kind === 'sort') for (const card of st.cards) moves.push(['pick', card.id], ['place', card.accepts[0]]);
+      else if (st.answers) for (const id of st.answers) moves.push(['choose', id]);
       else moves.push(['choose', st.answer]);
       moves.push(['submit']);
     }
     return moves;
   },
-  rubbing: (c, s) => [...c.regions.filter((r) => !s.rubbed.includes(r.id)).map((r) => ['rub', r.id]), ['choose', c.answer], ['submit']],
+  rubbing: (c, s) => [...c.regions.filter((r) => !s.rubbed.includes(r.id)).map((r) => ['rub', r.id]), ...(c.answers ? c.answers.map((id) => ['choose', id]) : [['choose', c.answer]]), ['submit']],
   sequence: (c, s) => c.answer.slice(s.pressed.length).map((id) => ['press', id]),
   choice: (c) => [['pick', c.answer]],
   lock: (c, s) => {
@@ -768,6 +811,8 @@ const SOLVE = {
     }
     return null;
   },
+  testimony: (c, s) => c.versions.slice(s.v).map((v) => ['present', ...v.breaks]),
+  shadows: solveShadows,
   arrange: (c) => {
     const used = new Set();
     const moves = [];

@@ -11,6 +11,7 @@ import { PUZZLES_SP2 } from './puzzles-sp2.js';
 import { PUZZLES_DEEP } from './puzzles-deep.js';
 import { PUZZLES_TEAM } from './puzzles-team.js';
 import { PUZZLES_S2 } from './puzzles-s2.js';
+import { PUZZLES_S2_M2 } from './puzzles-s2-m2.js';
 
 export const PUZZLES = {
   // Clue: the fountain engraving "from darkness to full light".
@@ -421,4 +422,5 @@ export const PUZZLES = {
   ...PUZZLES_TEAM,
   // Season 2 «ملف الدائرة المغلقة», M1
   ...PUZZLES_S2,
+  ...PUZZLES_S2_M2,
 };

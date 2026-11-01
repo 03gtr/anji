@@ -69,6 +69,8 @@ export const WORLDS = [
     { id: 's2-gym', name: 'صالة التمرين', short: 'الصالة', icon: 'dumbbell', x: 87, y: 71, unlock: 'flag:mission:s2-04', locked: 'تنفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
     { id: 's2-lamphouse', name: 'بيت الفانوس', icon: 'sun', x: 62, y: 40, unlock: 'flag:mission:s2-04', locked: 'ينفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
     { id: 's2-home', name: 'حديقة البيت', icon: 'heart', x: 87, y: 40, unlock: 'flag:mission:s2-04', locked: 'تنفتح لمن تعلّگين أول الأدلة على لوحة الدائرة.' },
+    // M2, the Living Story (after M1's last mission)
+    { id: 's2-office', name: 'المكتب', icon: 'note', x: 12, y: 40, unlock: 'flag:mission:s2-11', locked: 'ينفتح بعد «لوحة الدائرة» الثانية.' },
   ].map((w) => ({ act: 8, scene: w.id, spawn: 140, ready: true, pack: 's2', region: 's2', ...w })),
 ];
 

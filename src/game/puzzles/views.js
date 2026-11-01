@@ -11,6 +11,7 @@ import { esc, tx } from '../ui/dom.js';
 import { num } from '../ui/format.js';
 import { solve, flipCandles, programSolution, programCommands, machineDials, machineSolution } from './rules.js';
 import { fillNames } from '../core/names.js';
+import { SHADOWS_VIEW } from './view-shadows.js';
 
 function rerender(body, html, wire) {
   const focused = document.activeElement?.closest?.('[data-k]')?.dataset.k;
@@ -24,6 +25,7 @@ const glyph = (g) => (g.startsWith('sym:') ? symbol(g.slice(4)) : `<span class="
 const shown = (api) => (api.showSolution ? solve(api.def.type, api.def.config, api.state) || [] : []);
 
 export const VIEWS = {
+  shadows: SHADOWS_VIEW, // Season 2, Mission 05: lanterns on hooks, shadows on the wall
   sequence: {
     solution: true,
     render(body, api) {
@@ -52,13 +54,14 @@ export const VIEWS = {
       const { config } = api.def;
       const s = api.state;
       const right = api.showSolution ? config.answer : null;
+      const tried = (id) => !api.def.strict && s.tried.includes(id);
       rerender(
         body,
         `${config.question ? `<p class="choice-q">${esc(tx(config.question))}</p>` : ''}
          <div class="choice-grid">
           ${config.options
             .map(
-              (o) => `<button type="button" class="choice-item ${s.tried.includes(o.id) ? 'is-wrong' : ''} ${s.picked === o.id ? 'is-right' : ''} ${right === o.id ? 'is-solution' : ''}" data-k="${o.id}" data-id="${o.id}" ${s.tried.includes(o.id) ? 'disabled' : ''}>
+              (o) => `<button type="button" class="choice-item ${tried(o.id) ? 'is-wrong' : ''} ${s.picked === o.id ? 'is-right' : ''} ${right === o.id ? 'is-solution' : ''}" data-k="${o.id}" data-id="${o.id}" ${tried(o.id) ? 'disabled' : ''}>
                 ${o.icon ? symbol(o.icon) : ''}<span>${esc(tx(o.label))}</span></button>`,
             )
             .join('')}
@@ -92,7 +95,7 @@ export const VIEWS = {
             )
             .join('')}
          </div>
-         <button type="button" class="btn btn-primary lock-submit" data-k="submit">جرّبي الفتح 🔓</button>`,
+         <button type="button" class="btn btn-primary lock-submit" data-k="submit">${esc(tx(config.labels?.submit || 'جرّبي الفتح 🔓'))}</button>`,
         () => {
           body.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => api.act('turn', Number(b.dataset.i), Number(b.dataset.d))));
           body.querySelector('.lock-submit').addEventListener('click', () => api.act('submit'));
@@ -373,6 +376,7 @@ export const VIEWS = {
       const st = api.state;
       const hAng = (((st.h % 12) + st.m / 60) / 12) * 360;
       const mAng = (st.m / 60) * 360;
+      const tip = (ang, len) => [50 + Math.sin((ang * Math.PI) / 180) * len, 50 - Math.cos((ang * Math.PI) / 180) * len];
       const ticks = Array.from({ length: 12 }, (_, i) => {
         const a = (i / 12) * Math.PI * 2;
         return `<line x1="${50 + Math.sin(a) * 40}" y1="${50 - Math.cos(a) * 40}" x2="${50 + Math.sin(a) * 45}" y2="${50 - Math.cos(a) * 45}" stroke="#3b2630" stroke-width="${i % 3 ? 1 : 2.4}"/>`;
@@ -383,11 +387,12 @@ export const VIEWS = {
         `<div class="clk">
           <svg class="clk-face" viewBox="0 0 100 100" role="img" aria-label="الساعة ${digits(st.h)}:${digits(st.m)}">
             <circle cx="50" cy="50" r="48" fill="#f3e3c3" stroke="#3b2630" stroke-width="3"/>${ticks}
-            <line x1="50" y1="50" x2="${50 + Math.sin((hAng * Math.PI) / 180) * 24}" y2="${50 - Math.cos((hAng * Math.PI) / 180) * 24}" stroke="#3b2630" stroke-width="4" stroke-linecap="round"/>
-            <line x1="50" y1="50" x2="${50 + Math.sin((mAng * Math.PI) / 180) * 36}" y2="${50 - Math.cos((mAng * Math.PI) / 180) * 36}" stroke="#2b3a8c" stroke-width="2.4" stroke-linecap="round"/>
+            <line class="clk-h" x1="50" y1="50" x2="${tip(hAng, 24)[0]}" y2="${tip(hAng, 24)[1]}" stroke="#3b2630" stroke-width="4" stroke-linecap="round"/>
+            <line class="clk-m" x1="50" y1="50" x2="${tip(mAng, 36)[0]}" y2="${tip(mAng, 36)[1]}" stroke="#2b3a8c" stroke-width="2.4" stroke-linecap="round"/>
             <circle cx="50" cy="50" r="3" fill="#e2b544"/>
           </svg>
           <p class="clk-read" aria-live="polite">${digits(st.h)}:${digits(st.m)}${api.showSolution ? ` — الجواب: حوالي ${digits(config.target[0])}:${digits(config.target[1])}` : ''}</p>
+          ${config.drag ? '<p class="clk-how">اسحبي عقرب الدقايق بإصبعچ (يلف الساعة وياه)، أو استعملي الأزرار.</p>' : ''}
           <div class="clk-ctl">
             <div><span>الساعات</span><button type="button" class="dial-btn" data-k="h-" data-hand="h" data-d="-1" aria-label="الساعة: قبل">−</button><button type="button" class="dial-btn" data-k="h+" data-hand="h" data-d="1" aria-label="الساعة: بعد">+</button></div>
             <div><span>الدقايق</span><button type="button" class="dial-btn" data-k="m-" data-hand="m" data-d="-1" aria-label="الدقايق: قبل">−</button><button type="button" class="dial-btn" data-k="m+" data-hand="m" data-d="1" aria-label="الدقايق: بعد">+</button></div>
@@ -397,6 +402,49 @@ export const VIEWS = {
         () => {
           body.querySelectorAll('[data-hand]').forEach((b) => b.addEventListener('click', () => api.act('turn', b.dataset.hand, Number(b.dataset.d))));
           body.querySelector('[data-submit]').addEventListener('click', () => api.act('submit'));
+          if (!config.drag) return;
+          // a real clock: drag the minute hand round; passing twelve carries the hour with it. The hands move
+          // under her finger (no re-render mid-drag); the time is set when she lets go.
+          const face = body.querySelector('.clk-face');
+          const hL = face.querySelector('.clk-h');
+          const mL = face.querySelector('.clk-m');
+          const read = body.querySelector('.clk-read');
+          let drag = null;
+          const angleAt = (e) => {
+            const r = face.getBoundingClientRect();
+            return ((Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180) / Math.PI + 360) % 360;
+          };
+          const draw = ({ h, m }) => {
+            const [hx, hy] = tip((((h % 12) + m / 60) / 12) * 360, 24);
+            const [mx, my] = tip((m / 60) * 360, 36);
+            hL.setAttribute('x2', hx);
+            hL.setAttribute('y2', hy);
+            mL.setAttribute('x2', mx);
+            mL.setAttribute('y2', my);
+            read.textContent = `${digits(h)}:${digits(m)}`;
+          };
+          const move = (e) => {
+            const m = Math.round(angleAt(e) / 6) % 60;
+            if (drag.m > 45 && m < 15) drag.h = (drag.h % 12) + 1;
+            else if (drag.m < 15 && m > 45) drag.h = ((drag.h + 10) % 12) + 1;
+            drag.m = m;
+            draw(drag);
+          };
+          const end = () => {
+            if (!drag) return;
+            const d = drag;
+            drag = null;
+            api.act('set', d.h, d.m);
+          };
+          face.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            drag = { h: st.h, m: st.m };
+            face.setPointerCapture?.(e.pointerId);
+            move(e);
+          });
+          face.addEventListener('pointermove', (e) => drag && move(e));
+          face.addEventListener('pointerup', end);
+          face.addEventListener('pointercancel', end);
         },
       );
     },
@@ -492,6 +540,7 @@ export const VIEWS = {
       const token = (v) => (v == null ? '<span class="sr-q">؟</span>' : String(v).startsWith('sym:') ? symbol(String(v).slice(4)) : `<span class="sr-n">${esc(num(v))}</span>`);
       const row = (list, cls = '') => `<div class="sr-row ${cls}" dir="rtl">${list.map((v) => `<span class="sr-cell">${token(v)}</span>`).join('<span class="sr-arrow" aria-hidden="true">←</span>')}</div>`;
       const right = api.showSolution ? String(stage.answer) : null;
+      const tried = (v) => !api.def.strict && s.tried.includes(v);
       rerender(
         body,
         `<div class="pg-stage">المستوى ${num(s.stage + 1)} من ${num(config.stages.length)}</div>
@@ -501,7 +550,7 @@ export const VIEWS = {
          <p class="sr-label">${esc(tx(config.labels?.question ?? 'وهذا السطر وقف بنصه:'))}</p>
          ${row(stage.question, 'is-question')}
          <div class="choice-grid sr-options">${stage.options
-           .map((o) => `<button type="button" class="choice-item ${s.tried.includes(String(o)) ? 'is-wrong' : ''} ${right === String(o) ? 'is-solution' : ''}" data-k="o${o}" data-v="${esc(String(o))}" ${s.tried.includes(String(o)) ? 'disabled' : ''}>${token(o)}</button>`)
+           .map((o) => `<button type="button" class="choice-item ${tried(String(o)) ? 'is-wrong' : ''} ${right === String(o) ? 'is-solution' : ''}" data-k="o${o}" data-v="${esc(String(o))}" ${tried(String(o)) ? 'disabled' : ''}>${token(o)}</button>`)
            .join('')}</div>`,
         () => body.querySelectorAll('[data-v]').forEach((b) => b.addEventListener('click', () => api.act('pick', b.dataset.v))),
       );
@@ -594,11 +643,13 @@ export const VIEWS = {
       const many = config.stages.length > 1 ? `<div class="pg-stage">${num(s.stage + 1)} من ${num(config.stages.length)}</div>` : '';
       if (st.kind === 'pick') {
         const sol = api.showSolution ? st.answer : null;
+        const on = (id) => (st.answers ? (s.choice || []).includes(id) : s.choice === id);
         rerender(
           body,
           `${many}<p class="choice-q">${say(st.prompt)}</p>
+           ${st.answers ? '<p class="muted small">علّمي كل جملة تگدرين تگولينها بثقة — وبس هي.</p>' : ''}
            <div class="sort-pick">${st.options
-             .map((o) => `<button type="button" class="ct-claim ${s.choice === o.id ? 'is-sel' : ''} ${sol === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${s.choice === o.id}">${say(o.label)}</button>`)
+             .map((o) => `<button type="button" class="ct-claim ${on(o.id) ? 'is-sel' : ''} ${sol === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${on(o.id)}">${st.answers ? (on(o.id) ? '☑ ' : '☐ ') : ''}${say(o.label)}</button>`)
              .join('')}</div>
            <button type="button" class="btn btn-primary" data-k="submit" data-submit>${esc(tx(config.labels?.submit || 'هذا جوابي'))}</button>`,
           () => {
@@ -669,8 +720,12 @@ export const VIEWS = {
          ${
            all
              ? `<p class="choice-q">${say(config.question)}</p>
+                ${config.answers ? '<p class="muted small">علّمي كل جملة تگدرين تگولينها بثقة — وبس هي.</p>' : ''}
                 <div class="sort-pick">${config.options
-                  .map((o) => `<button type="button" class="ct-claim ${s.choice === o.id ? 'is-sel' : ''} ${api.showSolution && config.answer === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${s.choice === o.id}">${say(o.label)}</button>`)
+                  .map((o) => {
+                    const on = config.answers ? (s.choice || []).includes(o.id) : s.choice === o.id;
+                    return `<button type="button" class="ct-claim ${on ? 'is-sel' : ''} ${api.showSolution && config.answer === o.id ? 'is-solution' : ''}" data-k="o${o.id}" data-choose="${o.id}" aria-pressed="${on}">${config.answers ? (on ? '☑ ' : '☐ ') : ''}${say(o.label)}</button>`;
+                  })
                   .join('')}</div>
                 <button type="button" class="btn btn-primary" data-k="submit" data-submit>هذا اللي ينقرى</button>`
              : `<p class="muted small">مرّي القلم على كل مكان بالبطاقة (المسيه): ${num(s.rubbed.length)} من ${num(config.regions.length)}.</p>`
@@ -708,7 +763,7 @@ export const VIEWS = {
       };
       rerender(
         body,
-        `<ol class="lg-clues">${config.clues.map((c, i) => `<li class="${s.broken === i ? 'is-broken' : ''}">${esc(tx(c.text))}</li>`).join('')}</ol>
+        `<ol class="lg-clues">${config.clues.map((c, i) => `<li class="${!api.def.strict && s.broken === i ? 'is-broken' : ''}">${esc(tx(c.text))}</li>`).join('')}</ol>
          <div class="lg-grid" style="--cols:${config.cols.length}" role="table" aria-label="شبكة الاستنتاج">
            <span class="lg-h" role="columnheader"></span>${config.cols.map((c) => `<span class="lg-h" role="columnheader">${esc(tx(c.label))}</span>`).join('')}
            ${config.rows
@@ -723,7 +778,11 @@ export const VIEWS = {
              )
              .join('')}
          </div>
-         <p class="muted small">المسي الخانة حتى تتبدّل. التحقق يگول أول دليل ما ينطبق — ما يگول كم خانة صح.</p>
+         <p class="muted small">${
+           api.def.strict
+             ? 'المسي الخانة حتى تتبدّل. التحقق يگول بس إذا كلشي يركب — ما يگول وين الغلط ولا كم خانة صح.'
+             : 'المسي الخانة حتى تتبدّل. التحقق يگول أول دليل ما ينطبق — ما يگول كم خانة صح.'
+         }</p>
          <button type="button" class="btn btn-primary" data-k="check" data-check>تحققي ✔</button>`,
         () => {
           body.querySelectorAll('[data-row]').forEach((b) => b.addEventListener('click', () => api.act('cycle', b.dataset.row, b.dataset.col, 1)));
