@@ -20,6 +20,10 @@ export const PERSONAS = {
   sister: { front: true, bob: 0, watch: true, habits: [{ pose: 'cross', ms: 1800 }, { pose: 'lean', ms: 900 }] },
   // Rabi': polite, a little stiff
   rabi: { front: true, bob: 1.4, habits: [{ pose: 'think', ms: 1300 }] },
+  // Marius (Season 3): an easy, unhurried stride; arms crossed when something amuses him; a shrug, never a fuss
+  marius: { front: true, bob: 1.8, habits: [{ pose: 'cross', ms: 1700 }, { pose: 'shrug', ms: 800 }] },
+  // Jalal (Season 3, fiction): restless — a hand to the neck, a shrug that comes too fast
+  jalal: { front: true, bob: 2.2, habits: [{ pose: 'shrug', ms: 700 }, { pose: 'think', ms: 1100 }] },
   // Ryan: calm and observant — he keeps an eye on her; quietly sure of himself (a small nod), patient
   ryan: { bob: 1, glance: true },
   // Anji and the dogs keep their own drawn animations

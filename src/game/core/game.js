@@ -7,10 +7,11 @@
  * Collectible ids are dotted, the first segment is their group:
  *   'star.garden.1', 'note.ryan.3', 'seed.blue.2' …
  *
- * Two documents (Season 2, docs/season-2/SEASON_2_TECHNICAL_PLAN.md §1): the original campaign's save
- * (`state`) and Season 2's own (`s2`, core/s2-store.js). Every id is routed by `isS2`: Season 2's ids
- * start with an `s2` segment (`s2:board`, `mission:s2-01`, `s2.ev.e-wax`, `dlg:s2.01-enter`, a scene
- * `s2-archive` → `visited:s2-archive`, `t.s2-archive.enter`…). Season 2 never writes the main save.
+ * One document per season (docs/season-2/SEASON_2_TECHNICAL_PLAN.md §1, docs/season-3/TECHNICAL_ARCHITECTURE.md §2):
+ * the original campaign's save (`state`), Season 2's (`s2`) and Season 3's (`s3`), each season's in its own store
+ * (core/s2-store.js, one key each). Every id is routed by `seasonOf`: a season's ids carry its segment (`s2:board`,
+ * `mission:s2-01`, `s2.ev.e-wax`, `dlg:s2.01-enter`, a scene `s2-archive` → `visited:s2-archive`; likewise `s3`).
+ * A season never writes the main save, nor another season's.
  */
 import { defaultState, MAX_GIFTS } from './save.js';
 import { s2DefaultState, normalizeS2 } from './s2-store.js';
@@ -21,77 +22,98 @@ export const groupOf = (id) => String(id).split('.')[0];
 
 /** True for a Season 2 id: an `s2` segment at the start or after `:` / `.`, followed by `-` `:` `.` or the end. */
 export const isS2 = (id) => /(^|[:.])s2([-:.]|$)/.test(String(id));
+/** True for a Season 3 id (the same rule, an `s3` segment). */
+export const isS3 = (id) => /(^|[:.])s3([-:.]|$)/.test(String(id));
+/** The season whose document an id belongs to: 's2', 's3', or null (the original campaign's save). */
+export const seasonOf = (id) => (isS2(id) ? 's2' : isS3(id) ? 's3' : null);
+const SEASONS = ['s2', 's3'];
 
 /**
- * Season 2 ids never live in the main save. A main state that carries some (a test fixture, a
- * developer link) hands them to Season 2's document — in memory; nothing is written here.
+ * Season ids never live in the main save. A main state that carries some (a test fixture, a developer link) hands
+ * them to their season's document — in memory; nothing is written here.
  */
-function liftS2(main, s2) {
+function liftSeasons(main, docs) {
   for (const [k, v] of Object.entries(main.flags ?? {})) {
-    if (!isS2(k)) continue;
-    if (!(k in s2.flags)) s2.flags[k] = v;
+    const s = seasonOf(k);
+    if (!s) continue;
+    if (!(k in docs[s].flags)) docs[s].flags[k] = v;
     delete main.flags[k];
   }
   for (const list of ['collected', 'seen', 'journal']) {
-    const mine = (main[list] ?? []).filter(isS2);
-    if (!mine.length) continue;
-    main[list] = main[list].filter((x) => !isS2(x));
-    for (const x of mine) if (!s2[list].includes(x)) s2[list].push(x);
+    const own = (main[list] ?? []).filter((x) => seasonOf(x));
+    if (!own.length) continue;
+    main[list] = main[list].filter((x) => !seasonOf(x));
+    for (const x of own) {
+      const d = docs[seasonOf(x)];
+      if (!d[list].includes(x)) d[list].push(x);
+    }
   }
   for (const [k, r] of Object.entries(main.records ?? {})) {
-    if (!isS2(k)) continue;
-    if (!(k in s2.records)) s2.records[k] = r;
+    const s = seasonOf(k);
+    if (!s) continue;
+    if (!(k in docs[s].records)) docs[s].records[k] = r;
     delete main.records[k];
   }
 }
 
-export function createGame({ saveManager, s2Store = null, bus, initial, s2Initial, now = () => Date.now() }) {
+export function createGame({ saveManager, s2Store = null, s3Store = null, bus, initial, s2Initial, s3Initial, now = () => Date.now() }) {
   let state = initial ?? defaultState(now());
-  let s2 = s2Initial ?? s2DefaultState(state.createdAt, now());
-  liftS2(state, s2);
-  let lastSaveError = null;
-  // «كمّلي» goes to Season 2 when its document says she is there (`here`, written as she enters or leaves a
-  // Season 2 place) and the main save was not written after it (a write in the same millisecond is a tie:
-  // the marker decides). A document without `here` (written before the marker existed) goes by the newer
-  // document alone.
-  const resumesInS2 = () => {
-    if (!s2.location.scene || s2.here === false) return false;
-    const s2At = s2.updatedAt ?? 0;
-    const mainAt = state.updatedAt ?? 0;
-    return s2.here === true ? s2At >= mainAt : s2At > mainAt;
+  const docs = {
+    s2: s2Initial ?? s2DefaultState(state.createdAt, now()),
+    s3: s3Initial ?? s2DefaultState(state.createdAt, now()),
   };
-  let inS2 = resumesInS2(); // she is in a Season 2 place (play time and location go to its document)
-  let mainDirty = false; // a change not written yet (play time, or a write that failed)
-  let s2Dirty = false;
+  const stores = { s2: s2Store, s3: s3Store };
+  liftSeasons(state, docs);
+  let lastSaveError = null;
+  // «كمّلي» goes to a season when its document says she is there (`here`, written as she enters or leaves one of
+  // its places) and the main save was not written after it (a write in the same millisecond is a tie: the marker
+  // decides). A document without `here` (written before the marker existed) goes by the newer document alone.
+  const resumesIn = (s) => {
+    const d = docs[s];
+    if (!d.location.scene || d.here === false) return false;
+    const at = d.updatedAt ?? 0;
+    const mainAt = state.updatedAt ?? 0;
+    return d.here === true ? at >= mainAt : at > mainAt;
+  };
+  // (two seasons can only both qualify in hand-edited data: the newer document wins)
+  const resumeSeason = () => SEASONS.filter(resumesIn).reduce((a, b) => (a && (docs[a].updatedAt ?? 0) >= (docs[b].updatedAt ?? 0) ? a : b), null);
+  let here = resumeSeason(); // the season whose place she is in (play time and location go to its document), or null
+  const dirty = { main: false, s2: false, s3: false }; // a change not written yet (play time, or a write that failed)
 
-  function commitDoc(toS2, kind, detail) {
+  /** Write one document: 'main', 's2' or 's3'. */
+  function commitDoc(key, kind, detail) {
     let res;
-    if (toS2) {
-      s2.updatedAt = now();
-      res = s2Store?.save(s2) ?? { ok: true };
-      s2Dirty = !res.ok;
-    } else {
+    if (key === 'main') {
       state.updatedAt = now();
       res = saveManager?.save(state) ?? { ok: true };
-      mainDirty = !res.ok;
+    } else {
+      docs[key].updatedAt = now();
+      res = stores[key]?.save(docs[key]) ?? { ok: true };
     }
+    dirty[key] = !res.ok;
     if (!res.ok && res.error !== lastSaveError) bus?.emit('save-error', res.error);
     lastSaveError = res.ok ? null : res.error;
-    // `doc` says which save changed: after a Season 2 change the app syncs only Season 2's missions,
-    // so the original campaign's bookkeeping is never written because of Season 2
-    bus?.emit('change', { kind, doc: toS2 ? 's2' : 'main', ...detail });
+    // `doc` says which save changed: after a season's change the app syncs only that season's missions, so the
+    // original campaign's bookkeeping is never written because of a season
+    bus?.emit('change', { kind, doc: key, ...detail });
     return res;
   }
-  const docOf = (id) => (isS2(id) ? s2 : state);
-  const commit = (id, kind, detail) => commitDoc(isS2(id), kind, detail);
+  const docOf = (id) => {
+    const s = seasonOf(id);
+    return s ? docs[s] : state;
+  };
+  const commit = (id, kind, detail) => commitDoc(seasonOf(id) ?? 'main', kind, detail);
 
   const game = {
-    /** The original campaign's save (Season 2's is `s2State`). */
+    /** The original campaign's save (the seasons' are `s2State` and `s3State`). */
     get state() {
       return state;
     },
     get s2State() {
-      return s2;
+      return docs.s2;
+    },
+    get s3State() {
+      return docs.s3;
     },
     get lastSaveError() {
       return lastSaveError;
@@ -106,30 +128,30 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
       commit(id, 'flag', { id, value });
     },
     setFlags(ids) {
-      const changed = { main: false, s2: false };
+      const changed = { main: false, s2: false, s3: false };
       for (const id of ids) {
         const d = docOf(id);
         if (!d.flags[id]) {
           d.flags[id] = true;
-          changed[isS2(id) ? 's2' : 'main'] = true;
+          changed[seasonOf(id) ?? 'main'] = true;
         }
       }
-      if (changed.main) commitDoc(false, 'flag', { ids });
-      if (changed.s2) commitDoc(true, 'flag', { ids });
+      if (changed.main) commitDoc('main', 'flag', { ids });
+      for (const s of SEASONS) if (changed[s]) commitDoc(s, 'flag', { ids });
     },
 
     hasItem: (id, n = 1) => (state.inventory[id] || 0) >= n,
     itemCount: (id) => state.inventory[id] || 0,
     addItem(id, n = 1) {
       state.inventory[id] = (state.inventory[id] || 0) + n;
-      commitDoc(false, 'item', { id, n });
+      commitDoc('main', 'item', { id, n });
     },
     /** @returns {boolean} false (and no change) when there are not enough. */
     removeItem(id, n = 1) {
       if ((state.inventory[id] || 0) < n) return false;
       state.inventory[id] -= n;
       if (!state.inventory[id]) delete state.inventory[id];
-      commitDoc(false, 'item', { id, n: -n });
+      commitDoc('main', 'item', { id, n: -n });
       return true;
     },
 
@@ -160,20 +182,20 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
       commit(id, 'journal', { id });
       return true;
     },
-    /** Every journal entry, the original campaign's first. */
-    journalIds: () => [...state.journal, ...s2.journal],
+    /** Every journal entry, the original campaign's first, then each season's. */
+    journalIds: () => [...state.journal, ...docs.s2.journal, ...docs.s3.journal],
 
     isUnlocked: (id) => state.unlocks.includes(id),
     unlock(id) {
       if (state.unlocks.includes(id)) return false;
       state.unlocks.push(id);
-      commitDoc(false, 'unlock', { id });
+      commitDoc('main', 'unlock', { id });
       return true;
     },
     setCosmetic(slot, value) {
       if (!(slot in state.cosmetics) || state.cosmetics[slot] === value) return;
       state.cosmetics[slot] = value;
-      commitDoc(false, 'cosmetic', { slot, value });
+      commitDoc('main', 'cosmetic', { slot, value });
     },
 
     record: (id) => docOf(id).records[id] ?? null,
@@ -202,18 +224,19 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
     markMemory(id, solved) {
       const m = state.memories[id] ?? { solved: false, attempts: 0 };
       state.memories[id] = { solved: m.solved || solved, attempts: m.attempts + 1 };
-      commitDoc(false, 'memory', { id, solved });
+      commitDoc('main', 'memory', { id, solved });
     },
 
     setGarden(placed) {
       state.garden = placed.map(({ id, cell }) => ({ id, cell }));
-      commitDoc(false, 'garden', {});
+      commitDoc('main', 'garden', {});
     },
 
     /** Index of the next line of a dialogue pool; rotates so lines rarely repeat. */
     nextLine(key, size) {
       if (!size) return 0;
-      const lines = isS2(key) ? s2.lines : state.hub.lines;
+      const s = seasonOf(key);
+      const lines = s ? docs[s].lines : state.hub.lines;
       const i = (lines[key] ?? 0) % size;
       lines[key] = (i + 1) % size;
       commit(key, 'hub', { key });
@@ -223,78 +246,85 @@ export function createGame({ saveManager, s2Store = null, bus, initial, s2Initia
     addGift(gift) {
       if (state.hub.gifts.length >= MAX_GIFTS) return false;
       state.hub.gifts.push({ ...gift });
-      commitDoc(false, 'gift', {});
+      commitDoc('main', 'gift', {});
       return true;
     },
     setDaily(day) {
       state.hub.daily = day;
-      commitDoc(false, 'hub', { daily: day });
+      commitDoc('main', 'hub', { daily: day });
     },
 
     setLocation(scene, x = null) {
       const loc = { scene, x: Number.isFinite(x) ? Math.round(x) : null };
-      const left = inS2 && !isS2(scene);
-      inS2 = isS2(scene);
-      const doc = inS2 ? s2 : state;
+      const from = here;
+      const to = seasonOf(scene);
+      here = to;
+      const doc = to ? docs[to] : state;
       const moved = doc.location?.scene !== loc.scene || doc.location?.x !== loc.x;
       doc.location = loc;
       // the world re-saves her spot every few seconds and as she leaves: only a real move is written; an
       // unchanged spot is still announced (missions and the objective follow it, as before) but not rewritten
-      const unchanged = (toS2) => bus?.emit('change', { kind: 'location', doc: toS2 ? 's2' : 'main', scene });
-      if (inS2) {
-        if (moved || s2.here !== true) {
-          s2.here = true;
-          commitDoc(true, 'location', { scene });
-        } else unchanged(true);
+      const unchanged = (key) => bus?.emit('change', { kind: 'location', doc: key, scene });
+      // leaving a season (for the original campaign or another season) is written to its own document, never as
+      // an empty main-save write
+      if (from && from !== to) {
+        docs[from].here = false;
+        commitDoc(from, 'location', { scene });
+      }
+      if (to) {
+        if (moved || docs[to].here !== true) {
+          docs[to].here = true;
+          commitDoc(to, 'location', { scene });
+        } else unchanged(to);
         return;
       }
-      // leaving Season 2 is written to its own document, never as an empty main-save write
-      if (left) {
-        s2.here = false;
-        commitDoc(true, 'location', { scene });
-      }
-      if (moved) commitDoc(false, 'location', { scene });
-      else unchanged(false);
+      if (moved) commitDoc('main', 'location', { scene });
+      else unchanged('main');
     },
-    /** Where she is now (the Season 2 place she is in, or her place in the original campaign). */
-    location: () => (inS2 ? s2.location : state.location),
-    /** Where «كمّلي» resumes: her Season 2 place while she is there (see `resumesInS2`), else the original one. */
-    resumeLocation: () => (resumesInS2() ? s2.location : state.location),
+    /** Where she is now (the season place she is in, or her place in the original campaign). */
+    location: () => (here ? docs[here].location : state.location),
+    /** Where «كمّلي» resumes: her season place while she is there (see `resumesIn`), else the original one. */
+    resumeLocation: () => {
+      const s = resumeSeason();
+      return s ? docs[s].location : state.location;
+    },
     addPlayTime(ms) {
       if (!(ms > 0)) return;
       // saved with the next change; not worth a write of its own
-      if (inS2) {
-        s2.playMs += ms;
-        s2Dirty = true;
+      if (here) {
+        docs[here].playMs += ms;
+        dirty[here] = true;
       } else {
         state.playMs += ms;
-        mainDirty = true;
+        dirty.main = true;
       }
     },
 
-    /** Replace the whole state (new game / imported backup); Season 2 follows the playthrough. */
-    replace(next, { s2: s2Next = null } = {}) {
+    /** Replace the whole state (new game / imported backup); each season follows the playthrough. */
+    replace(next, { s2: s2Next = null, s3: s3Next = null } = {}) {
       const samePlaythrough = next.createdAt === state.createdAt;
       state = next;
-      inS2 = false;
-      if (!s2Next && samePlaythrough) {
-        // the same playthrough (an older tab's overwrite taken back, a backup of this game without a
-        // Season 2 section): its Season 2 progress stays
-      } else if (s2Next) {
-        s2Store?.rebind(next.createdAt);
-        s2 = normalizeS2(s2Next, next.createdAt, now());
-        s2.owner = next.createdAt;
-        commitDoc(true, 'replace', {});
-      } else {
-        s2 = s2Store ? s2Store.rebind(next.createdAt) : s2DefaultState(next.createdAt, now());
+      here = null;
+      for (const [s, incoming] of [['s2', s2Next], ['s3', s3Next]]) {
+        if (!incoming && samePlaythrough) {
+          // the same playthrough (an older tab's overwrite taken back, a backup of this game without this season's
+          // section): its progress stays
+        } else if (incoming) {
+          stores[s]?.rebind(next.createdAt);
+          docs[s] = normalizeS2(incoming, next.createdAt, now());
+          docs[s].owner = next.createdAt;
+          commitDoc(s, 'replace', {});
+        } else {
+          docs[s] = stores[s] ? stores[s].rebind(next.createdAt) : s2DefaultState(next.createdAt, now());
+        }
       }
-      return commitDoc(false, 'replace', {});
+      return commitDoc('main', 'replace', {});
     },
     /** Write what is not written yet (the tab is hiding). A save with nothing new is not rewritten. */
     save() {
       let res = { ok: true };
-      if (s2Dirty) res = commitDoc(true, 'save', {});
-      if (mainDirty) res = commitDoc(false, 'save', {});
+      for (const s of SEASONS) if (dirty[s]) res = commitDoc(s, 'save', {});
+      if (dirty.main) res = commitDoc('main', 'save', {});
       return res;
     },
   };

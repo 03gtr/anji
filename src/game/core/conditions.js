@@ -66,6 +66,14 @@ export function check(cond, game) {
       const cut = arg.indexOf('=');
       return game.flag(`s2:dec:${arg.slice(0, cut)}`) === arg.slice(cut + 1);
     }
+    // Season 3 (its own document): the same two, under their own names
+    case 'ev3': // 'ev3:e-visitor-log' — a piece of Season 3 evidence she has
+      return game.has(`s3.ev.${arg}`);
+    case 'dec3': {
+      // 'dec3:sabri-reply=deny' — a Season 3 decision she made
+      const cut = arg.indexOf('=');
+      return game.flag(`s3:dec:${arg.slice(0, cut)}`) === arg.slice(cut + 1);
+    }
     case 'num': {
       // 'num:s2:quiz>=2' — a number kept in a Season 2 flag (absent = 0)
       const m = arg.match(/^(s2:[\w:-]+?)\s*(>=|<=|==|>|<)\s*(-?\d+)$/);

@@ -1,6 +1,7 @@
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 import { DEEP_OPEN } from './missions-deep.js';
 import { S2_OPEN } from './missions-s2.js';
+import { S3_OPEN } from './s3/constants.js';
 
 /**
  * World map: the locations of the garden, how they connect, and when
@@ -72,13 +73,31 @@ export const WORLDS = [
     // M2, the Living Story (after M1's last mission)
     { id: 's2-office', name: 'المكتب', icon: 'note', x: 12, y: 40, unlock: 'flag:mission:s2-11', locked: 'ينفتح بعد «لوحة الدائرة» الثانية.' },
   ].map((w) => ({ act: 8, scene: w.id, spawn: 140, ready: true, pack: 's2', region: 's2', ...w })),
+  // Season 3 «أصداء الـV8»: the map's fourth page (`region: 's3'`); every id starts with `s3-`
+  ...[
+    { id: 's3-clinic', name: 'عيادة الورد', short: 'العيادة', icon: 'stethoscope', x: 37, y: 71, unlock: S3_OPEN, locked: 'تنفتح بعد نهاية «حقيقة البطاقة».' },
+    { id: 's3-street', name: 'شارع أنجي', short: 'الشارع', icon: 'car', x: 60, y: 50, unlock: 'flag:mission:s3-01', locked: 'ينفتح بعد «صبري ولسانه الطويل».', spawn: 120 },
+    { id: 's3-home', name: 'غرفة أنجي', short: 'الغرفة', icon: 'heart', x: 74, y: 30, unlock: 'flag:mission:s3-02', locked: 'تنفتح بعد «رسالة بثمانية أسطوانات».', spawn: 200 },
+    { id: 's3-garage', name: 'نادي السيارات', short: 'النادي', icon: 'car', x: 22, y: 34, unlock: 'flag:mission:s3-03', locked: 'ينفتح بعد «لا تصدّقين كلشي ينقال».', spawn: 140 },
+    { id: 's3-lane', name: 'الدربونة ورا المخبز', short: 'الدربونة', icon: 'paw', x: 52, y: 82, unlock: 'flag:mission:s3-04', locked: 'تنفتح بعد «الشخص ورا القصة».', spawn: 120 },
+    { id: 's3-archive', name: 'أرشيف العيادة', short: 'الأرشيف', icon: 'note', x: 14, y: 62, unlock: 'flag:mission:s3-05', locked: 'ينفتح بعد «سنوكي يعرف شي».', spawn: 150 },
+  ].map((w) => ({
+    act: 8,
+    scene: w.id,
+    spawn: 150,
+    ready: true,
+    pack: 's3',
+    region: 's3',
+    ...w,
+  })),
 ];
 
-/** Map pages: the garden, (Phase 04) the deep garden under and behind it, and (Season 2) the closed circle. */
+/** Map pages: the garden, (Phase 04) the deep garden under and behind it, (Season 2) the closed circle, (Season 3) the echoes. */
 export const REGIONS = [
   { id: 'garden', name: 'الحديقة' },
   { id: 'deep', name: 'الحديقة العميقة' },
   { id: 's2', name: 'الدائرة المغلقة' },
+  { id: 's3', name: 'أصداء الـV8' },
 ];
 export const regionOf = (w) => w?.region ?? 'garden';
 

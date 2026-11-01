@@ -16,6 +16,8 @@
  *    not overwrite it and becomes read-only (the app asks to reload).
  */
 export const S2_KEY = 'snooki-game:s2';
+/** Season 3 keeps its own document in the same kind of store, under its own key (docs/season-3/TECHNICAL_ARCHITECTURE.md §2). */
+export const S3_KEY = 'snooki-game:s3';
 export const S2_VERSION = 1;
 
 /** S2_MIGRATIONS[n] turns a version-n document into version n+1 (none yet). Never edit one. */
@@ -94,6 +96,9 @@ function storageOf(storage) {
   }
 }
 const isQuota = (err) => err?.name === 'QuotaExceededError' || err?.code === 22 || err?.code === 1014 || /quota/i.test(err?.message || '');
+
+/** A season's store: `createSeasonStore({ storage, key: S3_KEY })` is Season 3's (the same code as Season 2's). */
+export const createSeasonStore = (opts) => createS2Store(opts);
 
 export function createS2Store({ storage, key = S2_KEY, now = () => Date.now() } = {}) {
   const ls = storageOf(storage);

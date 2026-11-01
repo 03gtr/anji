@@ -16,6 +16,8 @@ import { TEAM_SCENES, withTeam } from './team.js';
 import { S2_SCENES } from './s2.js';
 import { S2_M2_SCENES } from './s2-m2.js';
 import { withM2 } from '../m2/index.js';
+import { S3_SCENES } from './s3.js';
+import { withS3 } from '../s3/index.js';
 
 const BASE = {
   [GARDEN.id]: GARDEN,
@@ -46,9 +48,11 @@ const BASE = {
   // Season 2 «ملف الدائرة المغلقة», M1 (the map's third page)
   ...Object.fromEntries(S2_SCENES.map((s) => [s.id, s])),
   ...Object.fromEntries(S2_M2_SCENES.map((s) => [s.id, s])),
+  // Season 3 «أصداء الـV8» (the map's fourth page)
+  ...Object.fromEntries(S3_SCENES.map((s) => [s.id, s])),
 };
 
 // Story Pack 02 adds clues, letter fragments and trail marks to existing locations; Phase 04
 // adds the deep garden's entrances and evidence; Season 2's mission modules extend the places
 // they play in (data/m2/)
-export const SCENES = Object.fromEntries(Object.entries(BASE).map(([id, scene]) => [id, withM2(withTeam(withDeep(withExtras(scene))))]));
+export const SCENES = Object.fromEntries(Object.entries(BASE).map(([id, scene]) => [id, withS3(withM2(withTeam(withDeep(withExtras(scene)))))]));

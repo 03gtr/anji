@@ -8,6 +8,8 @@
  * - Ambience/music beds are owned by the scene that started them and are
  *   stopped when that scene ends (stopBed) or the tab is hidden.
  */
+import { render, SOUNDS } from './engine-voice.js';
+
 const NOTE = (n) => 440 * 2 ** ((n - 69) / 12);
 
 const SFX = {
@@ -35,7 +37,23 @@ const SFX = {
   oops: 'oops', // a comic slide down (caught out)
   giggle: 'giggle', // three little rising chirps (comedy)
   click: [[88, 0, 0.025, 'square', 0.05]], // a dial or a hand on a clock
+  // Season 3: Zefiro's V8 and the street, rendered from the one engine model (core/engine-voice.js)
+  'v8-start': 'voice',
+  'v8-idle': 'voice',
+  'v8-blip': 'voice',
+  'v8-off': 'voice',
+  'v8-other': 'voice',
+  shutter: 'voice',
+  relay: 'voice',
+  // Season 3's finale: the street's sound in layers, faded one by one («السكوت»)
+  'hush-start': 'hush',
+  'hush-engine': 'hush',
+  'hush-hum': 'hush',
+  'hush-dog': 'hush',
+  'hush-fan': 'hush',
+  'hush-end': 'hush',
 };
+const VOICE_RATE = 22050;
 
 // Gentle pentatonic phrases for the optional music bed.
 const THEMES = {
@@ -99,7 +117,7 @@ export function createAudio(settings) {
     osc.stop(t0 + dur + 0.05);
   }
 
-  function bark(ac) {
+  function bark(ac, out = master) {
     // a short "woof": pitched-down chirp through a low-pass filter
     const t0 = ac.currentTime;
     for (const [at, f0] of [[0, 520], [0.16, 470]]) {
@@ -114,7 +132,7 @@ export function createAudio(settings) {
       g.gain.setValueAtTime(0.0001, t0 + at);
       g.gain.exponentialRampToValueAtTime(0.28, t0 + at + 0.01);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.13);
-      osc.connect(filter).connect(g).connect(master);
+      osc.connect(filter).connect(g).connect(out);
       osc.start(t0 + at);
       osc.stop(t0 + at + 0.16);
     }
@@ -206,8 +224,102 @@ export function createAudio(settings) {
     const def = SFX[name];
     if (def === 'bark') return bark(ac);
     if (def === 'boing') return boing(ac);
+    if (def === 'voice') return void playVoice(ac, name);
+    if (def === 'hush') return hush(ac, name);
     if (typeof def === 'string' && SYNTH[def]) return SYNTH[def](ac);
     for (const [m, at, dur, type, vol] of def || []) tone(ac, m, at, dur, type, vol);
+  }
+
+  // Season 3: each street sound is rendered once from the engine model, then replayed
+  const voices = new Map();
+  function voiceBuffer(ac, name) {
+    if (!voices.has(name)) {
+      const data = render(SOUNDS[name], VOICE_RATE);
+      const buf = ac.createBuffer(1, data.length, VOICE_RATE);
+      buf.getChannelData(0).set(data);
+      voices.set(name, buf);
+    }
+    return voices.get(name);
+  }
+  function playVoice(ac, name, out = master, loop = false) {
+    const src = ac.createBufferSource();
+    src.buffer = voiceBuffer(ac, name);
+    src.loop = loop;
+    src.connect(out);
+    src.start();
+    return src;
+  }
+
+  // the finale's street, in layers she names one by one; each fades out and stays out
+  let layers = null;
+  function hush(ac, name) {
+    if (name === 'hush-start') {
+      hush(ac, 'hush-end');
+      const layer = (start) => {
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0, ac.currentTime);
+        g.gain.linearRampToValueAtTime(1, ac.currentTime + 1);
+        g.connect(master);
+        return { g, stop: start(g) };
+      };
+      layers = {
+        engine: layer((g) => {
+          const src = playVoice(ac, 'v8-idle', g, true);
+          return () => src.stop();
+        }),
+        hum: layer((g) => {
+          const o = ac.createOscillator();
+          o.frequency.value = 100;
+          const v = ac.createGain();
+          v.gain.value = 0.02;
+          o.connect(v).connect(g);
+          o.start();
+          return () => o.stop();
+        }),
+        dog: layer((g) => {
+          const id = setInterval(() => ac.state === 'running' && bark(ac, g), 2600);
+          return () => clearInterval(id);
+        }),
+        fan: layer((g) => {
+          const len = ac.sampleRate;
+          const buf = ac.createBuffer(1, len, ac.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+          const src = ac.createBufferSource();
+          src.buffer = buf;
+          src.loop = true;
+          const bp = ac.createBiquadFilter();
+          bp.type = 'bandpass';
+          bp.frequency.value = 320;
+          const v = ac.createGain();
+          v.gain.value = 0.03;
+          src.connect(bp).connect(v).connect(g);
+          src.start();
+          return () => src.stop();
+        }),
+      };
+      return;
+    }
+    if (!layers) return;
+    const names = name === 'hush-end' ? Object.keys(layers) : [name.slice(5)];
+    for (const n of names) {
+      const l = layers[n];
+      if (!l) continue;
+      const t = ac.currentTime;
+      l.g.gain.cancelScheduledValues(t);
+      l.g.gain.setValueAtTime(l.g.gain.value, t);
+      l.g.gain.linearRampToValueAtTime(0, t + 1.6);
+      setTimeout(() => {
+        try {
+          l.stop();
+        } catch {
+          /* already stopped */
+        }
+        l.g.disconnect();
+      }, 1700);
+      delete layers[n];
+    }
+    if (name === 'hush-end') layers = null;
   }
 
   function playSample(ac, buffer) {

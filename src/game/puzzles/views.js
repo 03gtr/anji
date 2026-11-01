@@ -664,7 +664,7 @@ export const VIEWS = {
       const sol = api.showSolution ? Object.fromEntries(st.cards.map((c) => [c.id, c.accepts[0]])) : null;
       const card = (c) =>
         `<button type="button" class="sort-card ${s.sel === c.id ? 'is-sel' : ''}" data-k="c${c.id}" data-card="${c.id}" aria-pressed="${s.sel === c.id}">
-          ${c.icon ? symbol(c.icon) : ''}<b>${say(c.label)}</b>${c.note ? `<small>${say(c.note)}</small>` : ''}
+          ${c.icon ? symbol(c.icon) : ''}<b>${say(c.label)}</b>${c.note ? `<small>${say(c.note)}</small>` : ''}${c.art ? c.art : ''}
           ${sol ? `<small class="is-solution">← ${say(st.bins.find((b) => b.id === sol[c.id]).label)}</small>` : ''}</button>`;
       const loose = st.cards.filter((c) => !s.placed[c.id]);
       rerender(

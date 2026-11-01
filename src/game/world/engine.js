@@ -16,7 +16,7 @@ import { frameTable } from '../characters/sprites.js';
 import { spriteFrames } from './sprite-cache.js';
 import { reaction as socialReaction } from '../progression/social.js';
 import { check } from '../core/conditions.js';
-import { isS2 } from '../core/game.js';
+import { seasonOf } from '../core/game.js';
 import { applyEffects } from '../core/effects.js';
 import { fillNames } from '../core/names.js';
 import { PROP_DRAWERS } from './prop-drawers.js';
@@ -27,11 +27,14 @@ import { CIRCLE_GESTURES } from '../characters/circle.js';
 const CIRCLE_GESTURE_NAMES = new Set(Object.keys(CIRCLE_GESTURES));
 
 /**
- * The key of a rotating line counter (which of the dogs' lines comes next) for a scene: in a Season 2 place it is
- * kept in Season 2's own save (`s2:…`) — Season 2 never writes the original campaign's save, not even a counter
- * (REGRESSION: tapping her husky in the office wrote `hub.lines` in the original save).
+ * The key of a rotating line counter (which of the dogs' lines comes next) for a scene: in a season's place it is
+ * kept in that season's own save (`s2:…`, `s3:…`) — a season never writes the original campaign's save, not even a
+ * counter (REGRESSION: tapping her husky in the office wrote `hub.lines` in the original save).
  */
-export const lineKey = (sceneId, key) => (isS2(sceneId) ? `s2:${key}` : key);
+export const lineKey = (sceneId, key) => {
+  const s = seasonOf(sceneId);
+  return s ? `${s}:${key}` : key;
+};
 
 /**
  * The sound of a reaction (core/audio.js, synthesised; silent when sound is off): a gasp on a surprised face,
@@ -104,6 +107,10 @@ export const KIND = {
   sabri: { h: 116, w: 36, feet: 193 / 200, fps: 8 },
   jojo: { h: 112, w: 36, feet: 193 / 200, fps: 7 },
   sister: { h: 110, w: 34, feet: 193 / 200, fps: 8 },
+  // Season 3: Marius, Anji's older brother — tall and broad (owner's brief): a little taller than Ryan (130)
+  marius: { h: 136, w: 44, feet: 193 / 200, fps: 8 },
+  // Season 3, fiction: Jalal, an ordinary adult build
+  jalal: { h: 120, w: 38, feet: 193 / 200, fps: 8 },
 };
 
 const REACH = 34; // how close (beyond an object's half width) counts as "next to it"
@@ -1011,7 +1018,29 @@ export async function createWorld(host, scene, app, { spawnX, onProgress } = {})
     for (const p of a.puffs) {
       const age = t - p.t0;
       ctx.save();
-      if (p.type === 'sweat') {
+      if (p.type === 'blush') {
+        // (Season 3) warm cheeks that come up and pulse a little, and a little warmth rising: embarrassed
+        const pulse = 0.5 + 0.5 * Math.sin(age * 6);
+        ctx.fillStyle = '#ff7f8f';
+        ctx.globalAlpha = Math.min(1, age * 4) * (0.45 + 0.2 * pulse);
+        for (const dx of [-7, 7]) {
+          ctx.beginPath();
+          ctx.ellipse(a.x + dx, head + 24, 4, 2.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.strokeStyle = '#ff9aa8';
+        ctx.lineWidth = 1.6;
+        for (let i = 0; i < 3; i++) {
+          const f = (age * 1.2 + i / 3) % 1;
+          const x0 = a.x + (i - 1) * 7;
+          const y0 = head - 2 - f * 14;
+          ctx.globalAlpha = 0.6 * (1 - f);
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.quadraticCurveTo(x0 + 3, y0 - 3, x0, y0 - 6);
+          ctx.stroke();
+        }
+      } else if (p.type === 'sweat') {
         ctx.fillStyle = '#8fd3ff';
         for (const [dx, dl] of [[14, 0], [-12, 0.35]]) {
           const f = ((age + dl) % 0.9) / 0.9;

@@ -26,6 +26,8 @@ import { BRIEFS, judgeLook } from '../../src/game/minigames/dressup.js';
 import { QUIZ_SETS } from '../../src/game/minigames/quiz-sets.js';
 import { PIPE_LEVELS, parseLevel, scramble, isSolved } from '../../src/game/minigames/pipes-logic.js';
 import { WORLDS } from '../../src/game/data/worlds.js';
+import { LINKS_S3 } from '../../src/game/data/evidence-s3.js';
+import { linkFlag } from '../../src/game/data/s3/board.js';
 
 /* ── every effect anywhere in the content ── */
 function allEffects() {
@@ -60,7 +62,9 @@ function allEffects() {
   return out;
 }
 const EFFECTS = allEffects();
-const setsFlag = (id) => EFFECTS.includes(`flag:${id}`) || id.startsWith('mission:') || id.startsWith('t.');
+// a Season 3 board thread is set by the board itself (ui/board-s3.js), and only for a thread in its relation table
+const BOARD_THREADS = new Set(LINKS_S3.map(([a, rel, b]) => linkFlag(a, rel, b)));
+const setsFlag = (id) => EFFECTS.includes(`flag:${id}`) || id.startsWith('mission:') || id.startsWith('t.') || BOARD_THREADS.has(`flag:${id}`);
 const givesItem = (id) => EFFECTS.includes(`item:${id}`);
 const playedGames = new Set();
 (function collectGames() {
@@ -86,8 +90,8 @@ describe('missions', () => {
       expect(m.steps.length, m.id).toBeGreaterThanOrEqual(2);
       for (const s of m.steps) {
         expect(s.text, `${m.id}: every step has text`).toBeTruthy();
-        // the original game's steps each have a hint; Season 2's have none (no help with the story)
-        if (m.pack === 's2') expect(s.hint, `${m.id}: a Season 2 step has no hint`).toBeUndefined();
+        // the original game's steps each have a hint; Season 2's and Season 3's have none (no help with the story)
+        if (m.pack === 's2' || m.pack === 's3') expect(s.hint, `${m.id}: a season's step has no hint`).toBeUndefined();
         else expect(s.hint, `${m.id}: every step has a hint`).toBeTruthy();
       }
       for (const e of [].concat(m.reward)) expect(typeof e).toBe('string');

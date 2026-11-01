@@ -19,6 +19,7 @@ import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memo
 import { ACHIEVEMENTS } from '../progression/achievements.js';
 import { journalEntries, filterEntries, displayNo, evidenceView, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
 import { lockedText, exploreText } from '../progression/map-guide.js';
+import { renderBoard } from './board-s3.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -135,8 +136,8 @@ export function openSettings(app) {
         }),
       );
       scope.on(el.querySelector('[data-export]'), 'click', () => {
-        // Season 2 travels in the same file (older builds import the main save and ignore it)
-        const blob = new Blob([saves.exportText(game.state, game.s2State)], { type: 'application/json' });
+        // the seasons travel in the same file (older builds import the main save and ignore them)
+        const blob = new Blob([saves.exportText(game.state, game.s2State, game.s3State)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -156,7 +157,7 @@ export function openSettings(app) {
           const state = saves.importText(text);
           const ok = await confirmBox(app, { title: 'استرجاع التقدم؟', text: 'راح يتبدل التقدم الحالي بالنسخة اللي اخترتيها.', yes: 'استرجعي' });
           if (!ok) return;
-          game.replace(state, { s2: saves.importS2(text) });
+          game.replace(state, { s2: saves.importS2(text), s3: saves.importS3(text) });
           close();
           app.toTitle({ message: 'رجع التقدم من النسخة الاحتياطية ✓' });
         } catch (err) {
@@ -260,6 +261,8 @@ export function openJournal(app, tab = 'notes') {
         ['challenges', 'التحديات'],
         ['achievements', 'الإنجازات'],
       ];
+      // Season 3: the investigation board, once it has opened (Mission 03)
+      if (game.flag('s3:board-open')) tabs.splice(3, 0, ['board', 'لوحة التحقيق']);
       el.innerHTML = `<section class="panel journal">
         <header class="panel-head"><h2 tabindex="-1">دفتر أنجي</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
@@ -336,6 +339,8 @@ export function openJournal(app, tab = 'notes') {
               app.ui.puzzle(b.dataset.board);
             }),
           );
+        } else if (which === 'board') {
+          renderBoard(body, game);
         } else if (which === 'collection') {
           const worlds = [...new Set(Object.values(COLLECTIBLES).map((c) => c.world))];
           const groups = Object.keys(GROUP_NAMES);

@@ -1,5 +1,5 @@
 /**
- * Season 2's circle: Rabi', Lama, Sabri, Uncle Jojo and Anji's sister.
+ * Season 2's circle: Rabi', Lama, Sabri, Uncle Jojo and Anji's sister — and, from Season 3, Marius.
  *
  * ORIGINAL, CLEARLY FICTIONAL designs (owner decision): none of them claims to look like the real
  * person. Only Uncle Jojo's white hair is a real detail. Designs are respectful: no feature is drawn
@@ -16,7 +16,7 @@ import { lightingDefs } from './lighting.js';
 
 let uid = 0;
 
-/** The five looks. Colours and silhouettes differ clearly from Anji, Ryan and each other. */
+/** The looks. Colours and silhouettes differ clearly from Anji, Ryan and each other. */
 export const CIRCLE = {
   rabi: { name: 'ربيع', skin: '#e2b896', skinShade: '#c99a7a', hair: '#2b211b', hairStyle: 'neat', top: '#3f8f8a', topShade: '#2f6f6b', coat: '#f4f6f8', coatShade: '#d5dbe2', legs: '#3a4256', shoes: '#2a2a30', glasses: '#2b2f3a' },
   lama: { name: 'لمى', skin: '#e9c3a3', skinShade: '#cfa284', hair: '#4a2e22', hairStyle: 'bob', top: '#d9a53a', topShade: '#b8862a', coat: null, legs: '#5a4a6e', shoes: '#3a2c3c', clip: '#e86a8a' },
@@ -24,6 +24,13 @@ export const CIRCLE = {
   jojo: { name: 'العم جوجو', skin: '#e3bb9c', skinShade: '#c79c7c', hair: '#f2f2ee', hairStyle: 'white', top: '#e9e2d0', topShade: '#cfc6b0', coat: '#7a5a3e', coatShade: '#5f4530', legs: '#4a4038', shoes: '#2e2620', moustache: '#f2f2ee' },
   // her own silhouette (owner's brief): hair that frames her face like a hood, a patterned scarf, emerald and gold
   sister: { name: 'أخت أنجي', skin: '#ecc7a8', skinShade: '#d2a688', hair: '#1f1a17', hairStyle: 'hood', top: '#2f6b55', topShade: '#22513f', coat: null, legs: '#24323a', shoes: '#3a2a20', scarf: '#c9a64a', scarfMark: '#8a6a24' },
+  // Season 3: Marius, Anji's older brother (owner's brief): blond, blue-eyed, tall and broad-shouldered; an open
+  // jacket over a light tee — relaxed, confident. His height is world/engine.js KIND.marius; `build` widens the body
+  // (not the head), `eyes` colours the iris (both optional: the looks above are drawn exactly as before)
+  marius: { name: 'ماريوس', skin: '#efcfb4', skinShade: '#d6b094', hair: '#e0bd62', hairShade: '#b8933e', hairStyle: 'swept', eyes: '#3f86cf', top: '#eeede8', topShade: '#d6d4cc', coat: '#2e3d52', coatShade: '#233043', legs: '#384a66', shoes: '#5a3c26', build: 1.13 },
+  // Season 3, fiction: Jalal, a car-club acquaintance — a worn leather jacket over a grey tee, a neat moustache.
+  // Not modelled on anyone; not drawn as a villain (an ordinary, tired face)
+  jalal: { name: 'جلال', skin: '#d9ab86', skinShade: '#bf8f6c', hair: '#231c18', hairStyle: 'neat', top: '#6a6e78', topShade: '#52565e', coat: '#4a3326', coatShade: '#36251b', legs: '#2b2d33', shoes: '#1c1c20', moustache: '#231c18', build: 1.04 },
 };
 export const CIRCLE_KINDS = Object.keys(CIRCLE);
 export const CIRCLE_EXPRESSIONS = ['neutral', 'smile', 'thinking', 'surprised', 'worried', 'shy', 'suspicious', 'angry', 'laugh'];
@@ -71,10 +78,17 @@ function hairFront(L, cx = 50) {
       return `<path d="M${cx - 17} 29 C${cx - 18} 3 ${cx + 18} 3 ${cx + 17} 28 C${cx + 8} 19 ${cx - 6} 19 ${cx - 17} 29Z" fill="${L.hair}"/>`;
     case 'hood':
       return `<path d="M${cx - 17} 30 C${cx - 18} 4 ${cx + 18} 4 ${cx + 17} 30 C${cx + 9} 18 ${cx - 9} 18 ${cx - 17} 30Z" fill="${L.hair}"/>`;
+    case 'swept':
+      // short at the sides, swept up and back from a side parting; a lighter streak where the light catches it
+      return `<path d="M${cx - 17} 28 C${cx - 19} 10 ${cx - 4} 3 ${cx + 6} 5 C${cx + 16} 6 ${cx + 20} 14 ${cx + 17} 27 C${cx + 12} 18 ${cx + 2} 15 ${cx - 6} 17 C${cx - 11} 18 ${cx - 14} 22 ${cx - 17} 28Z" fill="${L.hair}"/>
+        <path d="M${cx - 7} 9 C${cx + 1} 6 ${cx + 10} 8 ${cx + 14} 14" stroke="${L.hairShade}" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
     default:
       return '';
   }
 }
+
+/** A look with a `build` is wider in the body (shoulders, arms, legs) — never in the head. */
+const wide = (L, svg) => (L.build ? `<g transform="translate(50 0) scale(${L.build} 1) translate(-50 0)">${svg}</g>` : svg);
 
 function face(L, expr, cx = 50, cy = 32, s = 1) {
   const eyeY = cy - 1;
@@ -84,7 +98,10 @@ function face(L, expr, cx = 50, cy = 32, s = 1) {
     expr === 'blink' || expr === 'laugh'
       ? // closed: a line, or happy arcs when she laughs
         [-6, 6].map((d) => (expr === 'laugh' ? `<path d="M${cx + (d - 2.2) * s} ${eyeY + 0.6 * s} Q${cx + d * s} ${eyeY - 2 * s} ${cx + (d + 2.2) * s} ${eyeY + 0.6 * s}" stroke="${ink}" stroke-width="${1.3 * s}" fill="none" stroke-linecap="round"/>` : `<path d="M${cx + (d - 2) * s} ${eyeY} H${cx + (d + 2) * s}" stroke="${ink}" stroke-width="${1.3 * s}" stroke-linecap="round"/>`)).join('')
-      : [-6, 6].map((d) => `<ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${1.7 * s}" ry="${ey * s}" fill="${ink}"/><circle cx="${cx + (d + 0.6) * s}" cy="${eyeY - 0.6 * s}" r="${0.5 * s}" fill="#fff"/>`).join('');
+      : L.eyes
+        ? // a coloured iris around a smaller pupil (a look with `eyes`)
+          [-6, 6].map((d) => `<ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${1.9 * s}" ry="${(ey + 0.2) * s}" fill="${L.eyes}"/><ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${0.95 * s}" ry="${ey * 0.55 * s}" fill="${ink}"/><circle cx="${cx + (d + 0.6) * s}" cy="${eyeY - 0.6 * s}" r="${0.5 * s}" fill="#fff"/>`).join('')
+        : [-6, 6].map((d) => `<ellipse cx="${cx + d * s}" cy="${eyeY}" rx="${1.7 * s}" ry="${ey * s}" fill="${ink}"/><circle cx="${cx + (d + 0.6) * s}" cy="${eyeY - 0.6 * s}" r="${0.5 * s}" fill="#fff"/>`).join('');
   const browY = eyeY - 4.6 * s;
   const browInk = L.hairStyle === 'white' ? '#cfcfc8' : ink;
   const brows =
@@ -167,13 +184,16 @@ export function personSprite(kind, { pose = 'idle', t = 0, expr = 'neutral' } = 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 200">
     <defs>${lightingDefs(id)}</defs>
     <g filter="url(#v3d-${id})"${lean}>
-      <path d="M38 132 L36 ${186 - lf} L49 ${186 - lf} L50 136Z" fill="${L.legs}"/>
+      ${wide(
+        L,
+        `<path d="M38 132 L36 ${186 - lf} L49 ${186 - lf} L50 136Z" fill="${L.legs}"/>
       <path d="M50 136 L51 ${186 + lf} L64 ${186 + lf} L62 132Z" fill="${L.legs}"/>
       <path d="M33 ${184 - lf} H49 V${193 - lf} H31Z" fill="${L.shoes}"/>
       <path d="M51 ${184 + lf} H67 L69 ${193 + lf} H51Z" fill="${L.shoes}"/>
       ${back}
       <path d="M33 140 L31 ${96 + breathe} C29 84 28 72 31 66 C36 61 64 61 69 66 C72 72 71 84 69 ${96 + breathe} L67 140Z" fill="${L.top}"/>
-      ${stripe}${coat}
+      ${stripe}${coat}`,
+      )}
       <path d="M44 50 H56 L57 63 H43Z" fill="${L.skinShade}"/>
       ${hairBack(L)}
       ${scarf(L)}
@@ -181,7 +201,7 @@ export function personSprite(kind, { pose = 'idle', t = 0, expr = 'neutral' } = 
       <path d="M34 30 C33 16 42 11 50 11 C58 11 67 16 66 30 C66 43 59 52 50 52 C41 52 34 43 34 30Z" fill="${L.skin}"/>
       ${hairFront(L)}
       ${face(L, expr, 50, 32, 1)}
-      ${front}
+      ${wide(L, front)}
     </g>
   </svg>`;
 }
@@ -195,7 +215,7 @@ export function personPortrait(kind, expr = 'neutral') {
     <defs>${lightingDefs(id)}<radialGradient id="bg${id}" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#2b2f5a"/><stop offset="1" stop-color="#151735"/></radialGradient></defs>
     <circle cx="100" cy="100" r="96" fill="url(#bg${id})"/>
     <g filter="url(#v3d-${id})" transform="translate(-50 -22) scale(3)">
-      <path d="M22 80 C26 66 40 61 50 61 C60 61 74 66 78 80Z" fill="${L.coat ?? L.top}"/>
+      ${wide(L, `<path d="M22 80 C26 66 40 61 50 61 C60 61 74 66 78 80Z" fill="${L.coat ?? L.top}"/>`)}
       ${L.coat ? `<path d="M44 62 L50 74 L56 62" fill="${L.top}"/>` : ''}
       <path d="M45 48 H55 L56 62 H44Z" fill="${L.skinShade}"/>
       ${hairBack(L)}
