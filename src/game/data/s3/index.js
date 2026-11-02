@@ -13,8 +13,13 @@ import M05 from './m05-snooki.js';
 import M06 from './m06-seven.js';
 import M07 from './m07-roads.js';
 import M08 from './m08-silence.js';
+// the final story (owner's final brief): four chapters after the season, in Season 3's own document
+import F01 from './f01-marius.js';
+import F02 from './f02-limits.js';
+import F03 from './f03-unsaid.js';
+import F04 from './f04-choice.js';
 
-export const S3_MODULES = [M01, M02, M03, M04, M05, M06, M07, M08];
+export const S3_MODULES = [M01, M02, M03, M04, M05, M06, M07, M08, F01, F02, F03, F04];
 
 /** One registry part gathered from every module (lists are concatenated, maps merged — ids are checked by tests). */
 export const gather = (key) => {

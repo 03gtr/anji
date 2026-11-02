@@ -10,6 +10,11 @@
  *               or the `solutionText` is shown
  *   «تخطّي»     after the hints (or 3 mistakes): the story continues with the
  *               same reward; the record remembers it was skipped (no medal)
+ *
+ * The seasons' story puzzles (`strict`) have no solution and no skip, ever. Since the owner's final brief they have
+ * one optional help: «تلميح», the puzzle's contextual guide (data/guides.js) — three levels for the stage she is on
+ * (direction, reasoning, method), one per tap. It only shows words: it never moves a card, picks an option or
+ * changes the state, and it never gives the answer.
  */
 import { RULES, nextHint } from './rules.js';
 import { VIEWS } from './views.js';
@@ -18,6 +23,8 @@ import { check } from '../core/conditions.js';
 import { h, esc, tx, ICONS } from '../ui/dom.js';
 import { confirmBox } from '../ui/menus.js';
 import { fillNames } from '../core/names.js';
+import { GUIDES, GUIDE_LEVELS } from '../data/guides.js';
+import { num } from '../ui/format.js';
 
 export const SKIP_AFTER_MISTAKES = 3;
 /**
@@ -73,6 +80,10 @@ export function openPuzzle(app, input) {
       let showSolution = Boolean(def.guided); // guided: the next step simply glows
       let mistakes = 0;
       let hintArmed = false; // the first hint asks once: think first, help is a choice
+      // a season's puzzle: its guide, one set of levels per stage (how many she has opened, per stage)
+      const guide = def.strict ? (def.guide ?? GUIDES[def.id] ?? null) : null;
+      const guideOpened = [];
+      const stageNo = () => (Number.isInteger(state.stage) ? state.stage : 0);
       el.append(
         h(`<section class="panel puzzle puzzle-${def.type}">
           <header class="panel-head">
@@ -85,9 +96,14 @@ export function openPuzzle(app, input) {
           <div class="puzzle-body"></div>
           <p class="puzzle-feedback" role="status" aria-live="polite"></p>
           <ol class="puzzle-hints" hidden></ol>
+          ${guide ? '<ol class="puzzle-guide" aria-label="التلميحات" hidden></ol>' : ''}
           <footer class="panel-foot">${
             def.strict
-              ? '' // Season 2's story puzzles: no hint, no "show the answer", no skip — not hidden, not there at all
+              ? // the seasons' story puzzles: no "show the answer" and no skip — not hidden, not there at all; only the
+                // optional guide (words that teach the method)
+                guide
+                ? `<button type="button" class="btn btn-ghost" data-act="guide">${ICONS.hint}<span></span></button>`
+                : ''
               : `<button type="button" class="btn btn-ghost" data-act="hint">${ICONS.hint}<span></span></button>
             <button type="button" class="btn btn-ghost" data-act="solution" hidden>🔍 <span>شوفي الحل</span></button>
             <button type="button" class="btn btn-ghost" data-act="skip" hidden>${ICONS.skip}<span>تخطّي اللغز</span></button>`
@@ -119,8 +135,21 @@ export function openPuzzle(app, input) {
       // Season 2's story puzzles have no "show the answer" (noSolution): help ends at the method, never the answer
       const hasSolution = !def.noSolution && Boolean(view.solution || def.solutionText);
 
+      const guideEl = el.querySelector('.puzzle-guide');
+      const guideBtn = el.querySelector('[data-act="guide"]');
+      /** The guide for the stage she is on: the levels she opened, and the button for the next one. */
+      const renderGuide = () => {
+        if (!guide) return;
+        const levels = guide[stageNo()] ?? [];
+        const opened = guideOpened[stageNo()] ?? 0;
+        guideEl.replaceChildren(...levels.slice(0, opened).map((t, i) => h(`<li><b>${esc(GUIDE_LEVELS[i])}:</b> ${esc(fillNames(tx(t), app.game))}</li>`)));
+        guideEl.hidden = opened === 0;
+        guideBtn.querySelector('span').textContent = !levels.length || opened >= levels.length ? 'خلصت تلميحات هالمرحلة' : `تلميح ${num(opened + 1)} من ${num(levels.length)}: ${GUIDE_LEVELS[opened]}`;
+        guideBtn.disabled = solved || !levels.length || opened >= levels.length;
+        guideBtn.hidden = solved || !settings.get().hints;
+      };
       const updateButtons = () => {
-        if (def.strict) return; // (no help controls exist)
+        if (def.strict) return renderGuide(); // (no hint ladder, solution or skip exists)
         const hintsOn = settings.get().hints;
         const left = (def.hints?.length || 0) - hintsUsed;
         hintBtn.querySelector('span').textContent = left <= 0 ? 'خلصت التلميحات' : hintArmed ? 'متأكدة؟ المسي مرة ثانية' : `تلميح (${left})`;
@@ -172,6 +201,7 @@ export function openPuzzle(app, input) {
           const stageBefore = state.stage;
           state = res.state;
           if (resumable && res.outcome === 'progress' && state.stage !== stageBefore) game.setFlag(stageFlag, state.stage);
+          if (guide && state.stage !== stageBefore) renderGuide(); // a new stage: its own guide
           if (drafted && res.outcome !== 'solved' && res.outcome !== 'noop') game.setFlag(draftFlag, rules.draft.save(state));
           if (res.outcome === 'wrong') {
             mistakes += 1;
@@ -220,6 +250,16 @@ export function openPuzzle(app, input) {
         audio.play('page');
         view.render(body, api);
         updateButtons();
+      });
+      // the guide: words only — the state, the view and the answer are not touched
+      if (guide) scope.on(guideBtn, 'click', () => {
+        const levels = guide[stageNo()] ?? [];
+        const opened = guideOpened[stageNo()] ?? 0;
+        if (solved || opened >= levels.length) return;
+        guideOpened[stageNo()] = opened + 1;
+        hintsUsed += 1; // (kept on the record, as any help is)
+        audio.play('page');
+        renderGuide();
       });
       if (!def.strict) scope.on(solBtn, 'click', () => {
         showSolution = true;

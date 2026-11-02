@@ -2,12 +2,13 @@
  * Season 3's investigation board, as a journal tab (data/s3/board.js has the rules). Touch first: tap a card, tap a
  * relation, tap a second card — the thread is checked against the season's relation table. A thread that holds
  * stays on the board (Season 3's own save); one that does not gets a neutral line, and nothing is drawn for her.
- * Every card shows its reliability as it stands now.
+ * Every card shows its reliability as it stands now. Tapping the chosen card again lets it go. The relation buttons
+ * and the reply stay on screen (a bar at the foot of the panel) however many cards she holds.
  */
 import { esc } from './dom.js';
 import { symbol } from './symbols.js';
 import { EVIDENCE_S3, LINKS_S3 } from '../data/evidence-s3.js';
-import { RELATIONS, STATES, linkFlag, linkHolds, reliability, LINK_WRONG } from '../data/s3/board.js';
+import { RELATIONS, STATES, linkFlag, linkMatch, reliability, LINK_WRONG } from '../data/s3/board.js';
 
 const held = (game) => Object.keys(EVIDENCE_S3).filter((id) => game.has(`s3.ev.${id}`));
 /** The threads she has drawn (from her flags), as [a, rel, b]. */
@@ -27,7 +28,7 @@ export function renderBoard(body, game) {
     const threads = drawnThreads(game);
     const rel = (id) => RELATIONS.find((r) => r.id === id).label;
     body.innerHTML = `
-      <p class="muted small">المسي دليل، بعدين نوع الخيط، بعدين الدليل الثاني. الخيط يبقى بس إذا الأدلة تثبته.</p>
+      <p class="muted small">المسي دليل، بعدين نوع الخيط، بعدين الدليل الثاني. لمسة ثانية على نفس الدليل تتركه. الخيط يبقى بس إذا الأدلة تثبته.</p>
       <div class="s3-board-cards">${ids
         .map((id) => {
           const e = EVIDENCE_S3[id];
@@ -38,19 +39,27 @@ export function renderBoard(body, game) {
             <small>${esc(e.note)}</small></button>`;
         })
         .join('')}</div>
-      <div class="s3-rels" role="group" aria-label="نوع الخيط">${RELATIONS.map((r) => `<button type="button" class="btn btn-small ${pick.rel === r.id ? 'btn-primary' : 'btn-ghost'}" data-rel="${r.id}" ${pick.a ? '' : 'disabled'}>${esc(r.label)}</button>`).join('')}</div>
-      <p class="s3-board-say" role="status" aria-live="polite">${esc(say)}</p>
+      <div class="s3-board-bar">
+        <div class="s3-rels" role="group" aria-label="نوع الخيط">${RELATIONS.map((r) => `<button type="button" class="btn btn-small ${pick.rel === r.id ? 'btn-primary' : 'btn-ghost'}" data-rel="${r.id}" ${pick.a ? '' : 'disabled'}>${esc(r.label)}</button>`).join('')}</div>
+        <p class="s3-board-say" role="status" aria-live="polite">${esc(say)}</p>
+      </div>
       <h3>خيوطچ</h3>
       ${threads.length ? `<ul class="s3-threads">${threads.map(([a, r, b]) => `<li>🧵 <b>${esc(EVIDENCE_S3[a].label)}</b> — ${esc(rel(r))} — <b>${esc(EVIDENCE_S3[b].label)}</b></li>`).join('')}</ul>` : '<p class="muted small">بعد ما ربطتي شي.</p>'}`;
     body.querySelectorAll('[data-card]').forEach((b) =>
       b.addEventListener('click', () => {
         const id = b.dataset.card;
-        if (!pick.a || !pick.rel) {
-          pick = { a: pick.a === id ? null : id, rel: null };
-          say = pick.a ? `«${EVIDENCE_S3[id].label}»… شنو يربطه؟` : '';
-        } else if (id !== pick.a) {
-          if (linkHolds(LINKS_S3, pick.a, pick.rel, id)) {
-            game.setFlag(linkFlag(pick.a, pick.rel, id).slice(5));
+        if (id === pick.a) {
+          // the chosen card again: let it go (with or without a relation)
+          pick = { a: null, rel: null };
+          say = '';
+        } else if (!pick.a || !pick.rel) {
+          pick = { a: id, rel: null };
+          say = `«${EVIDENCE_S3[id].label}»… شنو يربطه؟`;
+        } else {
+          // kept as the table names it (a conclusion's thread may be drawn from either end)
+          const thread = linkMatch(LINKS_S3, pick.a, pick.rel, id, EVIDENCE_S3);
+          if (thread) {
+            game.setFlag(linkFlag(...thread).slice(5));
             say = `🧵 «${EVIDENCE_S3[pick.a].label}» ${rel(pick.rel)} «${EVIDENCE_S3[id].label}».`;
           } else {
             say = LINK_WRONG[wrong++ % LINK_WRONG.length];

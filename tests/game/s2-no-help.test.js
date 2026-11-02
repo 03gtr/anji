@@ -11,6 +11,9 @@
  *  - the testimony bar has no help button;
  *  - the journal shows no hint for a Season 2 mission step;
  *  - the original game's puzzles keep their help (nothing outside Season 2 changed).
+ * Changed by the owner's final brief (2026-11-02): the seasons' puzzles now offer ONE optional help — the contextual
+ * guide (data/guides.js: direction, reasoning, method; words only). Still absent: the old hint ladder, «شوفي الحل»
+ * and skip. The guide's own rules (no answer, no state change) are tested in tests/game/guides.test.js.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createGameApp } from '../../src/game/app.js';
@@ -61,7 +64,7 @@ describe('Season 2: no help with the story (real panels)', () => {
     delete globalThis.__timerLoop;
   });
 
-  it('every Season 2 puzzle panel has no hint, solution or skip control — absent, not hidden — and no help tip', async () => {
+  it('every Season 2 puzzle panel has no hint ladder, solution or skip control — absent, not hidden — only the guide', async () => {
     await app.toTitle();
     app.settings.set({ hints: true, tips: true });
     const shown = vi.spyOn(app.tips, 'show');
@@ -70,7 +73,9 @@ describe('Season 2: no help with the story (real panels)', () => {
       await until(() => $('.puzzle'));
       expect($$(HELP), id).toHaveLength(0);
       expect($('.puzzle-hints')?.children.length ?? 0, id).toBe(0);
-      expect($('.panel-foot').textContent.trim(), id).toBe('');
+      // the foot holds the guide's one button and nothing else
+      expect([...$('.panel-foot').children].map((b) => b.dataset.act), id).toEqual(['guide']);
+      expect($('.puzzle-guide').children.length, id).toBe(0); // nothing shown until she asks
       $('.puzzle [data-act="close"]').click();
       await done;
       await until(() => !$('.puzzle'));
@@ -126,12 +131,13 @@ describe('Season 2: no help with the story (real panels)', () => {
     await done;
   });
 
-  it('the testimony bar has no help button', async () => {
+  it('the testimony bar has no help but the guide', async () => {
     await app.toTitle();
     const done = app.ui.testimony('s2-jojo-versions', { run: async () => {} });
     await until(() => $('.tm'));
     expect($$(HELP)).toHaveLength(0);
-    expect($('.tm').textContent).not.toMatch(/تلميح/);
+    expect($$('.tm button').filter((b) => /تلميح/.test(b.textContent)).map((b) => b.dataset.act)).toEqual(['guide']);
+    expect($('.tm .puzzle-guide').hidden).toBe(true);
     $('.tm [data-leave]').click();
     await done;
   });

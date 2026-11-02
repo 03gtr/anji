@@ -6,6 +6,7 @@
  *   'got:id'       collect a collectible     'journal:id' add a journal entry
  *   'unlock:id'    unlock a cosmetic / reward
  *   'seen:id'      mark a scene as seen
+ *   'end3:yes'     the final story's ending (first kept for ever; latest and history beside it)
  *
  * A single string or an array of strings. Returns a list of what actually
  * changed, so the UI can announce new items and rewards.
@@ -67,6 +68,16 @@ export function applyEffects(effects, game) {
         game.setFlag(`s3:dec:${id.slice(0, cut)}`, id.slice(cut + 1));
         break;
       }
+      case 'end3': {
+        // 'end3:yes' / 'end3:later' — the final story's ending (Season 3's own document). The FIRST ending is kept for
+        // ever; the latest and every choice in order are kept beside it — a replay never overwrites the first.
+        if (!game.flag('s3:end:first')) game.setFlag('s3:end:first', id);
+        game.setFlag('s3:end:last', id);
+        const before = game.flag('s3:end:history');
+        game.setFlag('s3:end:history', before ? `${before},${id}` : id);
+        changes.push({ kind: 'ending', id });
+        break;
+      }
       case 'num': {
         // 'num:s2:quiz+1' — add to a number kept in a Season 2 flag
         const m = id.match(/^(s2:[\w:-]+?)([+-]\d+)$/);
@@ -81,7 +92,7 @@ export function applyEffects(effects, game) {
   return changes;
 }
 
-const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num', 'hold', 'ev3', 'dec3']);
+const KINDS = new Set(['flag', 'item', 'got', 'journal', 'unlock', 'seen', 'ev', 'dec', 'num', 'hold', 'ev3', 'dec3', 'end3']);
 export function isValidEffect(fx) {
   if (typeof fx !== 'string' || !fx.includes(':')) return false;
   const kind = fx.replace(/^[!-]/, '').split(':')[0];
@@ -90,5 +101,6 @@ export function isValidEffect(fx) {
   if (kind === 'dec3') return /^dec3:[\w-]+=[\w-]+$/.test(fx);
   if (kind === 'hold') return /^(hold:[\w-]+|!hold:)$/.test(fx); // a thing she carries, or empty hands
   if (kind === 'num') return /^num:s2:[\w:-]+?[+-]\d+$/.test(fx);
+  if (kind === 'end3') return /^end3:(yes|later)$/.test(fx);
   return true;
 }

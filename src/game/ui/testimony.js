@@ -18,6 +18,7 @@ import { fillNames } from '../core/names.js';
 import { EVIDENCE_S2 as EVIDENCE_M1, REL_LABEL } from '../data/evidence-s2.js';
 import { EVIDENCE_S2_M2 } from '../data/evidence-s2-m2.js';
 import { h, esc, tx } from './dom.js';
+import { GUIDES, GUIDE_LEVELS } from '../data/guides.js';
 
 const rule = RULES.testimony;
 const digits = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
@@ -36,6 +37,9 @@ export function openTestimony(app, def, { run }) {
   let beat = 0;
   let busy = false;
   let deflects = 0;
+  // the owner's final brief: an optional guide (words only, never which line or which evidence)
+  const guide = (def.guide ?? GUIDES[def.id])?.[0] ?? [];
+  let guideOpened = 0;
 
   return app.overlays.open(
     (el, { close, scope }) => {
@@ -43,8 +47,10 @@ export function openTestimony(app, def, { run }) {
         <section class="tm" dir="rtl">
           <header class="tm-head">
             <span class="tm-who"></span>
+            ${guide.length && app.settings?.get().hints !== false ? '<button type="button" class="btn btn-ghost btn-small" data-act="guide">💡 تلميح</button>' : ''}
             <button type="button" class="btn btn-ghost btn-small" data-leave>أرجع بعدين</button>
           </header>
+          <ol class="puzzle-guide" aria-label="التلميحات" hidden></ol>
           <p class="tm-line" aria-live="polite"></p>
           <div class="tm-nav">
             <button type="button" class="dial-btn" data-prev aria-label="الجملة اللي قبلها">›</button>
@@ -105,6 +111,16 @@ export function openTestimony(app, def, { run }) {
         await goBeat(0);
       };
 
+      const guideBtn = $('[data-act="guide"]');
+      if (guideBtn)
+        scope.on(guideBtn, 'click', () => {
+          if (guideOpened >= guide.length) return;
+          guideOpened += 1;
+          $('.puzzle-guide').replaceChildren(...guide.slice(0, guideOpened).map((t, i) => h(`<li><b>${esc(GUIDE_LEVELS[i])}:</b> ${esc(tx(fillNames(t, game)))}</li>`)));
+          $('.puzzle-guide').hidden = false;
+          guideBtn.disabled = guideOpened >= guide.length;
+          audio.play('page');
+        });
       scope.on($('[data-next]'), 'click', () => goBeat(Math.min(beat + 1, ver().beats.length - 1)));
       scope.on($('[data-prev]'), 'click', () => goBeat(Math.max(beat - 1, 0)));
       scope.on($('[data-press]'), 'click', () => play([{ say: ver().beats[beat].press }]));

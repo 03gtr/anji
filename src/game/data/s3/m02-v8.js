@@ -47,6 +47,7 @@ const S3_STREET = {
       x: X.car,
       reach: 130,
       draw(ctx, { game, t }) {
+        if (game.flag('s3:f4-away')) return; // the final story's ending B: he drove away (f04-choice.js draws it)
         const running = game.flag(F('engine-on')) && !game.flag(F('engine-off'));
         const blip = running && game.flag(F('blip')) ? Math.max(0, Math.sin(t * 2.2)) : 0;
         zefiro(ctx, X.car, GROUND + 18, { color: carColor(game), lights: running, running, blip, driver: true, dog: true, t });

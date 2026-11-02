@@ -349,7 +349,9 @@ for (const [name, engine] of Object.entries(engines)) {
 
         // the puzzle: strict — no help; a wrong order gets a neutral line, no count
         await t.page.waitForSelector('.puzzle-arrange', { timeout: 15000 });
-        expect(await t.page.evaluate(() => document.querySelector('.puzzle .panel-foot').textContent.trim())).toBe('');
+        // the foot holds only the guide's button (owner's final brief), nothing shown until she asks
+        expect(await t.page.evaluate(() => [...document.querySelector('.puzzle .panel-foot').children].map((b) => b.dataset.act))).toEqual(['guide']);
+        expect(await t.page.evaluate(() => document.querySelector('.puzzle .puzzle-guide').children.length)).toBe(0);
         const wrong = ['quiet', 'clinic', 'whisper', 'heard', 'note'];
         for (let i = 0; i < 5; i++) {
           await press(t, `.ar-piece[data-piece="${wrong[i]}"]`);

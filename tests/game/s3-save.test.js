@@ -100,7 +100,8 @@ describe('routing: which document an id belongs to', () => {
     const worlds = path.join('src', 'game', 'data', 'worlds.js');
     // (and each Season 3 place opens when a Season 3 mission is done: its own completion flag)
     allowed.push(`${worlds}: s3`, ...S3_SCENES.map((s) => `${worlds}: ${s.id}`), ...MISSIONS_S3.map((m) => `${worlds}: flag:mission:${m.id}`));
-    expect(hits.filter((h) => !allowed.includes(h.replace(/\//g, path.sep)) && !/[/\\]data[/\\]s3[/\\]|missions-s3|evidence-s3|puzzles-s3|dialogue[/\\]s3|scenes[/\\]s3/.test(h))).toEqual([]);
+    // (the seasons' puzzle guides, data/guides.js, name Season 3's puzzles by their ids: keys, never a save key)
+    expect(hits.filter((h) => !allowed.includes(h.replace(/\//g, path.sep)) && !/[/\\]data[/\\]s3[/\\]|missions-s3|evidence-s3|puzzles-s3|dialogue[/\\]s3|scenes[/\\]s3|data[/\\]guides\.js/.test(h))).toEqual([]);
   });
 });
 

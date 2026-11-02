@@ -24,18 +24,20 @@ import { renderBoard } from './board-s3.js';
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
 /* ── chapter card ─────────────────────────────────────────── */
-export function chapterCard(app, { act, end = false }) {
-  const a = ACTS.find((x) => x.act === act);
-  const next = end ? ACTS.find((x) => x.act === act + 1) : null;
-  const show = end ? next : a;
+export function chapterCard(app, { act, end = false, kicker, title, sub }) {
+  // a card of its own (the final story's endings): `{ kicker, title, sub }`, no act behind it
+  const own = title ? { title, subtitle: sub ?? '', kicker } : null;
+  const a = own ? null : ACTS.find((x) => x.act === act);
+  const next = end && !own ? ACTS.find((x) => x.act === act + 1) : null;
+  const show = own ?? (end ? next : a);
   const art = painted(show?.art);
   return app.overlays.open(
     (el, { close, scope }) => {
       el.innerHTML = `<div class="chapter ${art ? 'has-art' : ''}">
         ${art ? `<img class="chapter-art" src="${art}" alt="">` : ''}
         <div class="chapter-copy">
-          ${end ? `<p class="chapter-end">نهاية الفصل ${ORD[act - 1]} ✦ ${esc(a.title)}</p>` : ''}
-          ${show ? `<p class="chapter-kicker">الفصل ${ORD[show.act - 1]}</p><h2 class="chapter-title" tabindex="-1">${esc(show.title)}</h2><p class="chapter-sub">${esc(show.subtitle)}</p>` : ''}
+          ${end && !own ? `<p class="chapter-end">نهاية الفصل ${ORD[act - 1]} ✦ ${esc(a.title)}</p>` : ''}
+          ${show ? `<p class="chapter-kicker">${own ? esc(own.kicker ?? '') : `الفصل ${ORD[show.act - 1]}`}</p><h2 class="chapter-title" tabindex="-1">${esc(show.title)}</h2><p class="chapter-sub">${esc(show.subtitle)}</p>` : ''}
           <button type="button" class="btn btn-primary" data-autofocus>كمّلي</button>
         </div></div>`;
       app.audio.play('gate');
@@ -285,6 +287,10 @@ export function openJournal(app, tab = 'notes') {
           body.querySelectorAll('[data-open]').forEach((b) =>
             b.addEventListener('click', () => {
               if (b.dataset.open === 'drawing') app.ui.drawing?.({ revisit: true });
+              if (b.dataset.open === 'final-choice') {
+                close();
+                app.ui.replayFinal?.();
+              }
             }),
           );
         } else if (which === 'missions') {

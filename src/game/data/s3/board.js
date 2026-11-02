@@ -24,10 +24,24 @@ export function linkFlag(a, rel, b) {
   const [x, y] = SYM.has(rel) && b < a ? [b, a] : [a, b];
   return `flag:s3:link:${x}~${rel}~${y}`;
 }
-/** Is this thread in the season's relation table? */
-export function linkHolds(links, a, rel, b) {
+/**
+ * The table's thread that this one states, or null. A conclusion rests on what proves it, so «A يعتمد على B» and
+ * «B يثبت A» are one thread when A is a deduction (`evidence[A].rel`): the table names it once, in either form, and
+ * she may draw it either way. Between two facts «يثبت» is corroboration, not dependence: no converse there.
+ */
+const CONVERSE = { supports: 'depends', depends: 'supports' };
+export function linkMatch(links, a, rel, b, evidence = {}) {
   const key = linkFlag(a, rel, b);
-  return links.some(([x, r, y]) => linkFlag(x, r, y) === key);
+  const direct = links.find(([x, r, y]) => linkFlag(x, r, y) === key);
+  if (direct) return direct;
+  const conv = CONVERSE[rel];
+  const conclusion = rel === 'depends' ? a : b;
+  if (!conv || evidence[conclusion]?.rel !== 'deduction') return null;
+  return links.find(([x, r, y]) => x === b && r === conv && y === a) ?? null;
+}
+/** Is this thread in the season's relation table (as written, or as its converse for a conclusion)? */
+export function linkHolds(links, a, rel, b, evidence) {
+  return linkMatch(links, a, rel, b, evidence) !== null;
 }
 
 export const STATES = {
