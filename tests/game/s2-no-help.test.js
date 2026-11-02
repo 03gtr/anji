@@ -14,6 +14,8 @@
  * Changed by the owner's final brief (2026-11-02): the seasons' puzzles now offer ONE optional help — the contextual
  * guide (data/guides.js: direction, reasoning, method; words only). Still absent: the old hint ladder, «شوفي الحل»
  * and skip. The guide's own rules (no answer, no state change) are tested in tests/game/guides.test.js.
+ * Changed again by the owner's hotfix brief: every mission step, Season 2's included, has a «تلميح» on what to do next
+ * (data/mission-hints.js; never an answer — tests/game/mission-hints.test.js), in the journal and on the HUD.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createGameApp } from '../../src/game/app.js';
@@ -22,6 +24,7 @@ import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { PUZZLES_S2 } from '../../src/game/data/puzzles-s2.js';
 import { PUZZLES_S2_M2 } from '../../src/game/data/puzzles-s2-m2.js';
 import { MISSIONS } from '../../src/game/data/missions.js';
+import { missionHint } from '../../src/game/data/mission-hints.js';
 import { renderMissions } from '../../src/game/ui/menus.js';
 import { memoryStorage } from '../helpers.js';
 
@@ -142,11 +145,12 @@ describe('Season 2: no help with the story (real panels)', () => {
     await done;
   });
 
-  it('the journal shows no hint for a Season 2 step; the original game\'s steps keep theirs', () => {
+  it('the journal shows a Season 2 step\'s «تلميح» (the hotfix brief), as the original game\'s steps keep theirs', () => {
     const { game } = app;
-    const s2 = MISSIONS.filter((m) => m.pack === 's2').map((m) => ({ ...m, status: 'active', next: m.steps[0].text, hint: 'x', pack: 's2', category: 'main', worlds: [] }));
+    const s2 = MISSIONS.filter((m) => m.pack === 's2').map((m) => ({ ...m, status: 'active', next: m.steps[0].text, hint: missionHint(m, 0), pack: 's2', category: 'main', worlds: [] }));
     const html = renderMissions(game, s2, 'all');
-    expect(html).not.toMatch(/data-mhint/);
+    expect(html.match(/data-mhint/g)).toHaveLength(s2.length);
+    for (const m of s2) expect(html).toContain(m.hint);
     const og = MISSIONS.find((m) => m.pack !== 's2' && m.steps[0]?.hint);
     const html2 = renderMissions(game, [{ ...og, status: 'active', next: og.steps[0].text, hint: og.steps[0].hint, category: 'main', worlds: [] }], 'all');
     expect(html2).toMatch(/data-mhint/);

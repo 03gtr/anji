@@ -96,7 +96,7 @@ describe('Story Pack 02 sits inside the main story, before the ending', () => {
     const g = throughAct(6, game());
     g.setFlag('sp2-done', false);
     g.setFlag('workshop-entered', false);
-    expect(currentObjective(g)).toEqual({ act: 6, title: ACTS[5].title, text: sp2('sp2-archives').steps[0].text });
+    expect(currentObjective(g)).toEqual({ act: 6, title: ACTS[5].title, text: sp2('sp2-archives').steps[0].text, hint: sp2('sp2-archives').steps[0].hint });
   });
 
   it('nothing is undone for saves already past it: workshop, finale and the ending stay open', () => {

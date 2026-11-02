@@ -7,7 +7,7 @@
  *    «غرفة الحقائق السبعة» proves with two chains that share no source (P-06); the defence never accepts a statement
  *    as an answer (P-09); the whisper chain starts from her own Mission 01 words (P-03);
  *  - the decisions: every value is made somewhere and read somewhere;
- *  - the board: threads only from the relation table, reliability as a state, nothing drawn for her (and its real UI);
+ *  - (the investigation board was removed by the owner's hotfix brief: tests/game/board-removed.test.js);
  *  - played through, every mission, for plans that cover every value of every decision and every road; the original
  *    save and Season 2's stay byte-identical.
  */
@@ -24,17 +24,15 @@ import { MISSIONS } from '../../src/game/data/missions.js';
 import { DIALOGUE } from '../../src/game/data/dialogue/index.js';
 import { SCENES } from '../../src/game/data/scenes/index.js';
 import { WORLDS } from '../../src/game/data/worlds.js';
-import { EVIDENCE_S3, DECISIONS_S3, LINKS_S3 } from '../../src/game/data/evidence-s3.js';
+import { EVIDENCE_S3, DECISIONS_S3 } from '../../src/game/data/evidence-s3.js';
 import { PUZZLES_S3 } from '../../src/game/data/puzzles-s3.js';
 import { S3_MODULES } from '../../src/game/data/s3/index.js';
-import { linkFlag, linkHolds, reliability, RELATIONS } from '../../src/game/data/s3/board.js';
 import { RECORDINGS } from '../../src/game/data/s3/recordings.js';
-import { ECHO_ANSWER, FIRST_LINK } from '../../src/game/data/s3/m03-echo.js';
+import { ECHO_ANSWER } from '../../src/game/data/s3/m03-echo.js';
 import { VERSIONS, CHANGED_LINK } from '../../src/game/data/s3/m04-source.js';
 import { SEVEN_ANSWER, PROOF_EVIDENCE } from '../../src/game/data/s3/m06-seven.js';
 import { STATEMENT_BINS, DEFENCE_ANSWER } from '../../src/game/data/s3/m08-silence.js';
 import { peak, clarity, strokes } from '../../src/game/core/engine-voice.js';
-import { renderBoard } from '../../src/game/ui/board-s3.js';
 import { setup, playSeason, PLANS } from './s3-play.js';
 
 // the season's eight missions (the final story's chapters share its document, `arc: 'final'`: tests/game/final-arc.test.js)
@@ -219,61 +217,6 @@ describe('Season 3: decisions', () => {
         expect(read.has(`${key}=${v}`), `${key}=${v} is read`).toBe(true);
       }
     }
-  });
-});
-
-describe('Season 3: the investigation board', () => {
-  it('every thread names evidence that exists, and a relation the board offers', () => {
-    const rels = new Set(RELATIONS.map((r) => r.id));
-    for (const [a, rel, b] of LINKS_S3) {
-      expect(EVIDENCE_S3[a], a).toBeTruthy();
-      expect(EVIDENCE_S3[b], b).toBeTruthy();
-      expect(rels.has(rel), rel).toBe(true);
-    }
-  });
-  it('symmetric threads read the same both ways; directed ones do not', () => {
-    expect(linkFlag('e-clip', 'contradicts', 'd-two-engines')).toBe(linkFlag('d-two-engines', 'contradicts', 'e-clip'));
-    expect(linkHolds(LINKS_S3, 'd-two-engines', 'contradicts', 'e-clip')).toBe(true);
-    expect(linkHolds(LINKS_S3, 'e-rec-gate', 'supports', 'e-blip')).toBe(true);
-    expect(linkHolds(LINKS_S3, 'e-blip', 'supports', 'e-rec-gate')).toBe(false);
-    expect(linkHolds(LINKS_S3, 'e-clip', 'supports', 'd-two-engines')).toBe(false);
-  });
-  it('reliability is a state: a claim is contradicted, then disproved, by what she holds', () => {
-    const held = new Set();
-    const has = (id) => held.has(id);
-    expect(reliability(EVIDENCE_S3['t-jalal'], has)).toBe('claim');
-    held.add('e-receipt');
-    expect(reliability(EVIDENCE_S3['t-jalal'], has)).toBe('contradicted');
-    held.add('d-truth');
-    expect(reliability(EVIDENCE_S3['t-jalal'], has)).toBe('disproved');
-    expect(reliability(EVIDENCE_S3['e-clip'], has)).toBe('claim');
-    held.add('d-two-engines');
-    expect(reliability(EVIDENCE_S3['e-clip'], has)).toBe('disproved');
-  });
-  it('the real board: a thread that holds is kept; one that does not gets a neutral line and nothing is drawn', () => {
-    const { game } = setup();
-    for (const e of ['e-clip', 'd-two-engines', 'e-rec-gate']) applyEffects(`ev3:${e}`, game);
-    const body = document.createElement('div');
-    renderBoard(body, game);
-    const tap = (sel) => body.querySelector(sel).click();
-    // no thread is drawn for her
-    expect(body.querySelectorAll('.s3-threads li')).toHaveLength(0);
-    // a wrong thread: neutral, no count, nothing kept
-    tap('[data-card="e-clip"]');
-    tap('[data-rel="supports"]');
-    tap('[data-card="d-two-engines"]');
-    const said = body.querySelector('.s3-board-say').textContent;
-    expect(said).not.toMatch(/[0-9٠-٩]/);
-    expect(body.querySelectorAll('.s3-threads li')).toHaveLength(0);
-    // the right thread
-    tap('[data-card="d-two-engines"]');
-    tap('[data-rel="contradicts"]');
-    tap('[data-card="e-clip"]');
-    expect(check(FIRST_LINK, game)).toBe(true);
-    expect(body.querySelectorAll('.s3-threads li')).toHaveLength(1);
-    // the clip's card shows it disproved; every card states its reliability in words
-    expect(body.querySelector('[data-card="e-clip"]').className).toContain('is-disproved');
-    for (const c of body.querySelectorAll('.s3-card')) expect(c.querySelector('.s3-state').textContent.trim()).not.toBe('');
   });
 });
 

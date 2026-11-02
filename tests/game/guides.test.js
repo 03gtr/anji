@@ -14,58 +14,12 @@ import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { GUIDES, GUIDE_LEVELS } from '../../src/game/data/guides.js';
 import { solve, replay, logicgridSolutions } from '../../src/game/puzzles/rules.js';
 import { memoryStorage } from '../helpers.js';
+import { secrets } from './puzzle-secrets.js';
 
 const STRICT = Object.entries(PUZZLES).filter(([, p]) => p.strict);
 const stagesOf = (p) => (Array.isArray(p.config.stages) && p.type !== 'shadows' ? p.config.stages.length : 1);
 const label = (x) => String(x?.label ?? x?.text ?? x ?? '').trim();
 const all = (id) => GUIDES[id].flat();
-
-/** Every string a hint must never contain, and pairs it must never contain together. */
-function secrets(p) {
-  const c = p.config;
-  const alone = [];
-  const pairs = [];
-  const opt = (list, id) => label(list?.find((o) => (o.id ?? o) === id));
-  switch (p.type) {
-    case 'sort':
-      for (const st of c.stages) {
-        if (st.kind === 'sort') for (const card of st.cards) pairs.push([label(card), opt(st.bins, card.accepts[0])]);
-        else for (const id of st.answers ?? [st.answer]) alone.push(opt(st.options, id));
-      }
-      break;
-    case 'contradict':
-      for (const st of c.stages) {
-        if (st.answer.claim >= 0) alone.push(label(st.claims[st.answer.claim]));
-        for (const e of [].concat(st.answer.evidence)) alone.push(opt(st.evidence ?? c.evidence, e));
-      }
-      break;
-    case 'deduction':
-      alone.push(opt(c.suspects ?? c.options, c.answer.suspect));
-      for (const e of c.answer.evidence) alone.push(opt(c.evidence, e));
-      break;
-    case 'rubbing':
-      for (const id of c.answers ?? [c.answer]) alone.push(opt(c.options, id));
-      break;
-    case 'logicgrid': {
-      const [sol] = logicgridSolutions(c);
-      for (const r of c.rows) for (const col of c.cols) pairs.push([label(r), opt(col.options, sol[r.id][col.id])]);
-      break;
-    }
-    case 'arrange':
-      for (const slot of c.slots) pairs.push([opt(c.pieces, slot.accepts[0]), label(slot)]);
-      break;
-    case 'testimony':
-      for (const v of p.versions) {
-        const [beat, ev] = v.breaks;
-        alone.push(label(v.beats.find((b) => b.id === beat)?.t));
-        pairs.push([label(v.beats.find((b) => b.id === beat)?.t), ev]);
-      }
-      break;
-    default:
-      break; // lock, clock, shadows: their answers are numbers (no digit at all is allowed)
-  }
-  return { alone: alone.filter((s) => s.length >= 4), pairs: pairs.filter(([a, b]) => a.length >= 2 && b.length >= 2) };
-}
 
 describe('every season puzzle has its guide', () => {
   it('three levels for every stage, each a real sentence', () => {

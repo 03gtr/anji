@@ -21,6 +21,7 @@ import { DEEP_SCENES, DEEP_EXTRAS } from '../../src/game/data/scenes/deep.js';
 import { DIALOGUE } from '../../src/game/data/dialogue/index.js';
 import { JOURNAL } from '../../src/game/data/items.js';
 import { ACTS, currentObjective } from '../../src/game/data/chapters.js';
+import { ACT_HINTS } from '../../src/game/data/mission-hints.js';
 import { dueNotice } from '../../src/game/ui/content-notice.js';
 import { HUSKY_FLAG } from '../../src/game/core/names.js';
 import { memoryStorage } from '../helpers.js';
@@ -82,7 +83,7 @@ describe('a new save: the original ending, then the continuation', () => {
     g.setFlags(MAP);
     expect(check(worldById('final').unlock, g)).toBe(true);
     expect(check(meet.if, g)).toBe(true); // the ending scene will play
-    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[0].text });
+    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[0].text, hint: ACT_HINTS[8][0] });
     expect(Object.keys(g.state.flags).filter((f) => f.startsWith('dg-'))).toEqual([]);
     expect(missionState(mission('dg-night'), g).status).toBe('locked');
     expect(openDeep(g)).toEqual([]);
@@ -180,7 +181,7 @@ describe('saves in progress', () => {
     expect(g.flag('game-complete')).toBeFalsy();
     expect(check(worldById('final').unlock, g)).toBe(true);
     expect(check(meet.if, g)).toBe(true);
-    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[1].text });
+    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[1].text, hint: ACT_HINTS[8][1] });
     expect(missionState(mission('dg-night'), g).status).toBe('locked');
     expect(visible('workshop', 'dg-seedbox', g)).toBe(false);
     expect(visible('final', 'dg-second-rose', g)).toBe(false);

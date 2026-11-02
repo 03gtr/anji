@@ -26,8 +26,6 @@ import { BRIEFS, judgeLook } from '../../src/game/minigames/dressup.js';
 import { QUIZ_SETS } from '../../src/game/minigames/quiz-sets.js';
 import { PIPE_LEVELS, parseLevel, scramble, isSolved } from '../../src/game/minigames/pipes-logic.js';
 import { WORLDS } from '../../src/game/data/worlds.js';
-import { LINKS_S3 } from '../../src/game/data/evidence-s3.js';
-import { linkFlag } from '../../src/game/data/s3/board.js';
 
 /* ── every effect anywhere in the content ── */
 function allEffects() {
@@ -62,9 +60,9 @@ function allEffects() {
   return out;
 }
 const EFFECTS = allEffects();
-// a Season 3 board thread is set by the board itself (ui/board-s3.js), and only for a thread in its relation table
-const BOARD_THREADS = new Set(LINKS_S3.map(([a, rel, b]) => linkFlag(a, rel, b)));
-const setsFlag = (id) => EFFECTS.includes(`flag:${id}`) || id.startsWith('mission:') || id.startsWith('t.') || BOARD_THREADS.has(`flag:${id}`);
+// (Mission 03's old thread flag, from the removed investigation board, is only ever read: an older save may hold it)
+const OLD_THREADS = new Set(['flag:s3:link:d-two-engines~contradicts~e-clip']);
+const setsFlag = (id) => EFFECTS.includes(`flag:${id}`) || id.startsWith('mission:') || id.startsWith('t.') || OLD_THREADS.has(`flag:${id}`);
 const givesItem = (id) => EFFECTS.includes(`item:${id}`);
 const playedGames = new Set();
 (function collectGames() {

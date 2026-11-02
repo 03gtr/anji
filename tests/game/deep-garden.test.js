@@ -21,6 +21,7 @@ import { DIALOGUE } from '../../src/game/data/dialogue/index.js';
 import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { JOURNAL } from '../../src/game/data/items.js';
 import { ACTS, currentObjective } from '../../src/game/data/chapters.js';
+import { ACT_HINTS } from '../../src/game/data/mission-hints.js';
 import { RULES, solve, replay, runProgram, programSolution, programCommands, machinePull, machineSolution, logicgridSolutions, clueHolds } from '../../src/game/puzzles/rules.js';
 import { mapPath } from '../../src/game/ui/menus.js';
 import { applyEffects } from '../../src/game/core/effects.js';
@@ -452,7 +453,7 @@ describe('old saves (synthetic)', () => {
   it('a save from Phase 03 that finished «خريطة الغد» goes straight on to the ending; the deep garden waits for after it', () => {
     const g = afterMap();
     expect(check(worldById('final').unlock, g)).toBe(true);
-    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[0].text });
+    expect(currentObjective(g)).toEqual({ act: 8, title: ACTS[7].title, text: ACTS[7].objectives[0].text, hint: ACT_HINTS[8][0] });
     expect(missionState(mission('dg-night'), g).status).toBe('locked');
   });
 

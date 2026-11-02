@@ -9,6 +9,7 @@ import { missionState } from '../progression/missions.js';
 import { SP2_GATE, SP2_FINAL_GATE } from './missions-sp2.js';
 import { WORLDS } from './worlds.js';
 import { seasonOf } from '../core/game.js';
+import { missionHint, actHint } from './mission-hints.js';
 
 export const ACTS = [
   {
@@ -129,9 +130,12 @@ export function currentObjective(game) {
     const next = act.objectives.find((o) => !check(o.done, game));
     if (next?.pack || next?.mission) {
       const m = MISSIONS.find((x) => (next.mission ? x.id === next.mission : x.pack === next.pack && x.kind === 'story') && missionState(x, game).status === 'active');
-      if (m) return { act: act.act, title: act.title, text: missionState(m, game).next.text };
+      if (m) {
+        const st = missionState(m, game);
+        return { act: act.act, title: act.title, text: st.next.text, hint: missionHint(m, st.step) };
+      }
     }
-    if (next) return { act: act.act, title: act.title, text: next.text };
+    if (next) return { act: act.act, title: act.title, text: next.text, hint: actHint(act.act, act.objectives.indexOf(next)) };
   }
   // after the ending: the next step of an open story-pack chapter — the one of the place she is in
   // first (the deep garden used to show the archives' step; Season 2 would have shown another pack's)
@@ -141,7 +145,7 @@ export function currentObjective(game) {
   const story = MISSIONS.filter((x) => x.kind === 'story');
   for (const m of herePack ? [...story.filter((x) => x.pack === herePack), ...story.filter((x) => x.pack !== herePack)] : story) {
     const st = missionState(m, game);
-    if (st.status === 'active') return { act: null, title: m.title, text: st.next.text };
+    if (st.status === 'active') return { act: null, title: m.title, text: st.next.text, hint: missionHint(m, st.step) };
   }
-  return { act: null, title: '', text: 'استكشفي الحديقة على راحتچ ✨' };
+  return { act: null, title: '', text: 'استكشفي الحديقة على راحتچ ✨', hint: null };
 }

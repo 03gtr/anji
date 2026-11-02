@@ -19,7 +19,6 @@ import { importMemoriesText, clearImportedMemories, loadPersonal } from '../memo
 import { ACHIEVEMENTS } from '../progression/achievements.js';
 import { journalEntries, filterEntries, displayNo, evidenceView, FILTERS, STATUS_NAMES } from '../progression/journal-index.js';
 import { lockedText, exploreText } from '../progression/map-guide.js';
-import { renderBoard } from './board-s3.js';
 
 const ORD = ['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن'];
 
@@ -263,8 +262,6 @@ export function openJournal(app, tab = 'notes') {
         ['challenges', 'التحديات'],
         ['achievements', 'الإنجازات'],
       ];
-      // Season 3: the investigation board, once it has opened (Mission 03)
-      if (game.flag('s3:board-open')) tabs.splice(3, 0, ['board', 'لوحة التحقيق']);
       el.innerHTML = `<section class="panel journal">
         <header class="panel-head"><h2 tabindex="-1">دفتر أنجي</h2>
           <button type="button" class="icon-btn" data-close aria-label="إغلاق">${ICONS.close}</button></header>
@@ -345,8 +342,6 @@ export function openJournal(app, tab = 'notes') {
               app.ui.puzzle(b.dataset.board);
             }),
           );
-        } else if (which === 'board') {
-          renderBoard(body, game);
         } else if (which === 'collection') {
           const worlds = [...new Set(Object.values(COLLECTIBLES).map((c) => c.world))];
           const groups = Object.keys(GROUP_NAMES);
@@ -413,7 +408,8 @@ export function openJournal(app, tab = 'notes') {
       }
       el.querySelectorAll('[data-tab]').forEach((b) => scope.on(b, 'click', () => render(b.dataset.tab)));
       scope.on(el.querySelector('[data-close]'), 'click', () => close());
-      render(tab);
+      // a tab that no longer exists (the removed investigation board) opens the notes
+      render(tabs.some(([id]) => id === tab) ? tab : 'notes');
     },
     { className: 'overlay-panel', dismissible: true, label: 'الدفتر' },
   );
@@ -440,7 +436,7 @@ export function renderMissions(game, entries = journalEntries(game), filter = 'a
           ? `<p class="mission-locked">🔒 ${esc(e.locked)}</p>`
           : `${e.summary ? `<p class="mission-summary">${esc(fillNames(e.summary, game))}</p>` : ''}
              <p class="mission-next"><b>${e.status === 'available' ? 'للبدء:' : 'الخطوة الجاية:'}</b> ${esc(text)}</p>
-             ${e.hint && e.pack !== 's2' ? `<button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button><p class="mission-hint" hidden>${esc(fillNames(e.hint, game))}</p>` : ''}
+             ${e.hint ? `<button type="button" class="btn btn-ghost btn-small" data-mhint aria-expanded="false">💡 تلميح</button><p class="mission-hint" hidden>${esc(fillNames(e.hint, game))}</p>` : ''}
              ${e.reward && e.pack !== 's2' ? `<p class="mission-reward muted small">الجايزة: ${esc(e.reward)}</p>` : ''}`;
     // (Season 2's reward names what she will find out; it shows only once she has found it)
     return `<article class="mission status-${e.status} cat-${e.category} ${e.isCurrent ? 'is-current' : ''}" data-mission="${esc(e.id)}" ${e.isCurrent ? 'aria-current="step"' : ''}>
