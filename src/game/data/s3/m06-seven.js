@@ -181,12 +181,6 @@ export default {
     'd-seven': { rel: 'deduction', source: 'board', icon: 'mark', label: 'طريقين لنفس الحقيقة', note: 'الصوت: محرك ثاني بعد ١١:٠٠. الورق: لوحة ٤٧، وميدالية ٤٧، وجلال ١١:٢٠ بعد شارعين. المقطع مو زفيرو.' },
   },
   case: [{ mission: 's3-06', ids: ['d-seven'] }],
-  links: [
-    ['d-two-engines', 'different-source', 'e-noise-notice'],
-    ['e-bakery-hours', 'before', 'e-light-timer'],
-    ['d-seven', 'depends', 'd-two-engines'],
-    ['d-seven', 'depends', 'e-noise-notice'],
-  ],
   journal: {
     's3-seven': { title: 'طريقين لنفس الحقيقة', icon: 'mark', text: 'بالأرشيف، رتّبت أنجي الليلة كلها. وثبّتت بطريقين ما يعتمدون على بعض: الصوت والورق. المقطع مو زفيرو.' },
   },

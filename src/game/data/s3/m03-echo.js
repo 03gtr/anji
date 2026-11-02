@@ -4,24 +4,25 @@
  * بالليل». Marius arrives with it too — how depends on `marius-honest` (honest: he comes to her first, worried and
  * teasing; deflect: he has heard it from the group, and his teasing has an edge). Ryan calls: «لا تصدّكين كلشي
  * ينقال…» — he names no one. Her answer (`ryan-trust`). She gathers the night's recordings and proves two engines,
- * not one («الصدى», strict, three stages, every clue drawn as well as heard). The investigation board opens; her first
- * thread on it: the clip, and what contradicts it.
+ * not one («الصدى», strict, three stages, every clue drawn as well as heard), and tells Marius what that makes of the
+ * clip.
  * Fiction written for the game.
  */
 import { GROUND } from '../../world/props.js';
 import { PACK_S3 } from './constants.js';
 import { RECORDINGS } from './recordings.js';
 import { waveSvg } from './art.js';
-import { linkFlag } from './board.js';
 
 const F = (k) => `s3:03-${k}`;
 const flag = (k) => `flag:${F(k)}`;
 const OPEN = 'flag:mission:s3-02';
 const OPENED = flag('opened');
 const SOLVED = flag('solved');
-export const BOARD_OPEN = 'flag:s3:board-open';
-/** Her first thread on the board: the clip, and the deduction that contradicts it. */
-export const FIRST_LINK = linkFlag('e-clip', 'contradicts', 'd-two-engines');
+/** The papers pinned on her wall once the recordings are solved (the cork board's drawing). */
+const PINNED = 'flag:s3:board-open';
+/** The step's old ending (a thread drawn on the investigation board, since removed): older saves keep it as done. */
+const OLD_LINK = 'flag:s3:link:d-two-engines~contradicts~e-clip';
+export const TOLD = flag('told');
 const RECS = ['e-clip', 'e-rec-cam', 'e-rec-gate', 'e-rec-lama'];
 const ANCHORS = ['e-light-timer', 'e-bakery-hours'];
 const HAS = (ids) => ids.map((e) => `ev3:${e}`);
@@ -135,6 +136,7 @@ const S3_HOME = {
       if: OPENED,
       cases: [
         { if: '!ev3:e-rec-cam', run: [{ say: 's3.03-marius-cam' }, { sfx: 'paper' }, { fx: 'ev3:e-rec-cam' }] },
+        { if: [SOLVED, { not: { any: [TOLD, OLD_LINK] } }], run: [{ say: 's3.03-tell' }, { fx: TOLD }] },
         { if: SOLVED, run: [{ say: 's3.03-marius-after' }] },
         { run: [{ say: 's3.03-marius-waits' }] },
       ],
@@ -168,21 +170,9 @@ const S3_HOME = {
         {
           run: [
             { if: '!seen:dlg:s3.03-desk-intro', then: [{ say: 's3.03-desk-intro' }] },
-            { puzzle: 's3-echo', then: [{ say: 's3.03-solved' }, { fx: ['ev3:d-two-engines', SOLVED, BOARD_OPEN] }, { say: 's3.03-board-opens' }], else: [{ say: 's3.03-later' }] },
+            { puzzle: 's3-echo', then: [{ say: 's3.03-solved' }, { fx: ['ev3:d-two-engines', SOLVED, PINNED] }, { say: 's3.03-pinned' }], else: [{ say: 's3.03-later' }] },
           ],
         },
-      ],
-    },
-    {
-      id: 'board',
-      x: X.board,
-      w: 110,
-      h: 90,
-      label: 'لوحة التحقيق',
-      icon: '📌',
-      cases: [
-        { if: BOARD_OPEN, run: [{ journal: 'board' }] },
-        { run: [{ say: 's3.03-board-early' }] },
       ],
     },
   ],
@@ -277,7 +267,7 @@ export default {
         { done: OPENED, world: 's3-home', text: 'تلفونچ ما يسكت.' },
         { done: HAS(RECS), world: 's3-home', text: 'لمّي كل تسجيل لتلك الليلة.' },
         { done: SOLVED, world: 's3-home', text: 'اسمعي التسجيلات، أو باوعي عليها، على اللابتوب.' },
-        { done: FIRST_LINK, world: 's3-home', text: 'على لوحة التحقيق: اربطي المقطع بالشي اللي يكذبه.' },
+        { done: { any: [TOLD, OLD_LINK] }, world: 's3-home', text: 'گولي لماريوس شنو طلع بالتسجيلات.' },
       ],
       reward: ['journal:s3-echo'],
       rewardText: 'محركين، مو واحد',
@@ -297,15 +287,6 @@ export default {
     'ryan-trust': ['trust', 'see'],
   },
   case: [{ mission: 's3-03', ids: [...RECS, 't-ryan', 'd-two-engines'] }],
-  links: [
-    ['e-clip', 'contradicts', 'd-two-engines'],
-    ['e-rec-gate', 'supports', 'e-blip'],
-    ['e-rec-cam', 'supports', 'd-two-engines'],
-    ['e-bakery-hours', 'supports', 'd-two-engines'],
-    ['e-light-timer', 'supports', 'd-two-engines'],
-    ['e-rec-gate', 'same-source', 'e-rec-lama'],
-    ['e-clip', 'different-source', 'e-rec-cam'],
-  ],
   journal: {
     's3-echo': { title: 'محركين، مو واحد', icon: 'car', text: 'المقطع يگول «ريان يسابق». بس التسجيلات تگول: زفيرو حچى نفخة وحدة بـ٩:٤٠ وسكت. والتفحيط بـ١١:١٠ كان محرك ثاني. ريان گال: «لا تصدّكين كلشي ينقال».' },
   },
@@ -375,8 +356,14 @@ export default {
       { s: 'marius', e: 'surprised', t: 'والمقطع… أعلى صوت، لأن انسجل من بعيد؟', act: [{ jolt: 'marius', type: 'hop' }] },
       { s: 'anji', e: 'smirk', t: 'الصوت العالي مو دايماً القريب.' },
     ],
-    's3.03-board-opens': [{ s: 'narrator', t: '(أنجي تعلّق الأدلة على اللوحة اللي بالحايط. لوحة التحقيق انفتحت.)' }],
-    's3.03-board-early': [{ s: 'anji', e: 'thinking', t: 'لوحة فاضية. بعد ما عندي شي أعلّقه.' }],
+    's3.03-pinned': [{ s: 'narrator', t: '(أنجي تعلّق المقطع على الحايط، وجنبه التسجيلات.)' }],
+    's3.03-tell': [
+      { s: 'anji', e: 'determined', t: 'المقطع يگول ريان سابق جوه البيت. والتسجيلات تگول محركين، مو واحد.' },
+      { s: 'anji', e: 'determined', t: 'زفيرو حچى مرة وحدة وانطفى. والتفحيط اللي بالمقطع؟ محرك ثاني، بعدين.' },
+      { s: 'marius', e: 'thinking', t: 'يعني الصوت صدگ… بس الكلام اللي تحته مو صدگ.', act: [{ pose: 'marius', anim: 'think', for: 1200 }] },
+      { s: 'anji', e: 'smirk', t: 'بالضبط. المقطع ما يكذب. اللي كتب تحته هو اللي كذب.' },
+      { s: 'marius', e: 'smile', t: 'زين. هسه نعرف شنو مو صدگ. باقي نعرف منو.' },
+    ],
     's3.03-desk-done': [{ s: 'anji', e: 'smile', t: 'محركين. ثابت.' }],
     's3.03-later': [{ s: 'anji', e: 'thinking', t: 'بعدين. الأصوات ما راح تهرب.' }],
   },

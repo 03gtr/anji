@@ -28,6 +28,8 @@ export function createExplore(app, scene, { spawnX } = {}) {
           <p>${esc(scene.title)}</p><div class="loading-bar"><i></i></div>
         </div>
         <p class="place-banner" aria-hidden="true">${esc(scene.title)}</p>
+        <button type="button" class="hint-pill" aria-expanded="false" aria-controls="objective-hint" hidden>💡 تلميح</button>
+        <p class="objective-hint" id="objective-hint" role="note" hidden></p>
       </div>
       <div class="controls" data-mode="play">
         <div class="pad pad-move">
@@ -48,6 +50,9 @@ export function createExplore(app, scene, { spawnX } = {}) {
   const mapBtn = el.querySelector('[data-act="map"]');
   const soundBtn = el.querySelector('[data-act="sound"]');
   const interactBtn = el.querySelector('.pad-interact');
+  const hintBtn = el.querySelector('.hint-pill');
+  const hintCard = el.querySelector('.objective-hint');
+  let hintText = '';
   let world = null;
 
   const renderObjective = () => {
@@ -55,7 +60,19 @@ export function createExplore(app, scene, { spawnX } = {}) {
     objective.querySelector('small').textContent = o.act ? `${ORD[o.act]} · ${o.title}` : o.title || '';
     objective.querySelector('span').textContent = fillNames(o.text, game);
     mapBtn.hidden = !game.flag('map-open');
+    // the step's «تلميح» (data/mission-hints.js): words only, closed again whenever the step changes
+    const hint = settings.get().hints && o.hint ? fillNames(o.hint, game) : '';
+    if (hint !== hintText) {
+      hintText = hint;
+      hintCard.textContent = hint;
+      showHint(false);
+    }
+    hintBtn.hidden = !hint;
   };
+  function showHint(open) {
+    hintCard.hidden = !open;
+    hintBtn.setAttribute('aria-expanded', String(open));
+  }
   const renderSound = () => {
     const on = settings.get().sound;
     soundBtn.innerHTML = on ? ICONS.soundOn : ICONS.soundOff;
@@ -68,7 +85,13 @@ export function createExplore(app, scene, { spawnX } = {}) {
   scope.sub(settings.subscribe(() => {
     renderSound();
     renderHints();
+    renderObjective();
   }));
+  scope.on(hintBtn, 'click', () => {
+    app.audio.unlock();
+    showHint(hintCard.hidden);
+  });
+  scope.on(hintCard, 'click', () => showHint(false));
 
   for (const b of el.querySelectorAll('[data-input]')) {
     if (b.dataset.input === 'interact') {

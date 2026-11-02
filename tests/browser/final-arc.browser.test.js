@@ -1,14 +1,15 @@
 // @vitest-environment node
 /**
  * The final story in REAL browsers — the four chapters played by keyboard and touch on a synthetic save (Season 3
- * finished) in a fresh profile, and the investigation board's phone fix:
+ * finished) in a fresh profile, and the mission «تلميح» on a phone:
  *  - Chapter 01 (Edge 390): Marius asks; she answers; his silence; the phone;
  *  - Chapter 02 (Edge 320): the club; the earned sharp line, her defence, his apology; the chapter completes;
  *  - Chapter 03 (Edge 360): the dawn walk, three stops, Ryan's question;
  *  - Chapter 04 + replay (Edge 390, WebKit 390, Edge landscape): the choice «إي. أختارك.» and its ending card; then
  *    «الاختيار الأخير، مرة ثانية» from the journal, «مو هسه», Zefiro driving away and its card — the first ending
  *    stays recorded, the history grows, nothing restarts;
- *  - the board at 320 with the whole season's evidence: after a tap, the relation buttons and the reply are on screen.
+ *  - the «تلميح» at 320 and 390: a real touch target clear of the HUD, the step's words on screen; the journal has no
+ *    investigation board (removed by the owner's hotfix brief) — the synthetic save still carries its old flag.
  * No page error, no failed request, nothing scrolls sideways. Headless emulation, not a physical phone.
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
@@ -267,28 +268,37 @@ for (const [name, engine] of Object.entries(engines)) {
       expect(t.errors, t.errors.join('\n')).toEqual([]);
     }, 400000);
 
-    it('the board at 320 with the season\'s evidence: after a tap, the relation buttons and the reply are on screen', async () => {
-      const t = await open(engine.browser, { width: 320, height: 700, scene: 's3-home', flags: ARC_UPTO(4) });
-      await t.page.waitForTimeout(1000);
-      await readAll(t);
-      await t.page.evaluate(`(async () => {
-        const { EVIDENCE_S3 } = await import('/src/game/data/evidence-s3.js');
-        for (const id of Object.keys(EVIDENCE_S3)) window.__game.game.collect('s3.ev.' + id);
-      })()`);
-      await t.page.evaluate(() => { window.__game.ui.openJournal('board'); });
-      await t.page.waitForSelector('.s3-board-cards .s3-card');
-      // the first card, tapped where it is (no scrolling to the buttons)
-      const p = await t.page.evaluate(() => { const r = document.querySelector('.s3-card').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
-      await t.page.touchscreen.tap(p.x, p.y);
-      await t.page.waitForTimeout(300);
-      const seen = (sel) => t.page.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, sel);
-      expect(await seen('[data-rel="supports"]')).toBe(true);
-      expect(await seen('.s3-board-say')).toBe(true);
-      expect(await t.page.evaluate(() => document.querySelector('[data-rel="supports"]').disabled)).toBe(false);
-      for (const h of await t.page.evaluate(() => [...document.querySelectorAll('.s3-card-head svg')].map((s) => Math.round(s.getBoundingClientRect().height)))) expect(h).toBeLessThanOrEqual(32);
-      expect(await sideways(t)).toBe(false);
-      await shot(t, `${name}-board-full-320`);
-      expect(t.errors, t.errors.join('\n')).toEqual([]);
+    it('the «تلميح» at 320, 390 and in landscape: on screen, a real touch target clear of the HUD, the step\'s words; the journal without the board', async () => {
+      for (const [width, height] of [[320, 640], [390, 844], [844, 390]]) {
+        const t = await open(engine.browser, { width, height, scene: 's3-home', flags: [] });
+        await t.page.waitForTimeout(1000);
+        // the chapter's opening plays on arrival (later in WebKit, on its own frames): read it through, until the
+        // objective is the step after it — Marius's question (the arrival step names him too: not enough to wait for)
+        await t.page.waitForFunction(() => /عنده سؤال/.test(document.querySelector('.hud .objective span')?.textContent ?? '') || Boolean(document.querySelector('.overlay-dialogue')), null, { timeout: 20000 });
+        await readAll(t);
+        await t.page.waitForFunction(() => /عنده سؤال/.test(document.querySelector('.hud .objective span')?.textContent ?? ''), null, { timeout: 15000 });
+        await press(t, '.hint-pill');
+        const r = await t.page.evaluate(() => {
+          const pill = document.querySelector('.hint-pill').getBoundingClientRect();
+          const card = document.querySelector('.objective-hint');
+          const c = card.getBoundingClientRect();
+          const hud = [...document.querySelectorAll('.hud-btn')].filter((b) => !b.hidden).map((b) => b.getBoundingClientRect());
+          const overlap = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+          return { h: Math.round(pill.height), text: card.hidden ? '' : card.textContent, inView: c.top >= 0 && c.bottom <= innerHeight && c.left >= 0 && c.right <= innerWidth, rect: [c.left, c.top, c.right, c.bottom, innerWidth, innerHeight].map(Math.round), overHud: hud.some((b) => overlap(b, pill)) };
+        });
+        expect(r.h).toBeGreaterThanOrEqual(44);
+        expect(r.text).toMatch(/ماريوس بغرفتچ. احچي وياه/); // that step's own hint (data/mission-hints.js)
+        expect(r.inView, `the card at ${r.rect}`).toBe(true);
+        expect(r.overHud).toBe(false);
+        expect(await sideways(t)).toBe(false);
+        await shot(t, `${name}-hint-${width}`);
+        await press(t, '.objective-hint');
+        await press(t, '.hud [data-act="journal"]');
+        await t.page.waitForSelector('.journal .tabs');
+        expect(await t.page.evaluate(() => document.querySelector('.journal .tabs').textContent)).not.toMatch(/لوحة التحقيق/);
+        expect(await sideways(t)).toBe(false);
+        expect(t.errors, t.errors.join('\n')).toEqual([]);
+      }
     }, 300000);
   });
 }

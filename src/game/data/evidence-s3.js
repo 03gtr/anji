@@ -12,5 +12,3 @@ export const DECISIONS_S3 = gather('decisions');
 /** The notebook, by mission, in order. */
 export const CASE_S3 = gather('case');
 export const JOURNAL_S3 = gather('journal');
-/** The board's relation table: the threads that hold ([a, relation, b]; data/s3/board.js). */
-export const LINKS_S3 = gather('links');

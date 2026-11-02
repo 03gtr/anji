@@ -15,8 +15,6 @@ import { createDialogue, walkScript } from '../../src/game/narrative/dialogue.js
 import { PUZZLES } from '../../src/game/data/puzzles.js';
 import { DIALOGUE } from '../../src/game/data/dialogue/index.js';
 import { SCENES } from '../../src/game/data/scenes/index.js';
-import { LINKS_S3 } from '../../src/game/data/evidence-s3.js';
-import { linkFlag, linkHolds } from '../../src/game/data/s3/board.js';
 import { memoryStorage } from '../helpers.js';
 
 export const T0 = 1_800_000_000_000;
@@ -100,12 +98,7 @@ export function player(game, plan) {
     const c = it.cases.find((x) => x.if === undefined || check(x.if, game));
     run(c.run);
   }
-  function thread(a, rel, b) {
-    expect(linkHolds(LINKS_S3, a, rel, b)).toBe(true);
-    game.setFlag(linkFlag(a, rel, b).slice(5));
-    syncMissions(game, { season: 's3' });
-  }
-  return Object.assign(t, { visit, tap, thread });
+  return Object.assign(t, { visit, tap });
 }
 
 export const done = (game, id) => game.flag(`mission:${id}`) === true;
@@ -139,8 +132,9 @@ export function playSeason(game, plan, { street = true } = {}) {
     p.visit('s3-home');
     p.tap('s3-home', 'desk');
   }
-  expect(game.flag('s3:board-open')).toBe(true);
-  p.thread('d-two-engines', 'contradicts', 'e-clip');
+  // she tells Marius what the recordings say (the step that replaced the removed investigation board)
+  p.tap('s3-home', 'marius');
+  expect(game.flag('s3:03-told')).toBe(true);
   expect(done(game, 's3-03')).toBe(true);
   // 04
   p.visit('s3-garage');

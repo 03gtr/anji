@@ -103,11 +103,6 @@ export default {
     road: ['marius', 'lama', 'sabri'],
   },
   case: [{ mission: 's3-07', ids: ['e-original'] }],
-  links: [
-    ['e-original', 'contradicts', 'e-clip'],
-    ['e-original', 'supports', 'e-noise-notice'],
-    ['e-original', 'supports', 'd-seven'],
-  ],
   journal: {
     's3-roads': { title: 'التسجيل الكامل', icon: 'mark', text: 'المقطع اللي انتشر چان مقصوص: انقطع قبل ما تبين اللوحة. بالتسجيل الكامل، السيارة تمر تحت العمود: ٤٧.' },
   },

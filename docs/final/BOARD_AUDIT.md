@@ -1,5 +1,7 @@
 # Investigation board audit (لوحة التحقيق)
 
+> **Superseded:** the owner later removed the board entirely (docs/final/HOTFIX_BOARD_HINTS.md). This audit is kept as the record of the release before that.
+
 Owner's final brief, Priority 0. Audited on branch `feature/final-choice`, starting from `main` at `a1c047a`, before any new story was written.
 
 ## How it was audited

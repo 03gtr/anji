@@ -59,7 +59,7 @@ describe('the finale is earned', () => {
     const g = throughAct(7, game());
     g.setFlags([...SP2_CORE, 'workshop-entered']); // an Act VII save has been in the workshop
     expect(check(worldById('final').unlock, g)).toBe(false);
-    expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: sp2('sp2-final').steps[0].text });
+    expect(currentObjective(g)).toEqual({ act: 7, title: ACTS[6].title, text: sp2('sp2-final').steps[0].text, hint: sp2('sp2-final').steps[0].hint });
     g.setFlags(FINAL);
     expect(check(worldById('final').unlock, g)).toBe(true);
     expect(currentObjective(g).act).toBe(8);

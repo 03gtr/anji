@@ -276,13 +276,6 @@ export default {
     'd-second-car': { rel: 'deduction', source: 'lane', icon: 'mark', label: 'السيارة الثانية', note: 'زفيرو بالموقف ٣، يم بيتها. سيارة ثانية بالموقف ٥ على الرصيف المقابل، بعيد عن عين الكاميرا.' },
   },
   case: [{ mission: 's3-05', ids: [...TRACES, 'd-second-car'] }],
-  links: [
-    ['e-keyring', 'supports', 'e-noise-notice'],
-    ['e-tyre-marks', 'supports', 'd-second-car'],
-    ['e-oil', 'supports', 'd-second-car'],
-    ['d-second-car', 'contradicts', 'e-clip'],
-    ['e-keyring', 'different-source', 'e-receipt'],
-  ],
   journal: {
     's3-snooki': { title: 'أنف يعرف أكثر', icon: 'paw', text: 'سنوكي لگى ميدالية النادي بالمجرى، وعليها «٤٧». وآثار التايرات والزيت على الرصيف المقابل: سيارة ثانية وگفت هناك، مو زفيرو.' },
   },

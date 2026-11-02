@@ -306,15 +306,6 @@ export default {
     'lama-secret': ['trust', 'keep'],
   },
   case: [{ mission: 's3-04', ids: [...CLUES, 'd-source', 'd-twisted'] }],
-  links: [
-    ['t-jalal', 'contradicts', 'e-receipt'],
-    ['e-noise-notice', 'contradicts', 'e-clip'],
-    ['e-plate', 'contradicts', 'e-clip'],
-    ['e-forward-chain', 'supports', 'd-source'],
-    ['d-source', 'depends', 'e-forward-chain'],
-    ['e-noise-notice', 'supports', 'd-two-engines'],
-    ['e-receipt', 'different-source', 'e-noise-notice'],
-  ],
   journal: {
     's3-source': { title: 'جملة وحدة، خمس نسخ', icon: 'mark', text: 'المقطع بدا من تلفون جلال. وجملتها، اللي گالتها لصبري، لفّت على الكروب بنفس المعنى… لحد ما وصلت جلال وانگلبت.' },
   },

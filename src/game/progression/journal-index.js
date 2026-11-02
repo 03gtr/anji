@@ -17,6 +17,7 @@ import { WORLDS } from '../data/worlds.js';
 import { JOURNAL } from '../data/items.js';
 import { EVIDENCE } from '../data/evidence.js';
 import { missionState } from './missions.js';
+import { missionHint, actHint } from '../data/mission-hints.js';
 
 export const POST_GAME = 9; // chapter number used for content after the ending
 
@@ -99,7 +100,7 @@ function actEntries(game) {
       where: WORLDS.filter((w) => worlds.includes(w.id)).map((w) => w.name).join(' · '),
       worlds,
       next: next?.text ?? null,
-      hint: null,
+      hint: next ? actHint(a.act, a.objectives.indexOf(next)) : null,
       locked: i > 0 ? `ينفتح بعد ما تخلصين «${ACTS[i - 1].title}».` : '',
       reward: '',
       steps: { done, total: a.objectives.length },
@@ -128,7 +129,7 @@ function missionEntries(game) {
       where: m.where,
       worlds: placesOf(stepWorld ?? m.world ?? MISSION_META[m.id]?.world, game),
       next: st.next?.text ?? null,
-      hint: st.next?.hint ?? null,
+      hint: st.next ? missionHint(m, st.step) : null,
       locked: lockedText(m),
       reward: m.rewardText,
       summary: m.summary,

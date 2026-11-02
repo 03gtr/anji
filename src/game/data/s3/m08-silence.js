@@ -95,11 +95,6 @@ export default {
     'd-truth': { rel: 'deduction', source: 'board', icon: 'heart', label: 'اللي صار', note: 'زفيرو حچى مرة وحدة بـ٩:٤٠، وسكت. سيارة جلال فحّطت ١١:١٠. جلال كتب الكلام تحت المقطع، وخلّى الكذبة تمشي… وگلبها لريان. وريان ما سمّاه إلا بعد الدليل.' },
   },
   case: [{ mission: 's3-08', ids: ['d-truth'] }],
-  links: [
-    ['d-truth', 'depends', 'd-seven'],
-    ['d-truth', 'depends', 'e-original'],
-    ['d-truth', 'contradicts', 't-jalal'],
-  ],
   journal: {
     's3-silence': { title: 'لمن يحچي السكوت', icon: 'heart', text: 'ريان ما لگى الكلمات، فخلّى زفيرو يحچي. والليلة، طفّى المحرك. بعض الأشياء تنگال أحسن بالسكوت.' },
   },

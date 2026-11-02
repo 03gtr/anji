@@ -7,7 +7,8 @@
  *  - Mission 02: she walks under the trees and the V8 speaks — ignition, one blip, off (the audio engine runs in the
  *    page; nothing throws) — her whisper, her answer by touch, the bakery's shutter; Season 3's save keeps it;
  *  - «الصدى» in the real panel: five waveforms drawn, no help controls, every target ≥ 44 px, no sideways scroll;
- *  - the board by touch: a thread that does not hold is refused neutrally; one that holds is kept.
+ *  - Mission 03 ends in a talk with Marius by touch (the investigation board was removed by the owner's hotfix brief):
+ *    the «تلميح» names it, a ≥ 44 px target that changes nothing; the journal has every tab but the board.
  * Headless emulation, not a physical phone.
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
@@ -210,31 +211,45 @@ for (const [name, engine] of Object.entries(engines)) {
       expect(t.errors, t.errors.join('\n')).toEqual([]);
     }, 300000);
 
-    it('the board by touch: a thread that does not hold is refused (no number); one that holds is kept', async () => {
-      const t = await open(engine.browser, { width: 360, height: 780, scene: 's3-home', flags: [...S3_UPTO(2), 's3:board-open'] });
+    it('Mission 03 ends in a talk with Marius, by touch: the «تلميح» says so, the journal has no board', async () => {
+      // an older save: the board had opened (s3:board-open), the recordings are solved, the thread never drawn
+      const t = await open(engine.browser, { width: 360, height: 780, scene: 's3-home', flags: [...S3_UPTO(2), 's3:03-opened', 's3:03-solved', 's3:board-open'] });
       await t.page.waitForTimeout(1000);
       await readAll(t, [0, 0]);
       await t.page.evaluate(() => {
         const g = window.__game.game;
-        for (const e of ['e-clip', 'd-two-engines', 'e-rec-gate', 'e-blip']) g.collect(`s3.ev.${e}`);
+        for (const e of ['e-clip', 'e-rec-cam', 'e-rec-gate', 'e-rec-lama', 'd-two-engines']) g.collect(`s3.ev.${e}`);
       });
-      await t.page.evaluate(() => { window.__game.ui.openJournal('board'); }); // (resolves when it closes: not awaited)
-      await t.page.waitForSelector('.s3-board-cards .s3-card');
-      await press(t, '[data-card="e-clip"]');
-      await press(t, '[data-rel="supports"]');
-      await press(t, '[data-card="d-two-engines"]');
-      const said = await t.page.evaluate(() => document.querySelector('.s3-board-say').textContent);
-      expect(said.trim()).not.toBe('');
-      expect(said).not.toMatch(/[0-9٠-٩]/);
-      expect(await t.page.evaluate(() => document.querySelectorAll('.s3-threads li').length)).toBe(0);
-      await press(t, '[data-card="e-clip"]');
-      await press(t, '[data-rel="contradicts"]');
-      await press(t, '[data-card="d-two-engines"]');
-      expect(await t.page.evaluate(() => document.querySelectorAll('.s3-threads li').length)).toBe(1);
-      expect(await flag(t, 's3:link:d-two-engines~contradicts~e-clip')).toBe(true);
-      for (const h of await t.page.evaluate(() => [...document.querySelectorAll('.s3-card, .s3-rels .btn')].map((x) => Math.round(x.getBoundingClientRect().height)))) expect(h).toBeGreaterThanOrEqual(44);
+      await t.page.waitForFunction(() => /ماريوس/.test(document.querySelector('.hud .objective span')?.textContent ?? ''), null, { timeout: 15000 });
+      // the hint: on screen, a real touch target, the step's words, nothing changed
+      const before = await t.page.evaluate(() => localStorage.getItem('snooki-game:s3'));
+      await press(t, '.hint-pill');
+      const hint = await t.page.evaluate(() => {
+        const c = document.querySelector('.objective-hint');
+        const r = c.getBoundingClientRect();
+        const b = document.querySelector('.hint-pill').getBoundingClientRect();
+        return { text: c.hidden ? '' : c.textContent, inView: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth, h: Math.round(b.height) };
+      });
+      expect(hint.text).toMatch(/ماريوس/);
+      expect(hint.inView).toBe(true);
+      expect(hint.h).toBeGreaterThanOrEqual(44);
+      expect(await t.page.evaluate(() => localStorage.getItem('snooki-game:s3'))).toBe(before);
+      await shot(t, `${name}-hint-360`);
+      await press(t, '.objective-hint');
+      // she tells Marius
+      const mx = await t.page.evaluate(() => window.__game.screen.world.actor('marius').x);
+      await walkTo(t, mx - 50);
+      await press(t, '.pad-interact');
+      await readAll(t);
+      expect(await flag(t, 's3:03-told')).toBe(true);
+      expect(await flag(t, 'mission:s3-03')).toBe(true);
+      // the journal: every tab but the board
+      await press(t, '.hud [data-act="journal"]');
+      await t.page.waitForSelector('.journal .tabs');
+      expect(await t.page.evaluate(() => document.querySelector('.journal .tabs').textContent)).not.toMatch(/لوحة التحقيق/);
+      expect(await t.page.evaluate(() => [...document.querySelectorAll('.journal [data-tab]')].map((b) => b.dataset.tab))).toEqual(['notes', 'missions', 'evidence', 'collection', 'bag', 'challenges', 'achievements']);
       expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-      await shot(t, `${name}-board-360`);
+      await shot(t, `${name}-journal-360`);
       expect(t.errors, t.errors.join('\n')).toEqual([]);
     }, 300000);
   });
