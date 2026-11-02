@@ -1288,12 +1288,18 @@ svg {
   color: var(--gold);
 }
 
-.puzzle-hints {
+.puzzle-hints,
+.puzzle-guide {
   margin: 8px 0 0;
   padding: 10px 28px 10px 12px;
   border-radius: 14px;
   background: rgba(47, 95, 208, 0.2);
   font-size: 15px;
+}
+
+/* a season's guide: one level per line, its name first (اتجاه · تفكير · طريقة) */
+.puzzle-guide li + li {
+  margin-top: 6px;
 }
 
 .panel.is-solved {

@@ -184,6 +184,24 @@ export function createGameApp(root, opts = {}) {
       openSettings: () => openSettings(app),
       openHelp: () => openHelp(app),
       drawing: (opts) => openDrawing(app, opts),
+      /**
+       * «الاختيار الأخير، مرة ثانية»: back to the final story's moment of choice on her street, without restarting
+       * anything. Asked first; the first ending stays recorded whatever she chooses now (core/effects.js `end3:`).
+       */
+      replayFinal: async () => {
+        if (!game.flag('s3:f4-done')) return false;
+        const first = game.flag('s3:end:first');
+        const ok = await confirmBox(app, {
+          title: 'الاختيار الأخير، مرة ثانية؟',
+          text: `ترجعين لليلة اللي تحت الشجر، ويا ريان، للحظة الاختيار. ${first ? `اختيارچ الأول («${first === 'yes' ? 'إي. أختارك.' : 'مو هسه.'}») يبقى محفوظ بالدفتر مهما تختارين هسه.` : ''}`,
+          yes: 'إي، رجعيني',
+          no: 'لا، خليها',
+        });
+        if (!ok) return false;
+        for (const [k, v] of [['s3:f4-away', false], ['s3:f4-gone', false], ['s3:f4-replay', true]]) game.setFlag(k, v);
+        await go('s3-street', { spawnX: 1000 });
+        return true;
+      },
       askName: (who) => askName(app, who),
       fade: (dir = 'out', ms = 350) =>
         new Promise((resolve) => {

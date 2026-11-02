@@ -286,13 +286,14 @@ describe('«إعادة بناء الأسبوع» in the real panel (what the pla
     delete globalThis.__timerLoop;
   });
 
-  it('has no hint, solution or skip control (absent, not hidden); a wrong layout gets a neutral line — never a count', async () => {
+  // (owner's final brief, 2026-11-02: the one help is the contextual guide — words only, tests/game/guides.test.js)
+  it('has no hint ladder, solution or skip control (absent, not hidden) — only the guide; a wrong layout gets a neutral line — never a count', async () => {
     await app.toTitle();
     app.settings.set({ hints: true, tips: true });
     const done = app.ui.puzzle('s3-office');
     await until(() => $('.puzzle .sort-card'));
     expect($$('[data-act="hint"], [data-act="solution"], [data-act="skip"], [data-hint], [data-sol]')).toHaveLength(0);
-    expect($('.panel-foot').textContent.trim()).toBe('');
+    expect([...$('.panel-foot').children].map((b) => b.dataset.act)).toEqual(['guide']);
     // every line of the log into «ريان»: wrong (four of the seven are not his)
     const seen = [];
     for (let round = 0; round < 2; round++) {

@@ -31,6 +31,13 @@
   gap: 6px;
 }
 
+/* a card's mark is a mark: at full width it filled the card and pushed the season's evidence ten thousand pixels down */
+.s3-card-head svg {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+
 .s3-card small {
   opacity: 0.8;
   font-size: 12px;
@@ -81,6 +88,28 @@
 
 .s3-card.is-deduction .s3-state::before {
   content: '💡 ';
+}
+
+/* the relation buttons and the reply stay at the foot of the panel while she scrolls the cards */
+.s3-board-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin: 0 -4px;
+  padding: 8px 4px 2px;
+  background: #12163f; /* opaque: the panel's own colour, so no card shows through */
+  box-shadow: 0 -10px 14px -8px rgba(0, 0, 0, 0.55);
+}
+
+/* two rows of three on a phone, every target still ≥ 44 px */
+.s3-board-bar .s3-rels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.s3-board-bar .s3-rels .btn {
+  padding-inline: 4px;
+  white-space: nowrap;
 }
 
 .s3-rels {

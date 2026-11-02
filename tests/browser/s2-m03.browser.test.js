@@ -198,10 +198,12 @@ for (const [name, engine] of Object.entries(engines)) {
         expect(await t.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
         await shot(t, `${tag}-1-testimony`);
 
-        // no help: no hint button, no hint list; nothing on the bar gives an answer
+        // no help but the guide (owner's final brief): no old hint button or list; the guide's one button,
+        // closed until she asks; nothing on the bar gives an answer
         expect(bar.help).toBe(0);
+        expect(await t.page.evaluate(() => [...document.querySelectorAll('.tm button')].filter((b) => /تلميح/.test(b.textContent)).map((b) => b.dataset.act))).toEqual(['guide']);
+        expect(await t.page.evaluate(() => document.querySelector('.tm .puzzle-guide').hidden)).toBe(true);
         const barText = await t.page.evaluate(() => document.querySelector('.tm').textContent);
-        expect(barText).not.toMatch(/تلميح/);
         for (const word of ANSWER_WORDS) expect(barText.includes(word), word).toBe(false);
 
         // a wrong piece of evidence: he shrugs it off; nothing says how close; still version 1

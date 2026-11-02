@@ -150,7 +150,7 @@ async function wheelToEnd(page, sel) {
   await page.mouse.move(r.x, r.y);
   await page.evaluate(() => { window.__wheels = []; });
   const trail = [(await metrics(page, sel)).st];
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 80; i++) { // a bound, not the check: the full journal is > 16,000 px at 320 wide
     const before = trail[trail.length - 1];
     if (i > 0 && before >= (await metrics(page, sel)).max) break; // at the end: nothing left to wheel
     await page.mouse.wheel(0, 400);
